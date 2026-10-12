@@ -16,6 +16,21 @@ class ErrorCode(StrEnum):
     RATE_LIMITED = "RATE_LIMITED"
     CONFLICT = "CONFLICT"
     VERSION_CONFLICT = "VERSION_CONFLICT"
+    # Access and identity
+    INVALID_CREDENTIALS = "INVALID_CREDENTIALS"
+    REAUTH_FAILED = "REAUTH_FAILED"
+    TOKEN_INVALID = "TOKEN_INVALID"
+    TOKEN_EXPIRED = "TOKEN_EXPIRED"
+    TOKEN_REVOKED = "TOKEN_REVOKED"
+    EMAIL_TAKEN = "EMAIL_TAKEN"
+    INVITE_PENDING = "INVITE_PENDING"
+    SELF_CHANGE_FORBIDDEN = "SELF_CHANGE_FORBIDDEN"
+    LAST_ADMIN_PROTECTED = "LAST_ADMIN_PROTECTED"
+    # Master data
+    ACCOUNT_NOT_POSTABLE = "ACCOUNT_NOT_POSTABLE"
+    DUPLICATE_VALUE = "DUPLICATE_VALUE"
+    TAX_RULE_OVERLAP = "TAX_RULE_OVERLAP"
+    PERIOD_OVERLAP = "PERIOD_OVERLAP"
     # Status machine
     INVALID_TRANSITION = "INVALID_TRANSITION"
     SELF_APPROVAL_FORBIDDEN = "SELF_APPROVAL_FORBIDDEN"
@@ -32,12 +47,24 @@ class ErrorCode(StrEnum):
 
 STATUS_BY_CODE: dict[ErrorCode, int] = {
     ErrorCode.BAD_REQUEST: 400,
+    ErrorCode.TOKEN_INVALID: 400,
+    ErrorCode.TOKEN_EXPIRED: 400,
+    ErrorCode.TOKEN_REVOKED: 400,
     ErrorCode.UNAUTHENTICATED: 401,
+    ErrorCode.INVALID_CREDENTIALS: 401,
     ErrorCode.FORBIDDEN: 403,
+    ErrorCode.REAUTH_FAILED: 403,
+    ErrorCode.SELF_CHANGE_FORBIDDEN: 403,
     ErrorCode.SELF_APPROVAL_FORBIDDEN: 403,
     ErrorCode.NOT_FOUND: 404,
     ErrorCode.METHOD_NOT_ALLOWED: 405,
     ErrorCode.CONFLICT: 409,
+    ErrorCode.EMAIL_TAKEN: 409,
+    ErrorCode.INVITE_PENDING: 409,
+    ErrorCode.LAST_ADMIN_PROTECTED: 409,
+    ErrorCode.DUPLICATE_VALUE: 409,
+    ErrorCode.TAX_RULE_OVERLAP: 409,
+    ErrorCode.PERIOD_OVERLAP: 409,
     ErrorCode.VERSION_CONFLICT: 409,
     ErrorCode.INVALID_TRANSITION: 409,
     ErrorCode.PERIOD_CLOSED: 409,
@@ -46,6 +73,7 @@ STATUS_BY_CODE: dict[ErrorCode, int] = {
     ErrorCode.VALIDATION_ERROR: 422,
     ErrorCode.DOCUMENT_INCOMPLETE: 422,
     ErrorCode.VOUCHER_UNBALANCED: 422,
+    ErrorCode.ACCOUNT_NOT_POSTABLE: 422,
     ErrorCode.COMMENT_REQUIRED: 422,
     ErrorCode.REASON_REQUIRED: 422,
     ErrorCode.RATE_LIMITED: 429,
@@ -58,6 +86,19 @@ TITLE_BY_CODE: dict[ErrorCode, str] = {
     ErrorCode.VALIDATION_ERROR: "The request has invalid fields",
     ErrorCode.UNAUTHENTICATED: "Sign in required",
     ErrorCode.FORBIDDEN: "Not allowed",
+    ErrorCode.INVALID_CREDENTIALS: "The email or password is incorrect",
+    ErrorCode.REAUTH_FAILED: "The password you entered is incorrect",
+    ErrorCode.TOKEN_INVALID: "This link is not valid",
+    ErrorCode.TOKEN_EXPIRED: "This link has expired",
+    ErrorCode.TOKEN_REVOKED: "This link was cancelled",
+    ErrorCode.EMAIL_TAKEN: "That email already has an account",
+    ErrorCode.INVITE_PENDING: "An invitation is already waiting for that email",
+    ErrorCode.SELF_CHANGE_FORBIDDEN: "You cannot make that change to your own account",
+    ErrorCode.LAST_ADMIN_PROTECTED: "The last active Admin cannot be removed",
+    ErrorCode.ACCOUNT_NOT_POSTABLE: "That account cannot be posted to",
+    ErrorCode.DUPLICATE_VALUE: "That value is already in use",
+    ErrorCode.TAX_RULE_OVERLAP: "Another tax rule already covers those dates",
+    ErrorCode.PERIOD_OVERLAP: "That period overlaps a closed period",
     ErrorCode.NOT_FOUND: "Not found",
     ErrorCode.METHOD_NOT_ALLOWED: "Method not allowed",
     ErrorCode.PAYLOAD_TOO_LARGE: "The request is too large",
@@ -157,3 +198,7 @@ class RateLimitedError(DomainError):
     def __init__(self, detail: str, *, retry_after_seconds: int) -> None:
         super().__init__(detail, headers={"Retry-After": str(max(1, retry_after_seconds))})
         self.retry_after_seconds = max(1, retry_after_seconds)
+
+
+class ReauthFailedError(DomainError):
+    code = ErrorCode.REAUTH_FAILED

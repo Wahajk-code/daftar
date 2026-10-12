@@ -11,6 +11,10 @@ dependencies = [
     "psycopg[binary]>=3.2",
     "pydantic-settings>=2.4",
     "tzdata>=2024.1",
+    "argon2-cffi>=25.1.0",
+    "pyjwt>=2.15.1",
+    "cryptography>=50.0.2",
+    "email-validator>=2.3.0",
 ]
 
 [dependency-groups]
@@ -46,13 +50,16 @@ select = [
 ]
 ignore = [
     "PLR0913",  # many arguments are normal for service methods
+    "PLR0917",  # services take their collaborators positionally
     "PLR2004",  # magic values are fine in tests and in the domain tables
     "S101",     # assert is used in tests
     "RUF012",   # SQLAlchemy and pydantic class attributes
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S105", "S106", "S608", "PLC0415"]
+"app/core/enums.py" = ["S105"]  # enum members named PASSWORD_RESET are not passwords
+"app/core/errors.py" = ["S105"]  # nor are the TOKEN_* error codes
+"tests/**" = ["S105", "S106", "S107", "S608", "PLC0415"]
 "alembic/**" = ["S608"]
 
 [tool.ruff.lint.flake8-tidy-imports]

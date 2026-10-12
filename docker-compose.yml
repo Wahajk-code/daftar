@@ -89,6 +89,10 @@ services:
       <<: *backend-env
       ENVIRONMENT: test
       SECRET_KEY: test-only-key-do-not-use-outside-automated-tests
+      ARGON2_TIME_COST: "1"
+      ARGON2_MEMORY_KIB: "1024"
+      ARGON2_PARALLELISM: "1"
+      BFF_SHARED_SECRET: test-bff-secret-for-automated-tests-only
       DATABASE_URL: postgresql+psycopg://daftar_app:${APP_DB_PASSWORD:-daftar_app_dev_password}@postgres:5432/daftar_test
       MIGRATION_DATABASE_URL: postgresql+psycopg://daftar:${POSTGRES_PASSWORD:-daftar_dev_password}@postgres:5432/daftar_test
     volumes:

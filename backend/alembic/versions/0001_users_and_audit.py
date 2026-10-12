@@ -36,8 +36,8 @@ def upgrade() -> None:
         sa.Column("tour_completed_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.CheckConstraint("email = lower(email)", name="ck_users_email_lower"),
-        sa.CheckConstraint("length(btrim(full_name)) > 0", name="ck_users_full_name_not_blank"),
+        sa.CheckConstraint("email = lower(email)", name="email_lower"),
+        sa.CheckConstraint("length(btrim(full_name)) > 0", name="full_name_not_blank"),
         sa.PrimaryKeyConstraint("id", name="pk_users"),
         sa.UniqueConstraint("email", name="uq_users_email"),
     )

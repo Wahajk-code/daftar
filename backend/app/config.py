@@ -24,6 +24,22 @@ class Settings(BaseSettings):
     git_sha: str = "unknown"
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 
+    web_base_url: str = "http://localhost:3001"
+    # The BFF proves it is the BFF with this secret; only then is the client address it forwards trusted.
+    bff_shared_secret: SecretStr | None = None
+
+    access_token_ttl_seconds: int = 15 * 60
+    refresh_token_ttl_days: int = 7
+    invite_ttl_days: int = 7
+    reset_ttl_minutes: int = 30
+    argon2_time_cost: int = 3
+    argon2_memory_kib: int = 65_536
+    argon2_parallelism: int = 4
+
+    # Rate-limit overrides as "limit/window_seconds", for example {"login_strict": "5/900"}. See core/rate_limit.py.
+    rate_limit_overrides: dict[str, str] = {}
+    rate_limit_max_keys: int = 50_000
+
     db_pool_size: int = 5
     db_max_overflow: int = 5
     db_pool_timeout_seconds: int = 10

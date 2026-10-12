@@ -36,13 +36,15 @@ class UtcDateTime(TypeDecorator[datetime]):
         return None if value is None else require_utc(value)
 
 
-def pg_enum[E: StrEnum](enum_class: type[E], name: str) -> SqlEnum:
-    """A native PostgreSQL enum that stores the lower-case values, not the member names."""
+def pg_enum[E: StrEnum](enum_class: type[E], name: str, *, create_type: bool = True) -> SqlEnum:
+    """A native PostgreSQL enum that stores the lower-case values, not the member names. Pass create_type=False
+    when a second table reuses a type another table (or a migration) already created."""
     return SqlEnum(
         enum_class,
         name=name,
         values_callable=lambda members: [member.value for member in members],
         validate_strings=True,
+        create_type=create_type,
     )
 
 

@@ -25,3 +25,9 @@ class Clock:
     def today(self, zone: ZoneInfo) -> date:
         """The current calendar date in the display zone: the default `document_date` and the date of a reversal."""
         return self.now().astimezone(zone).date()
+
+
+def format_display_instant(value: datetime, zone: ZoneInfo) -> str:
+    """How an instant reads on screen and in email: ``12 Oct 2026, 14:05 PKT``. 24-hour, zone shown."""
+    local = require_utc(value).astimezone(zone)
+    return f"{local.day} {local.strftime('%b %Y, %H:%M %Z')}"

@@ -40,3 +40,8 @@ UtcInstant = Annotated[
     AfterValidator(require_utc),
     PlainSerializer(format_instant, return_type=str, when_used="json"),
 ]
+
+
+def blank_to_none(value: Any) -> Any:
+    """An empty text box means "nothing", not an empty string."""
+    return None if isinstance(value, str) and not value.strip() else value

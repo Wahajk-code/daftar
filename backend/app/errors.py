@@ -6,6 +6,8 @@ from typing import Any
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import StaleDataError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.errors import STATUS_BY_CODE, TITLE_BY_CODE, DomainError, ErrorCode, FieldError
@@ -115,7 +117,68 @@ async def handle_unexpected(request: Request, exc: Exception) -> JSONResponse:
     )
 
 
+# Rules the database enforces, mapped to the error a person should see. A service that lets one fire needs no
+# try/except of its own: the constraint name is enough.
+CONSTRAINT_ERRORS: dict[str, tuple[ErrorCode, str, str | None]] = {
+    "uq_users_email": (ErrorCode.EMAIL_TAKEN, "That email already has an account.", "email"),
+    "uq_auth_tokens_pending_invite_email": (
+        ErrorCode.INVITE_PENDING,
+        "An invitation is already waiting for that email.",
+        "email",
+    ),
+    "uq_vendors_name_lower": (ErrorCode.DUPLICATE_VALUE, "A vendor with this name already exists.", "name"),
+    "uq_accounts_code": (ErrorCode.DUPLICATE_VALUE, "An account with this code already exists.", "code"),
+    "uq_cost_centers_code": (ErrorCode.DUPLICATE_VALUE, "A cost centre with this code already exists.", "code"),
+    "uq_projects_code": (ErrorCode.DUPLICATE_VALUE, "A project or product with this code already exists.", "code"),
+    "uq_categories_name_lower": (ErrorCode.DUPLICATE_VALUE, "A category with this name already exists.", "name"),
+    "accounts_parent_not_postable": (
+        ErrorCode.ACCOUNT_NOT_POSTABLE,
+        "A parent account cannot be posted to, and a postable account cannot have children.",
+        None,
+    ),
+    "users_keep_an_active_admin": (
+        ErrorCode.LAST_ADMIN_PROTECTED,
+        "This is the last active Admin. Make someone else an Admin first.",
+        None,
+    ),
+    "no_overlapping_rules": (
+        ErrorCode.TAX_RULE_OVERLAP,
+        "Another rule for the same kind of supplier already covers some of those dates.",
+        "effective_from",
+    ),
+    "no_overlapping_closed_ranges": (
+        ErrorCode.PERIOD_OVERLAP,
+        "Those dates overlap a period that is already closed.",
+        "start_date",
+    ),
+    "ck_vendors_registered_has_ntn_and_strn": (
+        ErrorCode.VALIDATION_ERROR,
+        "A sales-tax-registered vendor needs both an NTN and an STRN.",
+        "ntn",
+    ),
+}
+
+
+async def handle_integrity_error(request: Request, exc: Exception) -> JSONResponse:
+    assert isinstance(exc, IntegrityError)
+    diag = getattr(exc.orig, "diag", None)
+    known = CONSTRAINT_ERRORS.get(getattr(diag, "constraint_name", None) or "")
+    if known is None:
+        return await handle_unexpected(request, exc)
+    code, detail, field = known
+    errors = [FieldError(field, detail, "constraint")] if field else None
+    return problem_response(request, code, detail, errors=errors)
+
+
+async def handle_stale_data(request: Request, exc: Exception) -> JSONResponse:
+    return problem_response(
+        request, ErrorCode.VERSION_CONFLICT, "Someone else changed this record. Reload it and try again."
+    )
+
+
 def register_error_handlers(app: FastAPI) -> None:
+    app.add_exception_handler(IntegrityError, handle_integrity_error)
+    app.add_exception_handler(StaleDataError, handle_stale_data)
     app.add_exception_handler(DomainError, handle_domain_error)
     app.add_exception_handler(RequestValidationError, handle_validation_error)
     app.add_exception_handler(StarletteHTTPException, handle_http_exception)
