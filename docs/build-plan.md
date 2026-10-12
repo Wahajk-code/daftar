@@ -82,13 +82,13 @@ Model: strong for auth, cheap for the rest
 ## Pass 3: Documents
 Model: strong for the workflow engine and purchases
 
-- [ ] Expenses: direct or indirect per the `CHECK`s; allocations use the Pass 1 function; deferred triggers check sums on both sides; the preview endpoint; changing the amount recomputes percentage allocations
-- [ ] A reusable workflow engine built on `core/transitions.py`: submit, approve, reject (comment required), reopen (author only), history in one `document_events` table, `version` and `If-Match`, visibility rules. Expenses, purchases and vouchers all use it
-- [ ] Attachments on expenses and purchases (Cloudinary), with a per-user upload limit: storage interface with a Cloudinary implementation and an in-memory fake; file signature check, size cap, EXIF removal, SHA-256; authenticated upload; download only through the API after an ownership check. Read the current Cloudinary SDK docs first
-- [ ] Purchases: lines with item, quantity, rate, tax; totals recomputed on the server; both withholdings; memo versus invoice; rate and rule id copied onto each line; negative payable refused; every vendor combination gives a different rate in the test data
-- [ ] Parallel test: two simultaneous approvals give one winner and one 409
-- [ ] REVIEW: reach the allocation trigger by bypassing the service; show it rejects at commit
-- [ ] **Checkpoint:** stories C1 to C5, C7, D1 to D4, F2 have named tests
+- [x] Expenses: direct or indirect per the `CHECK`s; allocations use the Pass 1 function; deferred triggers check sums on both sides; the preview endpoint; changing the amount recomputes percentage allocations
+- [x] A reusable workflow engine built on `core/transitions.py`: submit, approve, reject (comment required), reopen (author only), history in one `document_events` table, `version` and `If-Match`, visibility rules. Expenses, purchases and vouchers all use it
+- [x] Attachments on expenses and purchases (Cloudinary), with a per-user upload limit: storage interface with a Cloudinary implementation and an in-memory fake; file signature check, size cap, EXIF removal, SHA-256; authenticated upload; download only through the API after an ownership check. Read the current Cloudinary SDK docs first (verified with the in-memory store; the live Cloudinary check waits for `CLOUDINARY_URL`)
+- [x] Purchases: lines with item, quantity, rate, tax; totals recomputed on the server; both withholdings; memo versus invoice; rate and rule id copied onto each line; negative payable refused; every vendor combination gives a different rate in the test data
+- [x] Parallel test: two simultaneous approvals give one winner and one 409
+- [x] REVIEW: reach the allocation trigger by bypassing the service; show it rejects at commit
+- [x] **Checkpoint:** stories C1 to C5, C7, D1 to D4, F2 have named tests (C6 is Pass 4)
 
 ---
 

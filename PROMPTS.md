@@ -63,6 +63,9 @@ Each row represents a significant implementation prompt. Model and effort are re
 | B9  | 2    | Not stated     | Proceed to Pass 2. | Start the next pass after reviewing Pass 1. | Four packages approved; auth, users, invites and vendors built; master data in progress. |
 | B10 | 2    | Not stated     | Give a progress report on the work so far and list any ambiguities. | Mid-pass oversight. | Report given in chat; seven open points listed, including the unverified tax rates. |
 | B11 | 2    | Not stated     | Say when Pass 2 is ready for a commit. | The owner reviews and approves commits. | Pass 2 finished with 371 tests; commit proposals prepared. |
+| B12 | 3    | Not stated     | Proceed to Pass 3 (documents). | Start the next pass after reviewing Pass 2. | Three packages approved (cloudinary, pillow, python-multipart); expenses, purchases, attachments and the shared workflow built. |
+| B13 | 3    | Not stated     | Give a progress report on the work so far and list any ambiguities. | Mid-pass oversight. | Report given in chat; seven open points listed, including the Cloudinary live check. |
+| B14 | 3    | Not stated     | Proceed (the session had restarted mid-run). | Resume after an interruption. | Working tree verified intact; the interrupted backend gate re-run. |
 
 ---
 

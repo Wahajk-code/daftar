@@ -16,19 +16,19 @@ Find the tests for a story with: `Select-String -Path backend\tests\*.py -Patter
 | B3 | Chart of accounts with hierarchy; parents not postable | [x] | [ ] | n/a |
 | B4 | Cost centres and projects, deactivatable | [x] | [ ] | n/a |
 | B5 | Tax rules by date; rate copied onto the line | [x] | [ ] | n/a |
-| C1 | Direct expense against project, product or cost centre | [ ] | [ ] | [ ] |
-| C2 | Indirect expense allocated by percentage or fixed, exact sums | [ ] | [ ] | n/a |
-| C3 | Receipt attachment, validated, private, stripped | [ ] | [ ] | [ ] |
-| C4 | Submit an expense for approval | [ ] | [ ] | [ ] |
-| C5 | Approve or reject with a comment | [ ] | [ ] | [ ] |
+| C1 | Direct expense against project, product or cost centre | [x] | [ ] | [ ] |
+| C2 | Indirect expense allocated by percentage or fixed, exact sums | [x] | [ ] | n/a |
+| C3 | Receipt attachment, validated, private, stripped | [x] | [ ] | [ ] |
+| C4 | Submit an expense for approval | [x] | [ ] | [ ] |
+| C5 | Approve or reject with a comment | [x] | [ ] | [ ] |
 | C6 | Post an approved expense (creates a posted voucher) | [ ] | [ ] | n/a |
-| C7 | Rejected expense returns to Draft for its author | [ ] | [ ] | n/a |
-| D1 | Purchase lines; totals recomputed on the server | [ ] | [ ] | n/a |
-| D2 | Registered vendor: invoice number, sales tax, both withholdings | [ ] | [ ] | n/a |
-| D3 | Unregistered vendor: purchase memo, visible flag, gross-value withholding | [ ] | [ ] | n/a |
-| D4 | Purchases use the same lifecycle as expenses | [ ] | [ ] | n/a |
+| C7 | Rejected expense returns to Draft for its author | [x] | [ ] | n/a |
+| D1 | Purchase lines; totals recomputed on the server | [x] | [ ] | n/a |
+| D2 | Registered vendor: invoice number, sales tax, both withholdings | [x] | [ ] | n/a |
+| D3 | Unregistered vendor: purchase memo, visible flag, gross-value withholding | [x] | [ ] | n/a |
+| D4 | Purchases use the same lifecycle as expenses | [x] | [ ] | n/a |
 | D5 | Purchase and its paying voucher link both ways | [ ] | [ ] | n/a |
-| D6 | Attach documents to a purchase | [ ] | [ ] | n/a |
+| D6 | Attach documents to a purchase | [x] | [ ] | n/a |
 | E1 | Voucher with debit and credit lines, one side per line | [ ] | [ ] | n/a |
 | E2 | Cannot save unbalanced; running difference; one-click balancing line | [ ] | [ ] | n/a |
 | E3 | Gapless numbering per type and year, assigned at Post | [ ] | [ ] | [ ] |
@@ -58,9 +58,11 @@ Find the tests for a story with: `Select-String -Path backend\tests\*.py -Patter
 | N1 | Skippable role-aware onboarding tour (web); three-card intro (mobile) | [ ] | [ ] | [ ] |
 
 Notes on ticks made by the build (the owner still confirms each against the evidence):
-- A3: the API refusing every role everywhere is tested (`tests/api/test_access_matrix.py`). The case of Staff opening another
-  user's expense and getting 404 is tested in Pass 3, when expenses exist.
-- A4: tested on the transition table for all three document types (`test_a4_...`); the approve endpoints that use it arrive in Pass 3.
+- A3: the API refusing every role everywhere is tested (`tests/api/test_access_matrix.py`), and Staff opening another
+  user's expense get 404 on every route (`test_a3_staff_asking_for_another_users_expense_get_a_404_everywhere`).
+- A4: tested on the transition table for all three document types, and through the approve endpoints for expenses and
+  purchases (`test_a4_...`, `test_d4_rejecting_needs_a_comment_and_nobody_approves_their_own_purchase`). Vouchers follow in Pass 4.
+- C3 and D6: the stored file is read back through the API with the in-memory store; the live Cloudinary check waits for the credential.
 - F1: the transition table and its matrix test (Pass 1).
 
 ## Cross-cutting checks (not single stories)

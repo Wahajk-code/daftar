@@ -38,4 +38,16 @@ Caught:     `tests/db/test_constraint_map.py`, which checks that every constrain
 Why wrong:  The error handler maps a violated constraint to its message by exact name. With the doubled name the vendor rule would have fallen through to a bare 500 in production. I copied the model's full names into the migrations instead of the bare names the convention expects.
 Fix:        All 19 CHECK names in the two migrations are now bare, matching the models. The migrations had only been run against test and scratch databases, so editing them in place was safe; the dev database is migrated once at the end.
 
+### M6: Division outside the money modules, again (pass 3)
+What:       The attachment service turned a byte limit into megabytes for an error message with `//`.
+Caught:     `tests/test_architecture.py`, on the first full run of the pass, the same test that caught M4.
+Why wrong:  `CLAUDE.md` allows division only in `core/money.py` and `core/allocation.py`. I had logged M4 and still wrote a division when I was thinking about a message, not about money.
+Fix:        The setting is now `max_upload_megabytes` and the byte limit is derived by multiplication. Before writing a new module I now search it for `/` and `//` as part of the lint pass.
+
+### M7: Left the development API container running on a stale image (pass 2 and 3)
+What:       After adding the Pass 2 packages I rebuilt the images but never recreated the running `backend` container. It kept running its old environment, without PyJWT, and failed to import the app as soon as the reloader picked up the new code. It showed as unhealthy for the rest of Pass 2 and most of Pass 3.
+Caught:     By me, when `docker compose ps` was read after a session restart. The tests were unaffected because they run in their own container.
+Why wrong:  I treated "the tests pass" as "the stack works" and did not look at the stack. The Pass 1 checkpoint says the stack must come up healthy; I did not repeat that check at the end of Pass 2.
+Fix:        `docker compose up -d --build` recreated it; it is healthy and serves 70 paths. From now on each pass report starts from a rebuilt stack and a `docker compose ps` check.
+
 <!-- entries are added as they happen -->
