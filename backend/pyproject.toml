@@ -1,0 +1,66 @@
+[project]
+name = "daftar-backend"
+version = "0.1.0"
+description = "Daftar API: expenses, purchases and vouchers"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "sqlalchemy>=2.0",
+    "alembic>=1.13",
+    "psycopg[binary]>=3.2",
+    "pydantic-settings>=2.4",
+    "tzdata>=2024.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "hypothesis>=6.110",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "httpx2>=2.13.1",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+    "slow: long-running tests such as the access matrix; run at review steps",
+    "concurrency: needs the committing scratch database and real parallel connections",
+]
+filterwarnings = ["error"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F", "I", "UP", "B", "SIM", "C4", "PT", "RUF", "T20", "S", "DTZ", "PL", "TID",
+]
+ignore = [
+    "PLR0913",  # many arguments are normal for service methods
+    "PLR2004",  # magic values are fine in tests and in the domain tables
+    "S101",     # assert is used in tests
+    "RUF012",   # SQLAlchemy and pydantic class attributes
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "S608", "PLC0415"]
+"alembic/**" = ["S608"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+plugins = ["pydantic.mypy"]
+files = ["app", "tests", "alembic/env.py"]
+warn_unreachable = true
