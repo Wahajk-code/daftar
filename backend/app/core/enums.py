@@ -63,3 +63,25 @@ class PostingKey(StrEnum):
     INPUT_SALES_TAX = "input_sales_tax"
     SALES_TAX_WITHHELD = "sales_tax_withheld"
     INCOME_TAX_WITHHELD = "income_tax_withheld"
+
+
+class ExpenseType(StrEnum):
+    DIRECT = "direct"
+    INDIRECT = "indirect"
+
+
+class AllocationMethod(StrEnum):
+    PERCENTAGE = "percentage"
+    FIXED = "fixed"
+
+
+class PaymentMethod(StrEnum):
+    CASH = "cash"
+    BANK_TRANSFER = "bank_transfer"
+    CARD = "card"
+    CHEQUE = "cheque"
+
+
+class PurchaseKind(StrEnum):
+    TAX_INVOICE = "tax_invoice"
+    PURCHASE_MEMO = "purchase_memo"

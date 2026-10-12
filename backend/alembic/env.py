@@ -17,7 +17,7 @@ target_metadata = Base.metadata
 
 APP_ROLE = "daftar_app"
 # Tables the application may only append to and read.
-APPEND_ONLY_TABLES = ("audit_events",)
+APPEND_ONLY_TABLES = ("audit_events", "document_events")
 
 
 def apply_app_privileges(connection: Connection) -> None:

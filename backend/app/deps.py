@@ -15,13 +15,17 @@ from app.core.mail import ConsoleMailer, Mailer, Outbox
 from app.core.principal import Principal
 from app.core.rate_limit import RateLimiter
 from app.core.security import Passwords, read_access_token, same_secret
+from app.core.storage import Storage, make_storage
 from app.db import get_session
 from app.repositories import users as user_repository
 from app.services.accounts import AccountService
+from app.services.attachments import AttachmentService
 from app.services.auth import AuthService
+from app.services.expenses import ExpenseService
 from app.services.invites import InviteService
 from app.services.lookups import CategoryService, CostCenterService, ProjectService
 from app.services.periods import PeriodService, PostingAccountService
+from app.services.purchases import PurchaseService
 from app.services.tax_rules import TaxRuleService
 from app.services.users import UserService
 from app.services.vendors import VendorService
@@ -230,6 +234,33 @@ ProjectServiceDep = Annotated[ProjectService, Depends(get_project_service)]
 PeriodServiceDep = Annotated[PeriodService, Depends(get_period_service)]
 PostingAccountServiceDep = Annotated[PostingAccountService, Depends(get_posting_account_service)]
 TaxRuleServiceDep = Annotated[TaxRuleService, Depends(get_tax_rule_service)]
+
+
+@lru_cache
+def get_storage() -> Storage:
+    return make_storage(get_settings())
+
+
+StorageDep = Annotated[Storage, Depends(get_storage)]
+
+
+def get_expense_service(session: SessionDep, clock: ClockDep, settings: SettingsDep) -> ExpenseService:
+    return ExpenseService(session, clock, settings)
+
+
+def get_purchase_service(session: SessionDep, clock: ClockDep, settings: SettingsDep) -> PurchaseService:
+    return PurchaseService(session, clock, settings)
+
+
+def get_attachment_service(
+    session: SessionDep, clock: ClockDep, settings: SettingsDep, storage: StorageDep, limiter: LimiterDep
+) -> AttachmentService:
+    return AttachmentService(session, clock, settings, storage, limiter)
+
+
+ExpenseServiceDep = Annotated[ExpenseService, Depends(get_expense_service)]
+PurchaseServiceDep = Annotated[PurchaseService, Depends(get_purchase_service)]
+AttachmentServiceDep = Annotated[AttachmentService, Depends(get_attachment_service)]
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
 VendorServiceDep = Annotated[VendorService, Depends(get_vendor_service)]
 UserServiceDep = Annotated[UserService, Depends(get_user_service)]

@@ -3,6 +3,7 @@
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
 CENT = Decimal("0.01")
+ZERO = Decimal("0.00")
 MAX_AMOUNT = Decimal("999999999999.99")
 BASIS_POINTS_TOTAL = 10_000
 PAISA_PER_RUPEE = 100
@@ -74,3 +75,34 @@ def to_json(amount: Decimal) -> str:
 def format_money(amount: Decimal) -> str:
     """The display form everywhere: ``1,234,567.00``. A negative amount has a leading minus: ``-1,234.00``."""
     return f"{amount.quantize(CENT):,.2f}"
+
+
+MILLI = Decimal("0.001")
+
+
+def parse_quantity(value: object) -> Decimal:
+    """A positive quantity with at most three decimal places, from a string or an integer. Never a float."""
+    if isinstance(value, bool | float):
+        raise MoneyError("a quantity must be a string or an integer, not a float or a boolean")
+    if isinstance(value, Decimal):
+        quantity = value
+    elif isinstance(value, int):
+        quantity = Decimal(value)
+    elif isinstance(value, str):
+        try:
+            quantity = Decimal(value.strip())
+        except InvalidOperation as exc:
+            raise MoneyError("not a number") from exc
+    else:
+        raise MoneyError("a quantity must be a string or an integer")
+    if not quantity.is_finite() or quantity <= 0:
+        raise MoneyError("must be greater than zero")
+    if quantity != quantity.quantize(MILLI):
+        raise MoneyError("at most three decimal places are allowed")
+    if quantity > Decimal("99999999999.999"):
+        raise MoneyError("is too large")
+    return quantity.quantize(MILLI)
+
+
+def quantity_to_json(quantity: Decimal) -> str:
+    return format(quantity.quantize(MILLI), "f")

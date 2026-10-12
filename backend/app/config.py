@@ -40,6 +40,15 @@ class Settings(BaseSettings):
     rate_limit_overrides: dict[str, str] = {}
     rate_limit_max_keys: int = 50_000
 
+    # Receipts and other attachments. "memory" keeps them in the process (development and tests); production requires
+    # Cloudinary. Nothing here is a secret except the URL, which carries the API secret.
+    storage_backend: Literal["cloudinary", "memory"] = "memory"
+    cloudinary_url: SecretStr | None = None
+    storage_folder: str = "daftar"
+    max_upload_megabytes: int = 10
+    max_image_pixels: int = 40_000_000
+    max_attachments_per_document: int = 10
+
     db_pool_size: int = 5
     db_max_overflow: int = 5
     db_pool_timeout_seconds: int = 10
@@ -56,10 +65,23 @@ class Settings(BaseSettings):
             raise ValueError(f"{value!r} is not an IANA time zone") from exc
         return value
 
+    @field_validator("cloudinary_url", mode="before")
+    @classmethod
+    def _empty_means_unset(cls, value: object) -> object:
+        return None if isinstance(value, str) and not value.strip() else value
+
+    @model_validator(mode="after")
+    def _storage_is_configured(self) -> "Settings":
+        if self.storage_backend == "cloudinary" and self.cloudinary_url is None:
+            raise ValueError("CLOUDINARY_URL is required when STORAGE_BACKEND is cloudinary")
+        return self
+
     @model_validator(mode="after")
     def _refuse_unsafe_production(self) -> "Settings":
         if self.environment != "production":
             return self
+        if self.storage_backend != "cloudinary":
+            raise ValueError("receipts must be stored in Cloudinary in production")
         if self.debug:
             raise ValueError("DEBUG must be off in production")
         key = self.secret_key.get_secret_value()
@@ -71,6 +93,10 @@ class Settings(BaseSettings):
         ):
             raise ValueError("SECRET_KEY is too weak for production")
         return self
+
+    @property
+    def max_upload_bytes(self) -> int:
+        return self.max_upload_megabytes * 1024 * 1024
 
     @property
     def owner_database_url(self) -> str:

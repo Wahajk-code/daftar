@@ -151,6 +151,38 @@ CONSTRAINT_ERRORS: dict[str, tuple[ErrorCode, str, str | None]] = {
         "Those dates overlap a period that is already closed.",
         "start_date",
     ),
+    "expense_allocations_consistent": (
+        ErrorCode.ALLOCATION_MISMATCH,
+        "The allocation does not add up to the expense.",
+        "allocation",
+    ),
+    "document_is_not_a_draft": (ErrorCode.DOCUMENT_LOCKED, "Only a draft can be changed.", None),
+    "ck_expenses_amount_positive": (ErrorCode.VALIDATION_ERROR, "The amount must be more than zero.", "amount"),
+    "ck_expenses_tax_within_amount": (
+        ErrorCode.VALIDATION_ERROR,
+        "The tax cannot be more than the amount.",
+        "tax_amount",
+    ),
+    "ck_expenses_direct_has_attribution_indirect_has_none": (
+        ErrorCode.VALIDATION_ERROR,
+        "A direct expense needs a project, product or cost centre; an indirect one has none.",
+        "project_id",
+    ),
+    "ck_purchases_payable_not_negative": (
+        ErrorCode.PAYABLE_NEGATIVE,
+        "The withholdings come to more than the amount.",
+        "lines",
+    ),
+    "ck_purchase_lines_payable_not_negative": (
+        ErrorCode.PAYABLE_NEGATIVE,
+        "The withholdings come to more than the amount.",
+        "lines",
+    ),
+    "ck_purchases_tax_invoice_has_a_number": (
+        ErrorCode.VALIDATION_ERROR,
+        "A tax invoice needs its number.",
+        "invoice_number",
+    ),
     "ck_vendors_registered_has_ntn_and_strn": (
         ErrorCode.VALIDATION_ERROR,
         "A sales-tax-registered vendor needs both an NTN and an STRN.",

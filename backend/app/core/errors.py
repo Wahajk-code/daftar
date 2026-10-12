@@ -40,6 +40,14 @@ class ErrorCode(StrEnum):
     REASON_REQUIRED = "REASON_REQUIRED"
     PERIOD_CLOSED = "PERIOD_CLOSED"
     REVERSAL_NOT_VOIDABLE = "REVERSAL_NOT_VOIDABLE"
+    # Documents and attachments
+    DOCUMENT_LOCKED = "DOCUMENT_LOCKED"
+    ALLOCATION_MISMATCH = "ALLOCATION_MISMATCH"
+    INACTIVE_REFERENCE = "INACTIVE_REFERENCE"
+    TAX_RULE_MISSING = "TAX_RULE_MISSING"
+    PAYABLE_NEGATIVE = "PAYABLE_NEGATIVE"
+    UNSUPPORTED_FILE_TYPE = "UNSUPPORTED_FILE_TYPE"
+    ATTACHMENT_LIMIT = "ATTACHMENT_LIMIT"
     # Server
     INTERNAL_ERROR = "INTERNAL_ERROR"
     SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE"
@@ -69,7 +77,14 @@ STATUS_BY_CODE: dict[ErrorCode, int] = {
     ErrorCode.INVALID_TRANSITION: 409,
     ErrorCode.PERIOD_CLOSED: 409,
     ErrorCode.REVERSAL_NOT_VOIDABLE: 409,
+    ErrorCode.DOCUMENT_LOCKED: 409,
+    ErrorCode.ATTACHMENT_LIMIT: 409,
     ErrorCode.PAYLOAD_TOO_LARGE: 413,
+    ErrorCode.ALLOCATION_MISMATCH: 422,
+    ErrorCode.INACTIVE_REFERENCE: 422,
+    ErrorCode.TAX_RULE_MISSING: 422,
+    ErrorCode.PAYABLE_NEGATIVE: 422,
+    ErrorCode.UNSUPPORTED_FILE_TYPE: 422,
     ErrorCode.VALIDATION_ERROR: 422,
     ErrorCode.DOCUMENT_INCOMPLETE: 422,
     ErrorCode.VOUCHER_UNBALANCED: 422,
@@ -86,6 +101,13 @@ TITLE_BY_CODE: dict[ErrorCode, str] = {
     ErrorCode.VALIDATION_ERROR: "The request has invalid fields",
     ErrorCode.UNAUTHENTICATED: "Sign in required",
     ErrorCode.FORBIDDEN: "Not allowed",
+    ErrorCode.DOCUMENT_LOCKED: "Only a draft can be changed",
+    ErrorCode.ALLOCATION_MISMATCH: "The allocation does not add up",
+    ErrorCode.INACTIVE_REFERENCE: "That record is no longer in use",
+    ErrorCode.TAX_RULE_MISSING: "No withholding rate applies",
+    ErrorCode.PAYABLE_NEGATIVE: "The amount payable would be negative",
+    ErrorCode.UNSUPPORTED_FILE_TYPE: "That file type is not accepted",
+    ErrorCode.ATTACHMENT_LIMIT: "This document has the most attachments it can hold",
     ErrorCode.INVALID_CREDENTIALS: "The email or password is incorrect",
     ErrorCode.REAUTH_FAILED: "The password you entered is incorrect",
     ErrorCode.TOKEN_INVALID: "This link is not valid",

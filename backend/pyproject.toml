@@ -15,6 +15,9 @@ dependencies = [
     "pyjwt>=2.15.1",
     "cryptography>=50.0.2",
     "email-validator>=2.3.0",
+    "cloudinary>=1.46.3",
+    "pillow>=12.3.0",
+    "python-multipart>=0.0.32",
 ]
 
 [dependency-groups]
@@ -61,6 +64,7 @@ ignore = [
 "app/core/errors.py" = ["S105"]  # nor are the TOKEN_* error codes
 "tests/**" = ["S105", "S106", "S107", "S608", "PLC0415"]
 "alembic/**" = ["S608"]
+"tests/db/test_document_rules.py" = ["E501"]  # long SQL literals read better on one line
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
@@ -71,3 +75,7 @@ python_version = "3.12"
 plugins = ["pydantic.mypy"]
 files = ["app", "tests", "alembic/env.py"]
 warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["cloudinary", "cloudinary.*"]
+ignore_missing_imports = true  # the Cloudinary SDK ships no type information

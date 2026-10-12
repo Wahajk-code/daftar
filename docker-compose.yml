@@ -40,6 +40,8 @@ services:
       ENVIRONMENT: development
       DEBUG: "true"
       SECRET_KEY: ${SECRET_KEY:-dev-only-key-do-not-use-outside-local-development}
+      STORAGE_BACKEND: ${STORAGE_BACKEND:-memory}
+      CLOUDINARY_URL: ${CLOUDINARY_URL:-}
       DATABASE_URL: postgresql+psycopg://daftar_app:${APP_DB_PASSWORD:-daftar_app_dev_password}@postgres:5432/daftar
       MIGRATION_DATABASE_URL: postgresql+psycopg://daftar:${POSTGRES_PASSWORD:-daftar_dev_password}@postgres:5432/daftar
     ports:
