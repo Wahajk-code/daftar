@@ -6,6 +6,7 @@ from io import BytesIO
 from typing import Any
 
 from PIL import Image
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.enums import AccountType, ProjectKind
@@ -25,10 +26,18 @@ class Lookups:
 
 
 def create_lookups(session: Session, owner: User) -> Lookups:
-    rent = Account(code="5100", name="Rent", type=AccountType.EXPENSE)
-    supplies = Account(code="5600", name="Office Supplies", type=AccountType.EXPENSE)
-    session.add_all([rent, supplies])
-    session.flush()
+    def expense_account(code: str, name: str) -> Account:
+        """A scratch database arrives with the starting chart, the fast one without it: use what is there."""
+        existing = session.scalars(select(Account).where(Account.code == code)).one_or_none()
+        if existing is not None:
+            return existing
+        created = Account(code=code, name=name, type=AccountType.EXPENSE)
+        session.add(created)
+        session.flush()
+        return created
+
+    rent = expense_account("5100", "Rent")
+    supplies = expense_account("5600", "Office Supplies")
     category = Category(name="Office rent", account_id=rent.id)
     other = Category(name="Stationery", account_id=supplies.id)
     centres = [
@@ -150,3 +159,71 @@ def jpeg_with_metadata() -> bytes:
     out = BytesIO()
     Image.new("RGB", (64, 48), (10, 200, 90)).save(out, format="JPEG", exif=exif)
     return out.getvalue()
+
+
+# Ledger --------------------------------------------------------------------------------------------------------------
+
+
+@dataclass
+class Ledger:
+    """Accounts a voucher can post to, with the posting accounts pointed at them."""
+
+    expense: Any  # 5100 Rent
+    other_expense: Any  # 5600 Office Supplies
+    cash: Any
+    bank: Any
+    input_tax: Any
+    sales_tax_withheld: Any
+    income_tax_withheld: Any
+    revenue: Any
+    parent: Any  # a parent account: not postable
+
+
+def create_ledger(session: Session, lookups: Lookups, admin: User, skip: tuple[str, ...] = ()) -> Ledger:
+    """`skip` leaves the named posting keys unset, as on an install nobody has configured."""
+    from app.core.enums import PostingKey
+    from app.models.master import PostingAccount
+
+    def account(code: str, name: str, kind: AccountType, **extra: Any) -> Account:
+        row = Account(code=code, name=name, type=kind, **extra)
+        session.add(row)
+        session.flush()
+        return row
+
+    expense = session.scalars(select(Account).where(Account.code == "5100")).one()
+    other = session.scalars(select(Account).where(Account.code == "5600")).one()
+    ledger = Ledger(
+        expense=expense,
+        other_expense=other,
+        cash=account("1100", "Cash in Hand", AccountType.ASSET),
+        bank=account("1200", "Bank - Meezan Current", AccountType.ASSET),
+        input_tax=account("1300", "Advance Tax Receivable", AccountType.ASSET),
+        sales_tax_withheld=account("2200", "Sales Tax Payable", AccountType.LIABILITY),
+        income_tax_withheld=account("2300", "Withholding Tax Payable", AccountType.LIABILITY),
+        revenue=account("4100", "Service Revenue", AccountType.INCOME),
+        parent=account("1000", "Assets", AccountType.ASSET, is_postable=False),
+    )
+    for key, row in (
+        (PostingKey.CASH, ledger.cash),
+        (PostingKey.BANK, ledger.bank),
+        (PostingKey.INPUT_SALES_TAX, ledger.input_tax),
+        (PostingKey.SALES_TAX_WITHHELD, ledger.sales_tax_withheld),
+        (PostingKey.INCOME_TAX_WITHHELD, ledger.income_tax_withheld),
+    ):
+        if key.value not in skip:
+            session.add(PostingAccount(key=key, account_id=row.id, updated_by=admin.id))
+    session.commit()
+    return ledger
+
+
+def voucher_body(ledger: Ledger, amount: str = "100.00", **overrides: Any) -> dict[str, Any]:
+    """A balanced payment voucher: the expense debited, cash credited."""
+    return {
+        "voucher_type": "PV",
+        "description": "Office rent for October",
+        "lines": [
+            {"account_id": ledger.expense.id, "debit": amount, "description": "Rent"},
+            {"account_id": ledger.cash.id, "credit": amount},
+        ],
+        **overrides,
+    }

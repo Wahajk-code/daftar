@@ -21,6 +21,7 @@ EXPECTED_TABLES = {
     "document_events",
     "expense_allocations",
     "expenses",
+    "number_counters",
     "posting_accounts",
     "projects",
     "purchase_lines",
@@ -29,6 +30,8 @@ EXPECTED_TABLES = {
     "tax_rules",
     "users",
     "vendors",
+    "voucher_lines",
+    "vouchers",
 }
 ENUM_TYPES = (
     "user_role",
@@ -44,6 +47,7 @@ ENUM_TYPES = (
     "payment_method",
     "purchase_kind",
     "document_type",
+    "voucher_type",
 )
 
 

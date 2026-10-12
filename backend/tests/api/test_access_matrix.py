@@ -42,6 +42,7 @@ def concrete(path: str) -> str:
         "rule_id",
         "expense_id",
         "purchase_id",
+        "voucher_id",
         "attachment_id",
     ):
         out = out.replace("{" + name + "}", MISSING)

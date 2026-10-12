@@ -18,7 +18,7 @@ from app.deps import get_clock, get_mailer, get_storage
 from app.main import create_app
 from app.models.user import User
 from tests.support.clock import FakeClock
-from tests.support.database import migrate, require_test_database, reset_schema
+from tests.support.database import clear_starting_data, migrate, require_test_database, reset_schema
 from tests.support.factories import RecordingMailer, bearer, make_user
 
 hypothesis_settings.register_profile("default", deadline=None, max_examples=200)
@@ -37,6 +37,7 @@ def migrated_database(settings: Settings) -> None:
     """daftar_test, rebuilt from nothing by the migrations at the start of every run."""
     reset_schema(settings.owner_database_url)
     migrate(settings.owner_database_url)
+    clear_starting_data(settings.owner_database_url)
 
 
 @pytest.fixture(scope="session")

@@ -46,6 +46,15 @@ def reset_schema(owner_url: str) -> None:
     engine.dispose()
 
 
+def clear_starting_data(owner_url: str) -> None:
+    """Empty the chart of accounts, categories and posting accounts that migration 0005 seeds, so tests build their own.
+    The seed itself is tested on a fresh scratch database. Done as the owner; the tables are empty of references."""
+    engine = create_engine(owner_url, isolation_level="AUTOCOMMIT")
+    with engine.connect() as connection:
+        connection.execute(text("TRUNCATE posting_accounts, categories, accounts CASCADE"))
+    engine.dispose()
+
+
 def settle_constraints(session: Session) -> None:
     """Fire every deferred constraint now. Tests never commit, so a deferred trigger would otherwise never run."""
     session.execute(text("SET CONSTRAINTS ALL IMMEDIATE"))
