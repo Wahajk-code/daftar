@@ -54,9 +54,9 @@ Model: strong · Review: money and allocation, status rules
 - [x] Audit: `audit_events` table (insert and select only for the app role) and a service that writes inside the caller's transaction
 
 **Checkpoint**
-- [ ] `docker compose up -d --build`; backend healthy, frontend up, `localhost:8000/docs` and `localhost:3000` respond
-- [ ] Backend and frontend tests pass in their containers; lint and types clean
-- [ ] Migrations apply to an empty database and re-run cleanly
+- [x] `docker compose up -d --build`; backend healthy, frontend up, `localhost:8000/docs` and `localhost:3000` respond (owner's ports: 8001 and 3001, decision 72)
+- [ ] Backend and frontend tests pass in their containers; lint and types clean (backend: 162 tests pass; frontend: lint and types pass, no test runner yet, deferred to the end by the owner's call)
+- [x] Migrations apply to an empty database and re-run cleanly (proved on a scratch database by `tests/db/test_migrations.py`; the dev database is migrated once at the end, by the owner's call)
 
 ---
 
