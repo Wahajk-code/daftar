@@ -169,3 +169,10 @@ def apply_transition(
     transition = check_transition(document_type, document.status, target, ctx)
     document.status = transition.target
     return transition
+
+
+def start_posted(document: Statused) -> None:
+    """Give a reversing voucher its status. A reversal is born Posted: it mirrors a voucher that was already
+    approved and posted, so it never passes through approval. This is the only status assignment outside
+    `apply_transition`."""
+    document.status = DocumentStatus.POSTED

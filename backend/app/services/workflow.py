@@ -37,8 +37,10 @@ PAST_TENSE = {
     "post": "posted",
     "void": "voided",
 }
-# Moves a person asks for directly. Posting and voiding happen through vouchers (Pass 4).
+# Moves a person asks for directly. Expenses and purchases are posted by posting their voucher, so only vouchers offer
+# "post" and "void" themselves.
 DIRECT_ACTIONS = ("submit", "approve", "reject", "reopen")
+VOUCHER_ACTIONS = (*DIRECT_ACTIONS, "post", "void")
 
 
 class WorkflowDocument(Protocol):
@@ -65,6 +67,9 @@ class Workflow:
         comment: str | None = None,
         reason: str | None = None,
         problems: Sequence[FieldError] = (),
+        balanced: bool = True,
+        period_open: bool = True,
+        is_reversal: bool = False,
     ) -> Transition:
         """Move a locked document to `target`, or raise the error that says why not."""
         if document.version != expected_version:
@@ -77,6 +82,9 @@ class Workflow:
             comment=comment,
             reason=reason,
             is_complete=not problems,
+            is_balanced=balanced,
+            period_open=period_open,
+            is_reversal=is_reversal,
         )
         try:
             transition = apply_transition(document, document_type, target, context)
@@ -134,7 +142,8 @@ def available_actions(
         if transition.document_type is not document_type or transition.source is not status:
             continue
         action = ACTION_NAMES[(transition.source, transition.target)]
-        if action not in DIRECT_ACTIONS or actor.role not in transition.roles:
+        offered = VOUCHER_ACTIONS if document_type is DocumentType.VOUCHER else DIRECT_ACTIONS
+        if action not in offered or actor.role not in transition.roles:
             continue
         is_author = actor.id == creator_id
         if action in {"submit", "reopen"} and not is_author:

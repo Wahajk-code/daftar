@@ -24,6 +24,7 @@ def _expense_query() -> Select[Expense]:
         joinedload(Expense.creator),
         joinedload(Expense.category),
         selectinload(Expense.allocations).joinedload(ExpenseAllocation.cost_center),
+        selectinload(Expense.voucher),
     )
 
 
@@ -98,7 +99,10 @@ def list_expenses(
 
 def _purchase_query() -> Select[Purchase]:
     return select(Purchase).options(
-        joinedload(Purchase.creator), joinedload(Purchase.vendor), selectinload(Purchase.lines)
+        joinedload(Purchase.creator),
+        joinedload(Purchase.vendor),
+        selectinload(Purchase.lines),
+        selectinload(Purchase.voucher),
     )
 
 

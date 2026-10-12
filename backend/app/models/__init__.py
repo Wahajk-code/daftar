@@ -6,6 +6,7 @@ from app.models.master import Account, Category, ClosedPeriod, CostCenter, Posti
 from app.models.tax import TaxRule
 from app.models.user import User
 from app.models.vendor import Vendor
+from app.models.vouchers import NumberCounter, Voucher, VoucherLine
 
 __all__ = [
     "Account",
@@ -19,6 +20,7 @@ __all__ = [
     "DocumentEvent",
     "Expense",
     "ExpenseAllocation",
+    "NumberCounter",
     "PostingAccount",
     "Project",
     "Purchase",
@@ -27,4 +29,6 @@ __all__ = [
     "TaxRule",
     "User",
     "Vendor",
+    "Voucher",
+    "VoucherLine",
 ]

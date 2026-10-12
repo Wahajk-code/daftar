@@ -2,6 +2,7 @@
 
 from datetime import date, datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     BigInteger,
@@ -33,6 +34,9 @@ from app.models.base import Base, UtcDateTime, pg_enum
 from app.models.master import Category, CostCenter, Project
 from app.models.user import User
 from app.models.vendor import Vendor
+
+if TYPE_CHECKING:
+    from app.models.vouchers import Voucher
 
 MONEY = Numeric(14, 2)
 QUANTITY = Numeric(14, 3)
@@ -82,6 +86,13 @@ class Expense(Base):
     category: Mapped[Category] = relationship(lazy="raise")
     project: Mapped[Project | None] = relationship(lazy="raise")
     cost_center: Mapped[CostCenter | None] = relationship(lazy="raise")
+    voucher: Mapped["Voucher | None"] = relationship(
+        "Voucher",
+        primaryjoin="Expense.id == foreign(Voucher.expense_id)",
+        uselist=False,
+        viewonly=True,
+        lazy="raise",
+    )
     allocations: Mapped[list["ExpenseAllocation"]] = relationship(
         lazy="raise", order_by="ExpenseAllocation.id", cascade="all, delete-orphan", passive_deletes=False
     )
@@ -167,6 +178,13 @@ class Purchase(Base):
 
     creator: Mapped[User] = relationship(lazy="raise")
     vendor: Mapped[Vendor] = relationship(lazy="raise")
+    voucher: Mapped["Voucher | None"] = relationship(
+        "Voucher",
+        primaryjoin="Purchase.id == foreign(Voucher.purchase_id)",
+        uselist=False,
+        viewonly=True,
+        lazy="raise",
+    )
     lines: Mapped[list["PurchaseLine"]] = relationship(
         lazy="raise", order_by="PurchaseLine.line_no", cascade="all, delete-orphan", passive_deletes=False
     )

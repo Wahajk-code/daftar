@@ -1,6 +1,7 @@
 """Dependency providers for routers: settings, session, clock, the signed-in user, role guards, services."""
 
 import ipaddress
+import re
 from functools import lru_cache
 from typing import Annotated, Any
 
@@ -10,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.config import Settings, get_settings
 from app.core.clock import Clock
 from app.core.enums import Role
-from app.core.errors import FieldError, ForbiddenError, UnauthenticatedError, ValidationFailedError
+from app.core.errors import ErrorCode, FieldError, ForbiddenError, UnauthenticatedError, ValidationFailedError
 from app.core.mail import ConsoleMailer, Mailer, Outbox
 from app.core.principal import Principal
 from app.core.rate_limit import RateLimiter
@@ -29,6 +30,7 @@ from app.services.purchases import PurchaseService
 from app.services.tax_rules import TaxRuleService
 from app.services.users import UserService
 from app.services.vendors import VendorService
+from app.services.vouchers import VoucherService
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -261,6 +263,32 @@ def get_attachment_service(
 ExpenseServiceDep = Annotated[ExpenseService, Depends(get_expense_service)]
 PurchaseServiceDep = Annotated[PurchaseService, Depends(get_purchase_service)]
 AttachmentServiceDep = Annotated[AttachmentService, Depends(get_attachment_service)]
+
+
+def get_voucher_service(session: SessionDep, clock: ClockDep, settings: SettingsDep) -> VoucherService:
+    return VoucherService(session, clock, settings)
+
+
+IDEMPOTENCY_KEY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{8,100}$")
+
+
+def idempotency_key(
+    key: Annotated[
+        str | None, Header(alias="Idempotency-Key", description="A unique value for this attempt, 8 to 100 characters.")
+    ] = None,
+) -> str:
+    """The key that makes a post or a void safe to repeat. Required: without it a retry could do the work twice."""
+    if key is None or not IDEMPOTENCY_KEY_PATTERN.match(key):
+        raise ValidationFailedError(
+            "Send an Idempotency-Key header of 8 to 100 letters, digits or . _ : -",
+            code=ErrorCode.IDEMPOTENCY_KEY_REQUIRED,
+            errors=[FieldError("Idempotency-Key", "Required: 8 to 100 characters.", "required")],
+        )
+    return key
+
+
+IdempotencyKeyDep = Annotated[str, Depends(idempotency_key)]
+VoucherServiceDep = Annotated[VoucherService, Depends(get_voucher_service)]
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
 VendorServiceDep = Annotated[VendorService, Depends(get_vendor_service)]
 UserServiceDep = Annotated[UserService, Depends(get_user_service)]

@@ -48,6 +48,13 @@ class ErrorCode(StrEnum):
     PAYABLE_NEGATIVE = "PAYABLE_NEGATIVE"
     UNSUPPORTED_FILE_TYPE = "UNSUPPORTED_FILE_TYPE"
     ATTACHMENT_LIMIT = "ATTACHMENT_LIMIT"
+    # Vouchers
+    IDEMPOTENCY_KEY_REQUIRED = "IDEMPOTENCY_KEY_REQUIRED"
+    IDEMPOTENCY_KEY_REUSED = "IDEMPOTENCY_KEY_REUSED"
+    SOURCE_NOT_APPROVED = "SOURCE_NOT_APPROVED"
+    ALREADY_GENERATED = "ALREADY_GENERATED"
+    POSTING_ACCOUNT_MISSING = "POSTING_ACCOUNT_MISSING"
+    ACCOUNT_HAS_POSTINGS = "ACCOUNT_HAS_POSTINGS"
     # Server
     INTERNAL_ERROR = "INTERNAL_ERROR"
     SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE"
@@ -78,6 +85,12 @@ STATUS_BY_CODE: dict[ErrorCode, int] = {
     ErrorCode.PERIOD_CLOSED: 409,
     ErrorCode.REVERSAL_NOT_VOIDABLE: 409,
     ErrorCode.DOCUMENT_LOCKED: 409,
+    ErrorCode.IDEMPOTENCY_KEY_REUSED: 409,
+    ErrorCode.SOURCE_NOT_APPROVED: 409,
+    ErrorCode.ALREADY_GENERATED: 409,
+    ErrorCode.ACCOUNT_HAS_POSTINGS: 409,
+    ErrorCode.IDEMPOTENCY_KEY_REQUIRED: 422,
+    ErrorCode.POSTING_ACCOUNT_MISSING: 422,
     ErrorCode.ATTACHMENT_LIMIT: 409,
     ErrorCode.PAYLOAD_TOO_LARGE: 413,
     ErrorCode.ALLOCATION_MISMATCH: 422,
@@ -102,6 +115,12 @@ TITLE_BY_CODE: dict[ErrorCode, str] = {
     ErrorCode.UNAUTHENTICATED: "Sign in required",
     ErrorCode.FORBIDDEN: "Not allowed",
     ErrorCode.DOCUMENT_LOCKED: "Only a draft can be changed",
+    ErrorCode.IDEMPOTENCY_KEY_REQUIRED: "An Idempotency-Key header is required",
+    ErrorCode.IDEMPOTENCY_KEY_REUSED: "That Idempotency-Key was used for a different request",
+    ErrorCode.SOURCE_NOT_APPROVED: "Only an approved expense or purchase can be turned into a voucher",
+    ErrorCode.ALREADY_GENERATED: "A voucher was already generated from this document",
+    ErrorCode.POSTING_ACCOUNT_MISSING: "A posting account is not set",
+    ErrorCode.ACCOUNT_HAS_POSTINGS: "That account already has postings and cannot become a parent",
     ErrorCode.ALLOCATION_MISMATCH: "The allocation does not add up",
     ErrorCode.INACTIVE_REFERENCE: "That record is no longer in use",
     ErrorCode.TAX_RULE_MISSING: "No withholding rate applies",

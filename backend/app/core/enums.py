@@ -85,3 +85,16 @@ class PaymentMethod(StrEnum):
 class PurchaseKind(StrEnum):
     TAX_INVOICE = "tax_invoice"
     PURCHASE_MEMO = "purchase_memo"
+
+
+class VoucherType(StrEnum):
+    PAYMENT = "PV"
+    RECEIPT = "RV"
+    JOURNAL = "JV"
+
+
+class YearMode(StrEnum):
+    """Which year a voucher number carries: the calendar year, or the fiscal year (July to June) named by its end."""
+
+    CALENDAR = "calendar"
+    FISCAL = "fiscal"

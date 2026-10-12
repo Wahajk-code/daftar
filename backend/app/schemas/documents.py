@@ -18,6 +18,7 @@ from app.core.enums import (
 )
 from app.core.normalize import collapse_spaces
 from app.schemas.base import Money, PositiveMoney, RequestModel, ResponseModel, SignedMoney, UtcInstant, blank_to_none
+from app.schemas.vouchers import VoucherRef
 
 
 def _parse_quantity(value: object) -> Decimal:
@@ -131,6 +132,7 @@ class ExpenseRead(ResponseModel):
     cost_center_id: int | None
     allocation_method: AllocationMethod | None
     allocations: list[AllocationRead]
+    voucher: VoucherRef | None = None
     created_by: int
     created_by_name: str
     version: int
@@ -240,6 +242,7 @@ class PurchaseRead(ResponseModel):
     income_tax_withheld: Money
     payable: Money
     lines: list[PurchaseLineRead]
+    voucher: VoucherRef | None = None
     created_by: int
     created_by_name: str
     version: int

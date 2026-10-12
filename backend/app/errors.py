@@ -183,6 +183,30 @@ CONSTRAINT_ERRORS: dict[str, tuple[ErrorCode, str, str | None]] = {
         "A tax invoice needs its number.",
         "invoice_number",
     ),
+    "voucher_balanced": (
+        ErrorCode.VOUCHER_UNBALANCED,
+        "Total debits must equal total credits.",
+        "lines",
+    ),
+    "voucher_line_account_postable": (
+        ErrorCode.ACCOUNT_NOT_POSTABLE,
+        "A parent account cannot be posted to. Choose one of its sub-accounts.",
+        "lines",
+    ),
+    "account_has_postings": (
+        ErrorCode.ACCOUNT_HAS_POSTINGS,
+        "That account already has postings, so it cannot become a parent.",
+        None,
+    ),
+    "uq_vouchers_expense_id": (ErrorCode.ALREADY_GENERATED, "A voucher was already generated from this expense.", None),
+    "uq_vouchers_purchase_id": (
+        ErrorCode.ALREADY_GENERATED,
+        "A voucher was already generated from this purchase.",
+        None,
+    ),
+    "uq_vouchers_post_key": (ErrorCode.IDEMPOTENCY_KEY_REUSED, "That Idempotency-Key was used for another post.", None),
+    "uq_vouchers_void_key": (ErrorCode.IDEMPOTENCY_KEY_REUSED, "That Idempotency-Key was used for another void.", None),
+    "uq_vouchers_reversal_of_id": (ErrorCode.CONFLICT, "That voucher already has a reversal.", None),
     "ck_vendors_registered_has_ntn_and_strn": (
         ErrorCode.VALIDATION_ERROR,
         "A sales-tax-registered vendor needs both an NTN and an STRN.",

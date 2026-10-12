@@ -15,6 +15,7 @@ from app.deps import (
     PrincipalDep,
     PurchaseServiceDep,
     SettingsDep,
+    VoucherServiceDep,
     roles,
 )
 from app.schemas.documents import (
@@ -36,6 +37,7 @@ from app.schemas.documents import (
     TransitionRequest,
 )
 from app.schemas.page import Page, PageParamsDep
+from app.schemas.vouchers import PurchaseVoucherRequest, VoucherRead
 from app.services.expenses import ExpenseService
 from app.services.purchases import PurchaseService
 
@@ -191,6 +193,20 @@ def upload_expense_attachment(
 ) -> AttachmentRead:
     data = file.file.read(settings.max_upload_bytes + 1)  # one byte over the cap is enough to know it is too big
     return AttachmentRead.model_validate(service.upload(actor, "expense", expense_id, file.filename or "receipt", data))
+
+
+@expenses.post(
+    "/{expense_id}/generate-voucher",
+    operation_id="generate_voucher_from_expense",
+    status_code=status.HTTP_201_CREATED,
+    **PURCHASE_AUTHORS,
+)
+def generate_voucher_from_expense(expense_id: int, actor: PrincipalDep, service: VoucherServiceDep) -> VoucherRead:
+    """A Payment voucher in Draft: cash for a cash expense, the bank otherwise, tax on its own line. Once only."""
+    voucher = service.generate_from_expense(actor, expense_id)
+    read = VoucherRead.model_validate(voucher)
+    read.actions = service.actions(actor, voucher)
+    return read
 
 
 # Purchases -----------------------------------------------------------------------------------------------------------
@@ -349,6 +365,23 @@ def upload_purchase_attachment(
     return AttachmentRead.model_validate(
         service.upload(actor, "purchase", purchase_id, file.filename or "receipt", data)
     )
+
+
+@purchases.post(
+    "/{purchase_id}/generate-voucher",
+    operation_id="generate_voucher_from_purchase",
+    status_code=status.HTTP_201_CREATED,
+    **PURCHASE_AUTHORS,
+)
+def generate_voucher_from_purchase(
+    purchase_id: int, body: PurchaseVoucherRequest, actor: PrincipalDep, service: VoucherServiceDep
+) -> VoucherRead:
+    """A Payment voucher in Draft: the purchase and its sales tax debited, the vendor paid and each withholding credited
+    on its own line. Once only. The category and the payment method are chosen here."""
+    voucher = service.generate_from_purchase(actor, purchase_id, body.category_id, body.payment_method)
+    read = VoucherRead.model_validate(voucher)
+    read.actions = service.actions(actor, voucher)
+    return read
 
 
 # Attachments ---------------------------------------------------------------------------------------------------------
