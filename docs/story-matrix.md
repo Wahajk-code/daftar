@@ -21,20 +21,20 @@ Find the tests for a story with: `Select-String -Path backend\tests\*.py -Patter
 | C3 | Receipt attachment, validated, private, stripped | [x] | [ ] | [ ] |
 | C4 | Submit an expense for approval | [x] | [ ] | [ ] |
 | C5 | Approve or reject with a comment | [x] | [ ] | [ ] |
-| C6 | Post an approved expense (creates a posted voucher) | [ ] | [ ] | n/a |
+| C6 | Post an approved expense (creates a posted voucher) | [x] | [ ] | n/a |
 | C7 | Rejected expense returns to Draft for its author | [x] | [ ] | n/a |
 | D1 | Purchase lines; totals recomputed on the server | [x] | [ ] | n/a |
 | D2 | Registered vendor: invoice number, sales tax, both withholdings | [x] | [ ] | n/a |
 | D3 | Unregistered vendor: purchase memo, visible flag, gross-value withholding | [x] | [ ] | n/a |
 | D4 | Purchases use the same lifecycle as expenses | [x] | [ ] | n/a |
-| D5 | Purchase and its paying voucher link both ways | [ ] | [ ] | n/a |
+| D5 | Purchase and its paying voucher link both ways | [x] | [ ] | n/a |
 | D6 | Attach documents to a purchase | [x] | [ ] | n/a |
-| E1 | Voucher with debit and credit lines, one side per line | [ ] | [ ] | n/a |
-| E2 | Cannot save unbalanced; running difference; one-click balancing line | [ ] | [ ] | n/a |
-| E3 | Gapless numbering per type and year, assigned at Post | [ ] | [ ] | [ ] |
-| E4 | Generate a voucher from an approved expense or purchase | [ ] | [ ] | n/a |
-| E5 | Post is idempotent; posted lines are immutable | [ ] | [ ] | n/a |
-| E6 | Void with reason creates one linked reversal | [ ] | [ ] | n/a |
+| E1 | Voucher with debit and credit lines, one side per line | [x] | [ ] | n/a |
+| E2 | Cannot save unbalanced; running difference; one-click balancing line | [x] | [ ] | n/a |
+| E3 | Gapless numbering per type and year, assigned at Post | [x] | [ ] | [ ] |
+| E4 | Generate a voucher from an approved expense or purchase | [x] | [ ] | n/a |
+| E5 | Post is idempotent; posted lines are immutable | [x] | [ ] | n/a |
+| E6 | Void with reason creates one linked reversal | [x] | [ ] | n/a |
 | F1 | One transition table; every valid and invalid pair tested | [x] | n/a | n/a |
 | F2 | Approval history timeline, one component for all types | [ ] | [ ] | [ ] |
 | F3 | Audit row for every create, update, status change | [ ] | n/a | n/a |

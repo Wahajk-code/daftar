@@ -66,6 +66,10 @@ Each row represents a significant implementation prompt. Model and effort are re
 | B12 | 3    | Not stated     | Proceed to Pass 3 (documents). | Start the next pass after reviewing Pass 2. | Three packages approved (cloudinary, pillow, python-multipart); expenses, purchases, attachments and the shared workflow built. |
 | B13 | 3    | Not stated     | Give a progress report on the work so far and list any ambiguities. | Mid-pass oversight. | Report given in chat; seven open points listed, including the Cloudinary live check. |
 | B14 | 3    | Not stated     | Proceed (the session had restarted mid-run). | Resume after an interruption. | Working tree verified intact; the interrupted backend gate re-run. |
+| B15 | 4    | Not stated     | Proceed to Pass 4 (the ledger). | Start the next pass after reviewing Pass 3. | Plan approved: purchase category and payment method chosen when the voucher is generated; vouchers, numbering, post, void and generation built. |
+| B16 | 4    | Not stated     | Docker Desktop was restarted; carry on with the tasks. | Resume after the container engine failed mid-pass. | Data volume intact; the Pass 4 test suite resumed. |
+| B17 | 4    | Not stated     | Give a progress report on the work so far and list any ambiguities. | Mid-pass oversight. | Report given in chat; four judgement calls listed (void leaves the source posted, unverified chart, July fiscal start, dev database migration). |
+| B18 | 4    | Not stated     | Proceed. | Continue the pass after the progress report. | Ledger rules, generation, parallel and fresh-install tests written; the balance trigger was made non-deferred once and 30 tests failed. |
 
 ---
 

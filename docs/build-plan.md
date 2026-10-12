@@ -95,15 +95,15 @@ Model: strong for the workflow engine and purchases
 ## Pass 4: Ledger
 Model: strong · Plan mode · Review: everything in this pass
 
-- [ ] Voucher and line tables; each line has exactly one side; optional cost centre and project per line
-- [ ] Deferred constraint trigger for debit equals credit; a balance-check endpoint returns the totals, the difference and the offsetting line. REVIEW: disable the deferral once and show the test fail
-- [ ] Counter-row numbering at Post; `Idempotency-Key` with unique `post_key`; period lock; close and reopen periods, audited; after a lost race re-read with `populate_existing`
-- [ ] Parallel tests: N simultaneous posts give N consecutive numbers; a replayed key gives one voucher. Repeat eight times
-- [ ] Void with a reason and its own `void_key`; reversing voucher in the same transaction; one reversal per voucher; a reversal cannot be voided; parallel test for void
-- [ ] Generation from an approved expense or purchase through the category-to-account mapping; separate tax lines; generating twice blocked; posting posts the source; a fresh install can generate a voucher
-- [ ] Lines of submitted and approved vouchers frozen
-- [ ] Explain, in the pass report, why the trigger is deferred and why a sequence cannot number vouchers
-- [ ] **Checkpoint:** stories E1 to E6, D5, C6 have named tests; the parallel tests pass eight times in a row
+- [x] Voucher and line tables; each line has exactly one side; optional cost centre and project per line
+- [x] Deferred constraint trigger for debit equals credit; a balance-check endpoint returns the totals, the difference and the offsetting line. REVIEW: disable the deferral once and show the test fail
+- [x] Counter-row numbering at Post; `Idempotency-Key` with unique `post_key`; period lock; close and reopen periods, audited; after a lost race re-read with `populate_existing`
+- [x] Parallel tests: N simultaneous posts give N consecutive numbers; a replayed key gives one voucher. Repeat eight times
+- [x] Void with a reason and its own `void_key`; reversing voucher in the same transaction; one reversal per voucher; a reversal cannot be voided; parallel test for void
+- [x] Generation from an approved expense or purchase through the category-to-account mapping; separate tax lines; generating twice blocked; posting posts the source; a fresh install can generate a voucher
+- [x] Lines of submitted and approved vouchers frozen
+- [x] Explain, in the pass report, why the trigger is deferred and why a sequence cannot number vouchers
+- [x] **Checkpoint:** stories E1 to E6, D5, C6 have named tests; the parallel tests pass eight times in a row
 
 ---
 

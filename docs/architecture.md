@@ -139,7 +139,8 @@ One transition table drives expenses, purchases and vouchers. Each row names the
 |---|---|---|
 | Pair not in the table | 409 | `INVALID_TRANSITION` |
 | Role not allowed, or approving your own document | 403 | `FORBIDDEN`, `SELF_APPROVAL_FORBIDDEN` |
-| A guard failed (incomplete, unbalanced, comment missing, period closed) | 422 | the guard's name |
+| A guard failed (incomplete, unbalanced, comment missing) | 422 | the guard's name |
+| The accounting period is closed | 409 | `PERIOD_CLOSED` |
 | Stale `version` | 409 | `VERSION_CONFLICT` |
 | Another user's record, seen by Staff | 404 | `NOT_FOUND` |
 

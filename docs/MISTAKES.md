@@ -50,4 +50,40 @@ Caught:     By me, when `docker compose ps` was read after a session restart. Th
 Why wrong:  I treated "the tests pass" as "the stack works" and did not look at the stack. The Pass 1 checkpoint says the stack must come up healthy; I did not repeat that check at the end of Pass 2.
 Fix:        `docker compose up -d --build` recreated it; it is healthy and serves 70 paths. From now on each pass report starts from a rebuilt stack and a `docker compose ps` check.
 
+### M8: A query after an assignment stepped the version early (pass 4)
+What:       `VoucherService._move` assigned `updated_at` on the voucher and then looked up whether the period was closed. The lookup auto-flushed, which wrote the row and raised its version; the workflow's own move then wrote it again with the old version in the `If-Match` check and answered `VERSION_CONFLICT` to a request that was correct.
+Caught:     `tests/api/test_vouchers.py`, the first submit in the first run.
+Why wrong:  I had already written down this hazard for the Pass 3 services (assign after every query, before the first flush) and did not apply it to the new service.
+Fix:        All lookups now come first and `updated_at` is assigned immediately before `Workflow.move`. The rule is in the service's docstring.
+
+### M9: Self-referencing relationships refreshed the voucher being voided (pass 4)
+What:       The first voucher model had `reversed_by` and `reversal_of` relationships on the same table. Loading the reversal with `populate_existing` refreshed the original too and cleared the attributes the response needed, so building the void response raised on a `lazy="raise"` attribute.
+Caught:     The void test, as a 500.
+Why wrong:  `populate_existing` refreshes every object the query touches, and a relationship to the same table reaches the original. I chose relationships because they were the usual shape, not because the response needed objects.
+Fix:        Both became computed columns (`reversed_by_id`, `reversal_of_number`) with a `get_reversal_of` query, so loading one voucher never touches another.
+
+### M10: A no-delete trigger on voucher lines blocked the edit I had designed (pass 4)
+What:       Migration 0005 put `prevent_delete()` on `voucher_lines` along with the other tables, while the service replaces a draft's lines by deleting and re-inserting them (decision 85).
+Caught:     The edit-lines test, as an error from my own trigger.
+Why wrong:  I copied the list of no-delete tables from the plan without checking it against decision 85, which I had written two passes earlier.
+Fix:        The trigger was removed from `voucher_lines`; the freeze trigger already refuses any change once the voucher leaves Draft, and decision 98 records it. The migration had never been run outside test databases.
+
+### M11: Checked the new work in pieces and let the seed break old tests (pass 4)
+What:       Migration 0005 seeds the chart of accounts. Existing tests that create accounts 5100 and 5600 collided with it, and so did the Pass 3 parallel tests, which build their data in a scratch database that keeps the seed.
+Caught:     The fast tests collided at once and I emptied the seed for them. The parallel tests collided only in the full-suite run at the end, after several targeted runs had passed.
+Why wrong:  I fixed the failure I saw and did not search for every place that creates the same rows. Targeted runs gave false comfort; only the full run covers the old tests.
+Fix:        `clear_starting_data` for the fast database, and `create_lookups` now reuses an account that already exists. After any migration that seeds data, the full suite runs before anything is called done, as the gate order already said.
+
+### M12: A PATCH dropped unset fields and the service assumed they were there (pass 4)
+What:       The voucher update used `model_dump(exclude_unset=True)`, so a line sent with only `debit` had no `credit` key, and the service read `line["credit"]`.
+Caught:     The line-edit API test, as a 500 from a `KeyError`.
+Why wrong:  `exclude_unset` also drops defaults, which the line schema relies on. I did not trace what a partial line looks like after the dump.
+Fix:        The service reads `line.get("debit", ZERO)` and `line.get("credit", ZERO)`; a test sends one-sided lines.
+
+### M13: Tests written against helpers and rules I had not checked (pass 4)
+What:       Three new tests assumed the wrong thing: an indirect-expense helper that defaults to a bank payment (the test expected cash), a test that deleted a posting account (the database forbids deleting them), and a first draft of the ledger rules test that matched trigger constraint names against messages that carry only text.
+Caught:     Each failed on its first run, with the real cause visible in the output.
+Why wrong:  I wrote the expectations from memory instead of opening the helper or the migration.
+Fix:        The tests now state their payment method, build a ledger without the key (`create_ledger(..., skip=...)`), and match the messages the triggers raise. No code under test changed.
+
 <!-- entries are added as they happen -->
