@@ -12,6 +12,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
+from app.core.enums import Role
 from app.core.errors import (
     ConflictError,
     ErrorCode,
@@ -100,8 +101,16 @@ def test_version_reports_the_git_sha(client: TestClient) -> None:
     assert body["git_sha"]
 
 
-def test_me_reports_the_display_zone(client: TestClient) -> None:
-    assert client.get("/api/v1/me").json() == {"display_timezone": "Asia/Karachi"}
+def test_me_reports_the_user_and_the_display_zone(client: TestClient, make: Any, auth: Any) -> None:
+    user = make(Role.STAFF)
+    body = client.get("/api/v1/me", headers=auth(user)).json()
+    assert body["display_timezone"] == "Asia/Karachi"
+    assert (body["id"], body["email"], body["role"]) == (user.id, user.email, "staff")
+    assert "password_hash" not in body
+
+
+def test_me_needs_a_sign_in(client: TestClient) -> None:
+    assert_problem(client.get("/api/v1/me"), 401, ErrorCode.UNAUTHENTICATED)
 
 
 # Errors --------------------------------------------------------------------------------------------------------------

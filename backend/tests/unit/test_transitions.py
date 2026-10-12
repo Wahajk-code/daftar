@@ -60,7 +60,7 @@ class Document:
 
 
 @pytest.mark.parametrize("document_type", list(T))
-def test_matrix_over_every_pair_and_role(document_type: DocumentType) -> None:
+def test_f1_matrix_over_every_pair_and_role(document_type: DocumentType) -> None:
     expected = expected_moves(document_type)
     for source, target in itertools.product(S, S):
         for role in ALL_ROLES:
@@ -79,13 +79,13 @@ def test_matrix_over_every_pair_and_role(document_type: DocumentType) -> None:
                 assert check_transition(document_type, source, target, ctx).target is target, where
 
 
-def test_the_table_has_exactly_the_expected_rows() -> None:
+def test_f1_the_table_has_exactly_the_expected_rows() -> None:
     for document_type in T:
         in_table = {(t.source, t.target) for t in TRANSITIONS if t.document_type is document_type}
         assert in_table == set(expected_moves(document_type))
 
 
-def test_the_table_has_no_duplicate_rows() -> None:
+def test_f1_the_table_has_no_duplicate_rows() -> None:
     keys = [(t.document_type, t.source, t.target) for t in TRANSITIONS]
     assert len(keys) == len(set(keys))
 
@@ -113,7 +113,7 @@ def guard_error(
 
 
 @pytest.mark.parametrize("document_type", list(T))
-def test_nobody_approves_their_own_document(document_type: DocumentType) -> None:
+def test_a4_nobody_approves_their_own_document(document_type: DocumentType) -> None:
     for role in (Role.ADMIN, Role.APPROVER):
         error = guard_error(document_type, S.SUBMITTED, S.APPROVED, role, creator_id=2)
         assert error.code is ErrorCode.SELF_APPROVAL_FORBIDDEN

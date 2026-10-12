@@ -9,7 +9,31 @@ from app.config import Settings
 from app.models import Base
 from tests.support.database import migrate, scratch_database
 
-EXPECTED_TABLES = {"users", "audit_events", "alembic_version"}
+EXPECTED_TABLES = {
+    "alembic_version",
+    "accounts",
+    "audit_events",
+    "auth_tokens",
+    "categories",
+    "closed_periods",
+    "cost_centers",
+    "posting_accounts",
+    "projects",
+    "refresh_tokens",
+    "tax_rules",
+    "users",
+    "vendors",
+}
+ENUM_TYPES = (
+    "user_role",
+    "document_status",
+    "auth_purpose",
+    "account_type",
+    "project_kind",
+    "tax_type",
+    "tax_category",
+    "posting_key",
+)
 
 
 def table_names(url: str) -> set[str]:
@@ -35,7 +59,7 @@ def test_migrations_reverse_to_nothing_and_apply_again(settings: Settings) -> No
         engine = create_engine(db.owner_url)
         with engine.connect() as connection:
             types = connection.execute(
-                text("SELECT typname FROM pg_type WHERE typname IN ('user_role', 'document_status')")
+                text("SELECT typname FROM pg_type WHERE typname = ANY(:names)"), {"names": list(ENUM_TYPES)}
             ).all()
         engine.dispose()
         assert table_names(db.owner_url) == {"alembic_version"}

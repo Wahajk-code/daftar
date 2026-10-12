@@ -1,4 +1,4 @@
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from datetime import UTC, datetime
 from typing import Any
 
@@ -10,11 +10,15 @@ from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
 from app.config import Settings, get_settings
+from app.core.enums import Role
+from app.core.rate_limit import RateLimiter, build_policies
 from app.db import build_engine, get_session
-from app.deps import get_clock
+from app.deps import get_clock, get_mailer
 from app.main import create_app
+from app.models.user import User
 from tests.support.clock import FakeClock
 from tests.support.database import migrate, require_test_database, reset_schema
+from tests.support.factories import RecordingMailer, bearer, make_user
 
 hypothesis_settings.register_profile("default", deadline=None, max_examples=200)
 hypothesis_settings.load_profile("default")
@@ -62,11 +66,49 @@ def clock() -> FakeClock:
 
 
 @pytest.fixture
-def app(db_session: Session, clock: FakeClock) -> FastAPI:
+def mailer() -> RecordingMailer:
+    return RecordingMailer()
+
+
+@pytest.fixture
+def app(db_session: Session, clock: FakeClock, mailer: RecordingMailer, settings: Settings) -> FastAPI:
     application = create_app()
-    application.dependency_overrides[get_session] = lambda: db_session
+
+    def request_session() -> Iterator[Session]:
+        """Behave like production: a request that fails leaves nothing behind. (Production closes its session, which
+        rolls back; the test session outlives the request, so the rollback is explicit.)"""
+        try:
+            yield db_session
+        except Exception:
+            db_session.rollback()
+            raise
+
+    application.dependency_overrides[get_session] = request_session
     application.dependency_overrides[get_clock] = lambda: clock
+    application.dependency_overrides[get_mailer] = lambda: mailer
+    # A limiter of its own per test, on the test's clock, so counters never leak between tests.
+    application.state.rate_limiter = RateLimiter(
+        clock, build_policies(settings.rate_limit_overrides), max_keys=settings.rate_limit_max_keys
+    )
     return application
+
+
+@pytest.fixture
+def make(db_session: Session, clock: FakeClock) -> Callable[..., User]:
+    """Create a user: make(Role.ADMIN), make(Role.STAFF, email="x@daftar.test")."""
+
+    def build(role: Role = Role.STAFF, **kwargs: Any) -> User:
+        user = make_user(db_session, role, now=clock.now(), **kwargs)
+        db_session.commit()  # durable for the test, so a failed request's rollback cannot take it away
+        return user
+
+    return build
+
+
+@pytest.fixture
+def auth(settings: Settings, clock: FakeClock) -> Callable[[User], dict[str, str]]:
+    """Headers for a signed-in user: client.get(url, headers=auth(user))."""
+    return lambda user: bearer(user, settings, clock.now())
 
 
 @pytest.fixture
