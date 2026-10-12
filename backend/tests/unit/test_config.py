@@ -8,10 +8,17 @@ from app.main import create_app
 
 STRONG_KEY = "f3a9c1d27b8e4a60915d2c7e8b3f4a1d6e0c95b7a2d8f13e"
 URL = "postgresql+psycopg://u:p@localhost:5432/db"
+CLOUDINARY = "cloudinary://key:secret@demo-cloud"
 
 
 def make(**overrides: Any) -> Settings:
-    values: dict[str, Any] = {"secret_key": STRONG_KEY, "database_url": URL, "environment": "production"}
+    values: dict[str, Any] = {
+        "secret_key": STRONG_KEY,
+        "database_url": URL,
+        "environment": "production",
+        "storage_backend": "cloudinary",
+        "cloudinary_url": CLOUDINARY,
+    }
     return Settings(**{**values, **overrides})
 
 
@@ -45,6 +52,8 @@ def test_the_process_refuses_to_start_with_an_unsafe_production_environment(monk
     monkeypatch.setenv("DEBUG", "true")
     monkeypatch.setenv("SECRET_KEY", STRONG_KEY)
     monkeypatch.setenv("DATABASE_URL", URL)
+    monkeypatch.setenv("STORAGE_BACKEND", "cloudinary")
+    monkeypatch.setenv("CLOUDINARY_URL", CLOUDINARY)
     with pytest.raises(ValidationError, match="DEBUG"):
         Settings()
     monkeypatch.setenv("DEBUG", "false")

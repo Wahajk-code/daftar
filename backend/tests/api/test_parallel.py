@@ -11,8 +11,9 @@ import pytest
 
 from app.config import Settings
 from app.core.enums import Role
+from tests.support.documents import create_lookups
 from tests.support.factories import TEST_PASSWORD
-from tests.support.parallel import parallel_app
+from tests.support.parallel import Parallel, parallel_app
 
 pytestmark = pytest.mark.concurrency
 
@@ -156,3 +157,93 @@ def test_b4_parallel_updates_with_the_same_version_have_one_winner(settings: Set
         responses = world.run([rename(f"Name {n}") for n in range(6)])
         assert statuses(responses) == {200: 1, 409: 5}
         assert world.scalar("SELECT version FROM cost_centers WHERE id = :i", i=created["id"]) == 2
+
+
+# Documents -----------------------------------------------------------------------------------------------------------
+
+
+def submitted_expense(world: Parallel, author: Any) -> dict[str, Any]:
+    """Create and submit an expense in the scratch database, returning it as the API shows it."""
+    from tests.support.documents import direct_expense
+
+    headers = world.headers(author)
+    with world.factory() as session:
+        lookups = world.lookups or create_lookups(session, world.make(Role.ADMIN))
+    world.lookups = lookups
+    created = world.run([post("/api/v1/expenses", direct_expense(lookups), headers)])[0].json()
+    submitted = world.run(
+        [post(f"/api/v1/expenses/{created['id']}/submit", None, {**headers, "If-Match": str(created["version"])})]
+    )[0]
+    assert submitted.status_code == 200, submitted.text
+    result: dict[str, Any] = submitted.json()
+    return result
+
+
+def decide(world: Parallel, approver: Any, expense: dict[str, Any], action: str, comment: str | None = None) -> Call:
+    headers = {**world.headers(approver), "If-Match": str(expense["version"])}
+    return post(f"/api/v1/expenses/{expense['id']}/{action}", {"comment": comment} if comment else None, headers)
+
+
+def test_c5_two_simultaneous_approvals_give_one_winner_and_one_409(settings: Settings) -> None:
+    with parallel_app(settings) as world:
+        author = world.make(Role.STAFF)
+        for _ in range(ROUNDS):
+            expense = submitted_expense(world, author)
+            first, second = world.make(Role.APPROVER), world.make(Role.APPROVER)
+            responses = world.run([decide(world, first, expense, "approve"), decide(world, second, expense, "approve")])
+            assert statuses(responses) == {200: 1, 409: 1}
+            assert {r.json()["code"] for r in responses if r.status_code == 409} <= {
+                "VERSION_CONFLICT",
+                "INVALID_TRANSITION",
+            }
+            assert world.scalar("SELECT status FROM expenses WHERE id = :i", i=expense["id"]) == "approved"
+            # One decision, one history row and one audit row for it.
+            assert (
+                world.scalar(
+                    "SELECT count(*) FROM document_events WHERE document_id = :i AND action = 'approved'",
+                    i=expense["id"],
+                )
+                == 1
+            )
+
+
+def test_c5_an_approval_and_a_rejection_at_the_same_moment_cannot_both_happen(settings: Settings) -> None:
+    with parallel_app(settings) as world:
+        author = world.make(Role.STAFF)
+        for _ in range(ROUNDS):
+            expense = submitted_expense(world, author)
+            approver, rejecter = world.make(Role.APPROVER), world.make(Role.APPROVER)
+            responses = world.run(
+                [
+                    decide(world, approver, expense, "approve"),
+                    decide(world, rejecter, expense, "reject", "Not acceptable"),
+                ]
+            )
+            assert statuses(responses) == {200: 1, 409: 1}
+            decided = world.scalar(
+                "SELECT count(*) FROM document_events WHERE document_id = :i AND action IN ('approved', 'rejected')",
+                i=expense["id"],
+            )
+            assert decided == 1
+
+
+def test_c4_a_double_click_on_submit_submits_once(settings: Settings) -> None:
+    from tests.support.documents import direct_expense
+
+    with parallel_app(settings) as world:
+        author = world.make(Role.STAFF)
+        headers = world.headers(author)
+        with world.factory() as session:
+            lookups = create_lookups(session, world.make(Role.ADMIN))
+        created = world.run([post("/api/v1/expenses", direct_expense(lookups), headers)])[0].json()
+        submit = post(
+            f"/api/v1/expenses/{created['id']}/submit", None, {**headers, "If-Match": str(created["version"])}
+        )
+        responses = world.run([submit] * 5)
+        assert statuses(responses) == {200: 1, 409: 4}
+        assert (
+            world.scalar(
+                "SELECT count(*) FROM document_events WHERE document_id = :i AND action = 'submitted'", i=created["id"]
+            )
+            == 1
+        )

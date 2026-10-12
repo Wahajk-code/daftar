@@ -12,13 +12,19 @@ from tests.support.database import migrate, scratch_database
 EXPECTED_TABLES = {
     "alembic_version",
     "accounts",
+    "attachments",
     "audit_events",
     "auth_tokens",
     "categories",
     "closed_periods",
     "cost_centers",
+    "document_events",
+    "expense_allocations",
+    "expenses",
     "posting_accounts",
     "projects",
+    "purchase_lines",
+    "purchases",
     "refresh_tokens",
     "tax_rules",
     "users",
@@ -33,6 +39,11 @@ ENUM_TYPES = (
     "tax_type",
     "tax_category",
     "posting_key",
+    "expense_type",
+    "allocation_method",
+    "payment_method",
+    "purchase_kind",
+    "document_type",
 )
 
 

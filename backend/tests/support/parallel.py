@@ -24,6 +24,7 @@ from app.deps import get_mailer
 from app.main import create_app
 from app.models.user import User
 from tests.support.database import scratch_database
+from tests.support.documents import Lookups
 from tests.support.factories import RecordingMailer, make_user
 
 
@@ -34,6 +35,7 @@ class Parallel:
     factory: sessionmaker[Session]
     mailer: RecordingMailer
     settings: Settings
+    lookups: Lookups | None = None
 
     def make(self, role: Role = Role.STAFF, **kwargs: Any) -> User:
         with self.factory() as session:

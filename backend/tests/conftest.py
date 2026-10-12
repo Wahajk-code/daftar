@@ -12,8 +12,9 @@ from sqlalchemy.orm import Session
 from app.config import Settings, get_settings
 from app.core.enums import Role
 from app.core.rate_limit import RateLimiter, build_policies
+from app.core.storage import MemoryStorage
 from app.db import build_engine, get_session
-from app.deps import get_clock, get_mailer
+from app.deps import get_clock, get_mailer, get_storage
 from app.main import create_app
 from app.models.user import User
 from tests.support.clock import FakeClock
@@ -71,7 +72,15 @@ def mailer() -> RecordingMailer:
 
 
 @pytest.fixture
-def app(db_session: Session, clock: FakeClock, mailer: RecordingMailer, settings: Settings) -> FastAPI:
+def storage() -> MemoryStorage:
+    """Where this test's attachments go; each test starts with an empty store."""
+    return MemoryStorage()
+
+
+@pytest.fixture
+def app(
+    db_session: Session, clock: FakeClock, mailer: RecordingMailer, settings: Settings, storage: MemoryStorage
+) -> FastAPI:
     application = create_app()
 
     def request_session() -> Iterator[Session]:
@@ -86,6 +95,7 @@ def app(db_session: Session, clock: FakeClock, mailer: RecordingMailer, settings
     application.dependency_overrides[get_session] = request_session
     application.dependency_overrides[get_clock] = lambda: clock
     application.dependency_overrides[get_mailer] = lambda: mailer
+    application.dependency_overrides[get_storage] = lambda: storage
     # A limiter of its own per test, on the test's clock, so counters never leak between tests.
     application.state.rate_limiter = RateLimiter(
         clock, build_policies(settings.rate_limit_overrides), max_keys=settings.rate_limit_max_keys
