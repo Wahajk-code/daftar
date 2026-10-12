@@ -63,19 +63,19 @@ Model: strong · Review: money and allocation, status rules
 ## Pass 2: Access and master data
 Model: strong for auth, cheap for the rest
 
-- [ ] Login, refresh, logout: argon2id; access token 15 minutes; rotating refresh token stored hashed; reuse revokes all of that user's refresh tokens
-- [ ] Generic login error with identical timing for an unknown email
-- [ ] Rate limiter in `core/rate_limit.py` per `architecture.md` section 9a: sliding window in memory, policies as data, `429` with `Retry-After`; an atomic count-before-check that is refunded on success; keys normalised exactly like the account lookup; bounded memory that drops the entries with the fewest hits first; applied to login, forgot password, reset confirm, invite accept, Admin-triggered resets and resends, and as a per-user safety net on authenticated routes
-- [ ] Role dependency on routes plus ownership checks in services; the access-matrix test (every endpoint by every role, marked `slow`) grows with each endpoint
-- [ ] Users: an Admin invites by email with one role; email is unique; invite tokens are hashed, single use, expire in 7 days; the invitee sets name and password; an Admin can resend or revoke a pending invite
-- [ ] Password reset, self-service and Admin-triggered: both send the same single-use 30-minute token; the reply never reveals whether an email exists; an Admin never sees or sets a password; using a link, changing a role or deactivating a user revokes that user's refresh tokens; email goes to the console until Pass 5
-- [ ] Role rules: only Admins invite, change roles, deactivate or trigger resets; a user cannot change their own role or deactivate themselves; the last active Admin cannot be demoted or deactivated; roles are read from the database on every request; users deactivate, never delete; all of it audited
-- [ ] Vendors first and carefully: NTN and STRN required when registered (database `CHECK`), a separate filer flag, bank account encrypted and masked, a bank change needs the password again, notifies the owner and is audited
-- [ ] Then accounts (tree, parents not postable), categories, cost centres, projects and products (one table, a `kind` column), periods, posting accounts. Deactivate, never delete (trigger); inactive records still render on old documents
-- [ ] Lists use `limit` and `offset` with a total count, clamp page size to 100, whitelist sort fields; unknown request fields are rejected
-- [ ] Tax rules per `domain-rules.md` section 5: exclusion constraint, lookup by document date preferring a specific category over `any`, seeded rates with cited sources
-- [ ] Rate-limit tests with the clock fixture: each policy returns 429 at its limit with `Retry-After`; the window slides; unknown emails are counted like real ones and the reply is identical; a burst of parallel logins cannot exceed the limit; spelling variants of an email share one counter; a client-address header without the BFF secret is ignored; filling the table with junk keys does not drop a counter that is near its limit; failures from another IP do not block the user's own IP
-- [ ] **Checkpoint:** stories A1 to A4, B1 to B5, I1, I4, I7 and I8 have named tests; the access matrix and the rate-limit tests pass
+- [x] Login, refresh, logout: argon2id; access token 15 minutes; rotating refresh token stored hashed; reuse revokes all of that user's refresh tokens
+- [x] Generic login error with identical timing for an unknown email
+- [x] Rate limiter in `core/rate_limit.py` per `architecture.md` section 9a: sliding window in memory, policies as data, `429` with `Retry-After`; an atomic count-before-check that is refunded on success; keys normalised exactly like the account lookup; bounded memory that drops the entries with the fewest hits first; applied to login, forgot password, reset confirm, invite accept, Admin-triggered resets and resends, and as a per-user safety net on authenticated routes
+- [x] Role dependency on routes plus ownership checks in services; the access-matrix test (every endpoint by every role, marked `slow`) grows with each endpoint
+- [x] Users: an Admin invites by email with one role; email is unique; invite tokens are hashed, single use, expire in 7 days; the invitee sets name and password; an Admin can resend or revoke a pending invite
+- [x] Password reset, self-service and Admin-triggered: both send the same single-use 30-minute token; the reply never reveals whether an email exists; an Admin never sees or sets a password; using a link, changing a role or deactivating a user revokes that user's refresh tokens; email goes to the console until Pass 5
+- [x] Role rules: only Admins invite, change roles, deactivate or trigger resets; a user cannot change their own role or deactivate themselves; the last active Admin cannot be demoted or deactivated; roles are read from the database on every request; users deactivate, never delete; all of it audited
+- [x] Vendors first and carefully: NTN and STRN required when registered (database `CHECK`), a separate filer flag, bank account encrypted and masked, a bank change needs the password again, notifies the owner and is audited
+- [x] Then accounts (tree, parents not postable), categories, cost centres, projects and products (one table, a `kind` column), periods, posting accounts. Deactivate, never delete (trigger); inactive records still render on old documents
+- [x] Lists use `limit` and `offset` with a total count, clamp page size to 100, whitelist sort fields; unknown request fields are rejected
+- [x] Tax rules per `domain-rules.md` section 5: exclusion constraint, lookup by document date preferring a specific category over `any`, seeded rates with cited sources
+- [x] Rate-limit tests with the clock fixture: each policy returns 429 at its limit with `Retry-After`; the window slides; unknown emails are counted like real ones and the reply is identical; a burst of parallel logins cannot exceed the limit; spelling variants of an email share one counter; a client-address header without the BFF secret is ignored; filling the table with junk keys does not drop a counter that is near its limit; failures from another IP do not block the user's own IP (the upload and export policies have no endpoint yet; they are tested with the endpoints in Passes 3 and 5)
+- [x] **Checkpoint:** stories A1 to A4, B1 to B5, I1, I4, I7 and I8 have named tests; the access matrix and the rate-limit tests pass
 
 ---
 

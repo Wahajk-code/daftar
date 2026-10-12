@@ -58,6 +58,8 @@ Two separate withholdings apply to one payment.
   copied onto each purchase line, so later rate changes never alter a saved document.
 - Seeded rates must come with cited sources and a note that they are to be verified against the current FBR
   position; published figures differ and change with each Finance Act.
+- Only the flag a tax depends on is stored on a rule: registration for sales tax, filer status for income tax. The other is held
+  at false, so the no-overlap constraint can compare every rule (decision 75).
 - Each line is computed on its own; the header is the exact sum of the lines. Both withholdings are deducted from the
   amount payable to the supplier. A negative payable is refused.
 - Registered supplier: document kind `tax_invoice`, invoice number required. Unregistered: `purchase_memo`, with a

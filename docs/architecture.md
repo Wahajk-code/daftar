@@ -210,6 +210,7 @@ One small limiter in `core/rate_limit.py`: a sliding window held in memory, poli
 | Forgot password | IP | 10 per hour |
 | Reset confirm and invite accept | IP | 10 per 15 minutes |
 | Admin-triggered reset or invite resend | Target user | 3 per hour |
+| Password re-entry for a sensitive change | User | 5 per 15 minutes |
 | Receipt uploads | User | 30 per hour |
 | CSV exports | User | 10 per hour |
 | All authenticated routes | User | 300 per minute (a safety net) |

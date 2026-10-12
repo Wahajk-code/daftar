@@ -7,15 +7,15 @@ Find the tests for a story with: `Select-String -Path backend\tests\*.py -Patter
 
 | ID | Story | B | F | M |
 |---|---|---|---|---|
-| A1 | Sign in with email and password | [ ] | [ ] | [ ] |
-| A2 | Admin invites users, assigns one role each, manages them | [ ] | [ ] | n/a |
-| A3 | UI shows permitted actions; API refuses the rest; other user's record is 404 | [ ] | [ ] | n/a |
-| A4 | Nobody approves their own document (all three types) | [ ] | [ ] | n/a |
-| B1 | Vendors with NTN, STRN, contact, bank details (masked) | [ ] | [ ] | n/a |
-| B2 | Separate ATL (filer) flag on vendors | [ ] | [ ] | n/a |
-| B3 | Chart of accounts with hierarchy; parents not postable | [ ] | [ ] | n/a |
-| B4 | Cost centres and projects, deactivatable | [ ] | [ ] | n/a |
-| B5 | Tax rules by date; rate copied onto the line | [ ] | [ ] | n/a |
+| A1 | Sign in with email and password | [x] | [ ] | [ ] |
+| A2 | Admin invites users, assigns one role each, manages them | [x] | [ ] | n/a |
+| A3 | UI shows permitted actions; API refuses the rest; other user's record is 404 | [x] | [ ] | n/a |
+| A4 | Nobody approves their own document (all three types) | [x] | [ ] | n/a |
+| B1 | Vendors with NTN, STRN, contact, bank details (masked) | [x] | [ ] | n/a |
+| B2 | Separate ATL (filer) flag on vendors | [x] | [ ] | n/a |
+| B3 | Chart of accounts with hierarchy; parents not postable | [x] | [ ] | n/a |
+| B4 | Cost centres and projects, deactivatable | [x] | [ ] | n/a |
+| B5 | Tax rules by date; rate copied onto the line | [x] | [ ] | n/a |
 | C1 | Direct expense against project, product or cost centre | [ ] | [ ] | [ ] |
 | C2 | Indirect expense allocated by percentage or fixed, exact sums | [ ] | [ ] | n/a |
 | C3 | Receipt attachment, validated, private, stripped | [ ] | [ ] | [ ] |
@@ -35,7 +35,7 @@ Find the tests for a story with: `Select-String -Path backend\tests\*.py -Patter
 | E4 | Generate a voucher from an approved expense or purchase | [ ] | [ ] | n/a |
 | E5 | Post is idempotent; posted lines are immutable | [ ] | [ ] | n/a |
 | E6 | Void with reason creates one linked reversal | [ ] | [ ] | n/a |
-| F1 | One transition table; every valid and invalid pair tested | [ ] | n/a | n/a |
+| F1 | One transition table; every valid and invalid pair tested | [x] | n/a | n/a |
 | F2 | Approval history timeline, one component for all types | [ ] | [ ] | [ ] |
 | F3 | Audit row for every create, update, status change | [ ] | n/a | n/a |
 | G1 | Expenses by type and cost centre | [ ] | [ ] | n/a |
@@ -47,15 +47,21 @@ Find the tests for a story with: `Select-String -Path backend\tests\*.py -Patter
 | H3 | View and approve or reject items from the phone | n/a | n/a | [ ] |
 | H4 | Vouchers viewable read-only | n/a | n/a | [ ] |
 | H5 | Tokens in secure storage, cleared on logout | n/a | n/a | [ ] |
-| I1 | Password reset by email (self-service) | [ ] | [ ] | n/a |
+| I1 | Password reset by email (self-service) | [x] | [ ] | n/a |
 | I2 | Approver emailed on submission | [ ] | n/a | n/a |
 | I3 | Submitter emailed on approve or reject | [ ] | n/a | n/a |
-| I4 | Admin invites a user by email | [ ] | [ ] | n/a |
-| I7 | Admin triggers a password reset | [ ] | [ ] | n/a |
-| I8 | Admin resends or revokes a pending invite | [ ] | [ ] | n/a |
+| I4 | Admin invites a user by email | [x] | [ ] | n/a |
+| I7 | Admin triggers a password reset | [x] | [ ] | n/a |
+| I8 | Admin resends or revokes a pending invite | [x] | [ ] | n/a |
 | M1 | Public screens are the login family only, 50/50 split, noindex everywhere | n/a | [ ] | n/a |
 | M2 | Footer shows version and git SHA | n/a | [ ] | n/a |
 | N1 | Skippable role-aware onboarding tour (web); three-card intro (mobile) | [ ] | [ ] | [ ] |
+
+Notes on ticks made by the build (the owner still confirms each against the evidence):
+- A3: the API refusing every role everywhere is tested (`tests/api/test_access_matrix.py`). The case of Staff opening another
+  user's expense and getting 404 is tested in Pass 3, when expenses exist.
+- A4: tested on the transition table for all three document types (`test_a4_...`); the approve endpoints that use it arrive in Pass 3.
+- F1: the transition table and its matrix test (Pass 1).
 
 ## Cross-cutting checks (not single stories)
 
