@@ -1,0 +1,203 @@
+.scroll {
+  overflow-x: auto;
+}
+
+.grid {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+}
+
+.grid th,
+.grid td {
+  padding: 0;
+  border-bottom: 1px solid var(--rule);
+  border-right: 1px solid var(--rule);
+  vertical-align: middle;
+}
+
+.grid th:last-child,
+.grid td:last-child {
+  border-right: 0;
+}
+
+.grid thead th {
+  padding: 0 var(--space-2);
+  height: var(--row-height);
+  background: var(--bg-sunken);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-2);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.grid .num {
+  text-align: right;
+}
+
+.no {
+  width: 40px;
+  text-align: center !important;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  background: var(--bg-sunken);
+}
+
+.debitHead,
+.debitCell {
+  background: var(--debit-wash);
+  width: 150px;
+}
+
+.creditHead,
+.creditCell {
+  background: var(--credit-wash);
+  width: 150px;
+}
+
+/* A cell is the whole box: no inner border until it has focus, so the grid reads like a sheet of ruled paper. */
+.cell {
+  display: block;
+  width: 100%;
+  min-height: calc(var(--row-height) + 4px);
+  padding: 0 var(--space-2);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: var(--text-1);
+}
+
+.cell:hover {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.cell:focus {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+  background: var(--k-input-bg);
+}
+
+.amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.tools {
+  width: 78px;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.addRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.error {
+  color: var(--negative);
+  font-size: var(--text-sm);
+}
+
+/* The foot of the page: the ledger's footer. It stays in view while the lines are typed. */
+.footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) 0 var(--space-3);
+  background: var(--bg-page);
+}
+
+.strip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--text-1);
+  border-bottom: 3px double var(--text-1);
+}
+
+.strip dl {
+  display: flex;
+  gap: var(--space-6);
+  margin: 0;
+  flex-wrap: wrap;
+}
+
+.strip dl > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.strip dt {
+  font-size: var(--text-xs);
+  opacity: 0.8;
+}
+
+.strip dd {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.state {
+  flex: 1;
+  font-weight: 600;
+}
+
+.ok {
+  background: var(--k-balance-ok-bg);
+  color: var(--k-balance-ok-text);
+}
+
+.off {
+  background: var(--k-balance-off-bg);
+  color: var(--k-balance-off-text);
+}
+
+.actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.why {
+  flex: 1 1 360px;
+  font-size: var(--text-sm);
+}
+
+.whyTitle {
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+
+.why ul {
+  margin: 0;
+  padding-left: 1.2em;
+  color: var(--text-2);
+}
+
+.buttons {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 700px) {
+  .strip dl {
+    gap: var(--space-4);
+  }
+
+  .buttons > * {
+    flex: 1 1 100%;
+  }
+}

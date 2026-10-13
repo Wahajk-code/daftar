@@ -1,0 +1,148 @@
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  align-self: flex-start;
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--accent);
+}
+
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.headerText {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.description {
+  max-width: 70ch;
+  font-size: var(--text-base);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.panel {
+  background: var(--k-panel-bg);
+  border: 1px solid var(--k-panel-rule);
+  border-radius: var(--radius-sm);
+  min-width: 0;
+}
+
+.panelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--k-panel-rule);
+  min-height: 46px;
+}
+
+.panelHead h2 {
+  font-size: var(--text-md);
+}
+
+.panelActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.panelBody {
+  padding: var(--space-4);
+}
+
+.panelFlush {
+  padding: 0;
+}
+
+.facts {
+  margin: 0;
+  display: grid;
+  gap: 0;
+}
+
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.fact:last-child {
+  border-bottom: 0;
+}
+
+.fact dt {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  letter-spacing: 0.02em;
+}
+
+.fact dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.formGrid {
+  display: grid;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.cols1 {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.cols2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cols3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 760px) {
+  .cols2,
+  .cols3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .panelBody {
+    padding: var(--space-3);
+  }
+}

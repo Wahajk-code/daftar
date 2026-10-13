@@ -197,3 +197,19 @@ class TaxRuleRead(ResponseModel):
     version: int
     created_at: UtcInstant
     updated_at: UtcInstant
+
+
+# Accounting settings -------------------------------------------------------------------------------------------------
+
+
+class AccountingSettingsSet(RequestModel):
+    fiscal_year_start_month: int = Field(
+        ge=1, le=12, description="The month the voucher numbering year starts in. 1 is the calendar year; 7 is July."
+    )
+
+
+class AccountingSettingsRead(ResponseModel):
+    fiscal_year_start_month: int
+    numbering_year_today: int  # the year a voucher dated today would be numbered in, to show what the choice means
+    updated_by: int | None
+    updated_at: UtcInstant

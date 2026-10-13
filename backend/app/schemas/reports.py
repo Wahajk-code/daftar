@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from app.core.enums import DocumentStatus, ExpenseType, VoucherType
+from app.core.enums import DocumentStatus, ExpenseType, Role, VoucherType
 from app.schemas.base import Money, ResponseModel
 
 
@@ -78,3 +78,26 @@ class VoucherRegisterRow(ResponseModel):
     expense_id: int | None
     purchase_id: int | None
     reversal_of_number: str | None
+
+
+class ActivityRow(ResponseModel):
+    """What one person did in the period, counted from the approval history."""
+
+    user_id: int
+    full_name: str
+    role: Role
+    expenses_created: int
+    purchases_created: int
+    vouchers_created: int
+    submitted: int  # documents they sent for approval
+    rejected_received: int  # times a reviewer sent back something they wrote
+    approved: int  # decisions they made as a reviewer
+    rejected_given: int
+    posted: int  # vouchers they posted
+    voided: int  # vouchers they voided
+
+
+class ActivityReport(ResponseModel):
+    date_from: date | None
+    date_to: date | None
+    rows: list[ActivityRow]

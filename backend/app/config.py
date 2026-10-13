@@ -5,8 +5,6 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from pydantic import SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from app.core.enums import YearMode
-
 MIN_PRODUCTION_KEY_LENGTH = 32
 MIN_PRODUCTION_KEY_DISTINCT_CHARACTERS = 10
 WEAK_KEY_MARKERS = ("changeme", "change-me", "secret", "password", "dev-only", "test-only", "example")
@@ -46,7 +44,6 @@ class Settings(BaseSettings):
     # Cloudinary. Nothing here is a secret except the URL, which carries the API secret.
     storage_backend: Literal["cloudinary", "memory"] = "memory"
     cloudinary_url: SecretStr | None = None
-    voucher_year_mode: YearMode = YearMode.CALENDAR
     storage_folder: str = "daftar"
     max_upload_megabytes: int = 10
     max_image_pixels: int = 40_000_000

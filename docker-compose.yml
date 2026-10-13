@@ -42,6 +42,7 @@ services:
       SECRET_KEY: ${SECRET_KEY:-dev-only-key-do-not-use-outside-local-development}
       STORAGE_BACKEND: ${STORAGE_BACKEND:-memory}
       CLOUDINARY_URL: ${CLOUDINARY_URL:-}
+      BFF_SHARED_SECRET: ${BFF_SHARED_SECRET:-dev-bff-shared-secret-for-local-use-only}
       MAIL_BACKEND: ${MAIL_BACKEND:-console}
       MAIL_FROM: ${MAIL_FROM:-Daftar <no-reply@daftar.pk>}
       SMTP_HOST: ${SMTP_HOST:-mailpit}
@@ -69,10 +70,15 @@ services:
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
       API_BASE_URL: http://backend:8000
+      BFF_SHARED_SECRET: ${BFF_SHARED_SECRET:-dev-bff-shared-secret-for-local-use-only}
+      DEMO_MODE: ${DEMO_MODE:-true}
+      DISPLAY_TIMEZONE: ${DISPLAY_TIMEZONE:-Asia/Karachi}
+      OPENAPI_FILE: /openapi.json
     ports:
       - "${FRONTEND_PORT:-3001}:3000"
     volumes:
       - ./frontend:/app
+      - ./backend/openapi.json:/openapi.json:ro
       - /app/node_modules
       - /app/.next
     depends_on:
@@ -113,8 +119,10 @@ services:
     command: ["sh", "-c", "pnpm lint && pnpm typecheck"]
     environment:
       TZ: UTC
+      OPENAPI_FILE: /openapi.json
     volumes:
       - ./frontend:/app
+      - ./backend/openapi.json:/openapi.json:ro
       - /app/node_modules
       - /app/.next
 

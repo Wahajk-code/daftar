@@ -266,7 +266,7 @@ EXPENSES = (
     direct(
         "Generator service contract",
         "Utilities",
-        "49750.00",
+        "48300.00",
         "submitted",
         "accountant",
         method="bank_transfer",

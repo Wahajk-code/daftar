@@ -19,8 +19,10 @@ from app.core.security import Passwords, read_access_token, same_secret
 from app.core.storage import Storage, make_storage
 from app.db import get_session
 from app.repositories import users as user_repository
+from app.services.accounting_settings import AccountingSettingsService
 from app.services.accounts import AccountService
 from app.services.attachments import AttachmentService
+from app.services.audit_log import AuditLogService
 from app.services.auth import AuthService
 from app.services.expenses import ExpenseService
 from app.services.invites import InviteService
@@ -222,6 +224,16 @@ def get_period_service(session: SessionDep, clock: ClockDep) -> PeriodService:
     return PeriodService(session, clock)
 
 
+def get_accounting_settings_service(
+    session: SessionDep, clock: ClockDep, settings: SettingsDep
+) -> AccountingSettingsService:
+    return AccountingSettingsService(session, clock, settings)
+
+
+def get_audit_log_service(session: SessionDep, settings: SettingsDep) -> AuditLogService:
+    return AuditLogService(session, settings)
+
+
 def get_posting_account_service(session: SessionDep, clock: ClockDep) -> PostingAccountService:
     return PostingAccountService(session, clock)
 
@@ -235,7 +247,9 @@ CategoryServiceDep = Annotated[CategoryService, Depends(get_category_service)]
 CostCenterServiceDep = Annotated[CostCenterService, Depends(get_cost_center_service)]
 ProjectServiceDep = Annotated[ProjectService, Depends(get_project_service)]
 PeriodServiceDep = Annotated[PeriodService, Depends(get_period_service)]
+AuditLogServiceDep = Annotated[AuditLogService, Depends(get_audit_log_service)]
 PostingAccountServiceDep = Annotated[PostingAccountService, Depends(get_posting_account_service)]
+AccountingSettingsServiceDep = Annotated[AccountingSettingsService, Depends(get_accounting_settings_service)]
 TaxRuleServiceDep = Annotated[TaxRuleService, Depends(get_tax_rule_service)]
 
 

@@ -7,12 +7,19 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "tokens": "node scripts/build-tokens.mjs",
+    "types": "openapi-typescript ${OPENAPI_FILE:-../backend/openapi.json} -o src/api/schema.d.ts",
+    "predev": "node scripts/build-tokens.mjs",
+    "prebuild": "node scripts/build-tokens.mjs"
   },
   "dependencies": {
+    "@tabler/icons-react": "^3.49.0",
+    "@tanstack/react-query": "^5.104.2",
     "next": "16.4.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "react-joyride": "^3.2.0"
   },
   "devDependencies": {
     "@types/node": "^22",
@@ -20,6 +27,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
+    "openapi-typescript": "^7.13.0",
     "typescript": "^5"
   },
   "packageManager": "pnpm@12.11.2"

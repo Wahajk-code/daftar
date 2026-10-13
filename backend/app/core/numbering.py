@@ -6,19 +6,19 @@ text."""
 
 from datetime import date
 
-from app.core.enums import VoucherType, YearMode
-
-FISCAL_YEAR_STARTS_IN = 7  # July
+from app.core.enums import VoucherType
 
 
-def voucher_year(document_date: date, mode: YearMode) -> int:
-    """The year a voucher dated `document_date` is numbered in.
+def voucher_year(document_date: date, start_month: int) -> int:
+    """The year a voucher dated `document_date` is numbered in, for a numbering year that starts in `start_month`.
 
-    Calendar mode is the date's own year. Fiscal mode runs July to June and is named by the year it ends in, as the tax
-    year is: 1 July 2025 to 30 June 2026 is 2026."""
-    if mode is YearMode.CALENDAR:
+    Month 1 is the calendar year. Any other month starts a fiscal year that is named by the year it ends in, as the tax
+    year is: with July as the start, 1 July 2025 to 30 June 2026 is 2026."""
+    if not 1 <= start_month <= 12:
+        raise ValueError("the numbering year starts in a month from 1 to 12")
+    if start_month == 1:
         return document_date.year
-    return document_date.year + 1 if document_date.month >= FISCAL_YEAR_STARTS_IN else document_date.year
+    return document_date.year + 1 if document_date.month >= start_month else document_date.year
 
 
 def format_number(voucher_type: VoucherType, year: int, sequence: int) -> str:

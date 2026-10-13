@@ -1,6 +1,17 @@
 from datetime import date, datetime
 
-from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, Identity, Index, String, func, literal_column, text
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    ForeignKey,
+    Identity,
+    Index,
+    SmallInteger,
+    String,
+    func,
+    literal_column,
+    text,
+)
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -114,6 +125,21 @@ class ClosedPeriod(Base):
     @property
     def status(self) -> str:
         return "reopened" if self.reopened_at is not None else "closed"
+
+
+class AccountingSettings(Base):
+    """The one row of company-wide accounting choices. An Accountant sets them; each change is audited."""
+
+    __tablename__ = "accounting_settings"
+    __table_args__ = (
+        CheckConstraint("id = 1", name="only_one_row"),
+        CheckConstraint("fiscal_year_start_month BETWEEN 1 AND 12", name="a_real_month"),
+    )
+
+    id: Mapped[int] = mapped_column(SmallInteger, primary_key=True, server_default=text("1"))
+    fiscal_year_start_month: Mapped[int] = mapped_column(SmallInteger, server_default=text("1"))
+    updated_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), default=None)
+    updated_at: Mapped[datetime] = mapped_column(UtcDateTime, server_default=text("now()"))
 
 
 class PostingAccount(Base):

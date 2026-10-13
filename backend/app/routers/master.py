@@ -7,6 +7,7 @@ from fastapi import APIRouter, Query, status
 
 from app.core.enums import AccountType, PostingKey, ProjectKind, Role, TaxCategory, TaxType
 from app.deps import (
+    AccountingSettingsServiceDep,
     AccountServiceDep,
     CategoryServiceDep,
     CostCenterServiceDep,
@@ -20,6 +21,8 @@ from app.deps import (
 )
 from app.schemas.master import (
     AccountCreate,
+    AccountingSettingsRead,
+    AccountingSettingsSet,
     AccountRead,
     AccountUpdate,
     CategoryCreate,
@@ -280,7 +283,7 @@ def list_posting_accounts(service: PostingAccountServiceDep) -> list[PostingAcco
     return [PostingAccountRead.model_validate(r) for r in service.list_all()]
 
 
-@posting_accounts.put("/{key}", operation_id="set_posting_account", **ADMIN)
+@posting_accounts.put("/{key}", operation_id="set_posting_account", **EDITORS)
 def set_posting_account(
     key: PostingKey, body: PostingAccountSet, actor: PrincipalDep, service: PostingAccountServiceDep
 ) -> PostingAccountRead:
@@ -337,13 +340,43 @@ def get_tax_rule(rule_id: int, service: TaxRuleServiceDep) -> TaxRuleRead:
     return TaxRuleRead.model_validate(service.get(rule_id))
 
 
-@tax_rules.post("", operation_id="create_tax_rule", status_code=status.HTTP_201_CREATED, **ADMIN)
+@tax_rules.post("", operation_id="create_tax_rule", status_code=status.HTTP_201_CREATED, **EDITORS)
 def create_tax_rule(body: TaxRuleCreate, actor: PrincipalDep, service: TaxRuleServiceDep) -> TaxRuleRead:
     return TaxRuleRead.model_validate(service.create(actor, body.model_dump()))
 
 
-@tax_rules.patch("/{rule_id}", operation_id="update_tax_rule", **ADMIN)
+@tax_rules.patch("/{rule_id}", operation_id="update_tax_rule", **EDITORS)
 def update_tax_rule(
     rule_id: int, body: TaxRuleUpdate, version: IfMatchDep, actor: PrincipalDep, service: TaxRuleServiceDep
 ) -> TaxRuleRead:
     return TaxRuleRead.model_validate(service.update(actor, rule_id, version, body.model_dump(exclude_unset=True)))
+
+
+# Accounting settings -------------------------------------------------------------------------------------------------
+
+accounting_settings = APIRouter(prefix="/settings/accounting", tags=["settings"])
+
+
+def _settings_read(service: AccountingSettingsServiceDep) -> AccountingSettingsRead:
+    row = service.get()
+    return AccountingSettingsRead(
+        fiscal_year_start_month=row.fiscal_year_start_month,
+        numbering_year_today=service.year_today(row),
+        updated_by=row.updated_by,
+        updated_at=row.updated_at,
+    )
+
+
+@accounting_settings.get("", operation_id="get_accounting_settings", **OFFICE)
+def get_accounting_settings(service: AccountingSettingsServiceDep) -> AccountingSettingsRead:
+    return _settings_read(service)
+
+
+@accounting_settings.put("", operation_id="set_accounting_settings", **EDITORS)
+def set_accounting_settings(
+    body: AccountingSettingsSet, actor: PrincipalDep, service: AccountingSettingsServiceDep
+) -> AccountingSettingsRead:
+    """Choose the month the voucher numbering year starts in. It applies to vouchers posted from now on; numbers already
+    given never change."""
+    service.set_year_start(actor, body.fiscal_year_start_month)
+    return _settings_read(service)

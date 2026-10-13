@@ -1,7 +1,7 @@
 """Aggregate queries for the reports. Read only; sums are done by the database and never divided."""
 
 from collections.abc import Sequence
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -9,8 +9,9 @@ from sqlalchemy import Row, func, select
 from sqlalchemy.orm import Session, aliased
 
 from app.core.enums import DocumentStatus, ExpenseType
-from app.models.documents import Expense, ExpenseAllocation, Purchase
+from app.models.documents import DocumentEvent, Expense, ExpenseAllocation, Purchase
 from app.models.master import CostCenter
+from app.models.user import User
 from app.models.vendor import Vendor
 from app.models.vouchers import Voucher, VoucherLine
 
@@ -185,3 +186,45 @@ def voucher_register_all(
 ) -> list[Row[Any]]:
     statement = _voucher_register_query(statuses, start, end, voucher_type).order_by(*_REGISTER_ORDER)
     return list(session.execute(statement).all())
+
+
+def people(session: Session) -> Sequence[Any]:
+    """Everyone who can act, active in the period or not: a manager wants to see the quiet ones too."""
+    statement = (
+        select(User.id, User.full_name, User.role).where(User.is_active.is_(True)).order_by(User.full_name, User.id)
+    )
+    return session.execute(statement).all()
+
+
+def actions_by_person(
+    session: Session, start: datetime | None, end: datetime | None
+) -> dict[tuple[int, str, str], int]:
+    """How often each person did each thing to each kind of document, from the approval history. `end` is exclusive."""
+    statement = select(
+        DocumentEvent.actor_id, DocumentEvent.action, DocumentEvent.document_type, func.count(DocumentEvent.id)
+    ).group_by(DocumentEvent.actor_id, DocumentEvent.action, DocumentEvent.document_type)
+    if start is not None:
+        statement = statement.where(DocumentEvent.created_at >= start)
+    if end is not None:
+        statement = statement.where(DocumentEvent.created_at < end)
+    return {(actor, action, kind.value): int(count) for actor, action, kind, count in session.execute(statement)}
+
+
+def rejections_received(session: Session, start: datetime | None, end: datetime | None) -> dict[int, int]:
+    """How many times a reviewer sent back something each author wrote, across the three kinds of document."""
+    received: dict[int, int] = {}
+    for model, kind in ((Expense, "expense"), (Purchase, "purchase"), (Voucher, "voucher")):
+        statement = (
+            select(model.created_by, func.count(DocumentEvent.id))
+            .select_from(DocumentEvent)
+            .join(model, model.id == DocumentEvent.document_id)
+            .where(DocumentEvent.action == "rejected", DocumentEvent.document_type == kind)
+            .group_by(model.created_by)
+        )
+        if start is not None:
+            statement = statement.where(DocumentEvent.created_at >= start)
+        if end is not None:
+            statement = statement.where(DocumentEvent.created_at < end)
+        for author, count in session.execute(statement):
+            received[author] = received.get(author, 0) + int(count)
+    return received

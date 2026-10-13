@@ -199,7 +199,7 @@ class VoucherService:
         if voucher.status is not DocumentStatus.APPROVED:
             # Let the transition table give the right error (409 for a wrong status, 403 for a wrong role).
             return self._move(actor, voucher, DocumentStatus.POSTED, expected_version)
-        year = voucher_year(voucher.document_date, self._settings.voucher_year_mode)
+        year = voucher_year(voucher.document_date, self._year_start())
         closed = master_repository.closed_period_containing(self._session, voucher.document_date)
         balanced = balance(self._specs(voucher)).balanced
         source = self._lock_source(voucher)
@@ -247,7 +247,7 @@ class VoucherService:
             )
         today = self._today()
         closed = master_repository.closed_period_containing(self._session, today)
-        year = voucher_year(today, self._settings.voucher_year_mode)
+        year = voucher_year(today, self._year_start())
         original_specs = self._specs(voucher)
         mirror = reverse(original_specs, note=f"Reversal of {voucher.number}")
         number_given = voucher_repository.next_sequence(self._session, voucher.voucher_type, year)
@@ -429,6 +429,10 @@ class VoucherService:
         if not voucher.description.strip():
             problems.append(FieldError("description", "Add a narration saying what this voucher is for.", "required"))
         return problems
+
+    def _year_start(self) -> int:
+        """The month the numbering year starts in, as the Accountant set it."""
+        return master_repository.get_accounting_settings(self._session).fiscal_year_start_month
 
     def _locked(self, voucher_id: int) -> Voucher:
         voucher = voucher_repository.get_voucher(self._session, voucher_id, for_update=True)

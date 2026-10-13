@@ -6,7 +6,15 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.enums import AccountType, PostingKey, ProjectKind
-from app.models.master import Account, Category, ClosedPeriod, CostCenter, PostingAccount, Project
+from app.models.master import (
+    Account,
+    AccountingSettings,
+    Category,
+    ClosedPeriod,
+    CostCenter,
+    PostingAccount,
+    Project,
+)
 from app.repositories.paging import order_clauses, paginate
 
 # Accounts ------------------------------------------------------------------------------------------------------------
@@ -148,3 +156,8 @@ def list_posting_accounts(session: Session) -> list[PostingAccount]:
 
 def get_posting_account(session: Session, key: PostingKey) -> PostingAccount | None:
     return session.get(PostingAccount, key)
+
+
+def get_accounting_settings(session: Session) -> AccountingSettings:
+    """The one settings row. The migration creates it and the database allows no other, so it is always there."""
+    return session.scalars(select(AccountingSettings)).one()

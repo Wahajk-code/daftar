@@ -1,0 +1,123 @@
+.scroll {
+  overflow-x: auto;
+}
+
+.grid {
+  width: 100%;
+  min-width: 1020px;
+}
+
+.grid th,
+.grid td {
+  padding: var(--space-1) var(--space-2);
+  vertical-align: top;
+  text-align: left;
+  border-bottom: 1px solid var(--rule);
+}
+
+.grid thead th {
+  background: var(--bg-sunken);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-2);
+  white-space: nowrap;
+  vertical-align: middle;
+  height: var(--row-height);
+}
+
+.grid .num {
+  text-align: right;
+}
+
+.grid td:nth-child(1) {
+  min-width: 190px;
+}
+
+.grid td:nth-child(2) {
+  min-width: 120px;
+}
+
+.grid td:nth-child(3),
+.grid td:nth-child(5) {
+  width: 96px;
+}
+
+.grid td:nth-child(4) {
+  width: 130px;
+}
+
+/* The columns the server works out are not for typing in: a quieter tint marks them. */
+.worked {
+  background: var(--bg-sunken);
+  color: var(--text-1);
+  padding-top: 9px !important;
+  white-space: nowrap;
+}
+
+.right input {
+  text-align: right;
+}
+
+.grid tfoot th,
+.grid tfoot td {
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-top: 1px solid var(--text-1);
+  border-bottom: 3px double var(--text-1);
+  font-weight: 600;
+  background: var(--bg-surface);
+}
+
+.lineTools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.error {
+  color: var(--negative);
+  font-size: var(--text-sm);
+}
+
+.vendorTags {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  align-self: end;
+  min-height: calc(var(--row-height) + 2px);
+}
+
+.memo {
+  margin-top: var(--space-4);
+}
+
+.totals {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0 var(--space-5);
+}
+
+.totals > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.totals dt {
+  color: var(--text-2);
+}
+
+.totals dd {
+  margin: 0;
+}
+
+.payable {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--text-1);
+  border-bottom: 3px double var(--text-1) !important;
+  font-weight: 600;
+}

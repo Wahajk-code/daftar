@@ -3,7 +3,7 @@ count) in its own transaction, before any byte is sent."""
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -21,6 +21,8 @@ from app.core.principal import Principal
 from app.core.rate_limit import RateLimiter
 from app.repositories import reports as report_repository
 from app.schemas.reports import (
+    ActivityReport,
+    ActivityRow,
     ExpenseReport,
     ExpenseReportRow,
     ExpenseReportTotals,
@@ -96,6 +98,39 @@ class ReportService:
         )
         return [VoucherRegisterRow.model_validate(row) for row in rows], total
 
+    def activity(self, date_from: date | None, date_to: date | None) -> ActivityReport:
+        """Who did what in the period, for a manager keeping an eye on how the work is going."""
+        self._scope(DEFAULT_SPEND_STATUSES, date_from, date_to)  # only to check the range
+        zone = ZoneInfo(self._settings.display_timezone)
+        start = None if date_from is None else datetime.combine(date_from, time.min, tzinfo=zone)
+        end = None if date_to is None else datetime.combine(date_to + timedelta(days=1), time.min, tzinfo=zone)
+        done = report_repository.actions_by_person(self._session, start, end)
+        rejected = report_repository.rejections_received(self._session, start, end)
+
+        def count(person: int, action: str, kind: str | None = None) -> int:
+            if kind is not None:
+                return done.get((person, action, kind), 0)
+            return sum(n for (who, what, _kind), n in done.items() if who == person and what == action)
+
+        rows = [
+            ActivityRow(
+                user_id=person.id,
+                full_name=person.full_name,
+                role=person.role,
+                expenses_created=count(person.id, "created", "expense"),
+                purchases_created=count(person.id, "created", "purchase"),
+                vouchers_created=count(person.id, "created", "voucher"),
+                submitted=count(person.id, "submitted"),
+                rejected_received=rejected.get(person.id, 0),
+                approved=count(person.id, "approved"),
+                rejected_given=count(person.id, "rejected"),
+                posted=count(person.id, "posted", "voucher"),
+                voided=count(person.id, "voided", "voucher"),
+            )
+            for person in report_repository.people(self._session)
+        ]
+        return ActivityReport(date_from=date_from, date_to=date_to, rows=rows)
+
     # CSV -------------------------------------------------------------------------------------------------------------
 
     def expenses_csv(
@@ -160,6 +195,46 @@ class ReportService:
             "Payable",
         ]
         return self._export(actor, "purchases", scope, header, rows)
+
+    def activity_csv(self, actor: Principal, date_from: date | None, date_to: date | None) -> CsvFile:
+        scope = self._scope(DEFAULT_SPEND_STATUSES, date_from, date_to)
+        self._limiter.hit(("export_user", str(actor.id)))
+        report = self.activity(date_from, date_to)
+        rows = [
+            [
+                text_cell(row.full_name),
+                row.role.value,
+                *(
+                    str(value)
+                    for value in (
+                        row.expenses_created,
+                        row.purchases_created,
+                        row.vouchers_created,
+                        row.submitted,
+                        row.rejected_received,
+                        row.approved,
+                        row.rejected_given,
+                        row.posted,
+                        row.voided,
+                    )
+                ),
+            ]
+            for row in report.rows
+        ]
+        header = [
+            "Person",
+            "Role",
+            "Expenses created",
+            "Purchases created",
+            "Vouchers created",
+            "Submitted",
+            "Rejected on them",
+            "Approved",
+            "Rejected by them",
+            "Posted",
+            "Voided",
+        ]
+        return self._export(actor, "activity", scope, header, rows)
 
     def register_csv(
         self,

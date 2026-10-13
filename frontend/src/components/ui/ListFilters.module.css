@@ -1,0 +1,46 @@
+.wrap {
+  border-bottom: 1px solid var(--rule);
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.search {
+  position: relative;
+  flex: 1 1 220px;
+  min-width: 200px;
+  max-width: 340px;
+}
+
+.search input {
+  padding-left: 30px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 9px;
+  bottom: 10px;
+  z-index: 1;
+  color: var(--text-3);
+  pointer-events: none;
+}
+
+.select {
+  flex: 0 1 170px;
+  min-width: 140px;
+}
+
+.date {
+  flex: 0 1 150px;
+  min-width: 140px;
+}
+
+.check {
+  align-self: flex-end;
+  padding-bottom: 4px;
+}

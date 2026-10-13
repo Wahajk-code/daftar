@@ -1,0 +1,56 @@
+.stamp {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.draft {
+  color: var(--k-stamp-draft);
+  border-style: dashed;
+}
+
+.submitted {
+  color: var(--k-stamp-waiting);
+}
+
+.approved {
+  color: var(--accent);
+}
+
+.rejected {
+  color: var(--k-stamp-stopped);
+}
+
+.posted {
+  color: var(--k-stamp-posted);
+}
+
+.void {
+  color: var(--k-stamp-stopped);
+  text-decoration: line-through;
+}
+
+.tag-neutral {
+  color: var(--k-stamp-neutral);
+}
+
+.tag-positive {
+  color: var(--k-stamp-posted);
+}
+
+.tag-caution {
+  color: var(--k-stamp-waiting);
+}
+
+.tag-negative {
+  color: var(--k-stamp-stopped);
+}

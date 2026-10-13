@@ -1,0 +1,84 @@
+.duplicates {
+  margin: 0;
+  padding-left: 1.2em;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.advice {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.receipts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.gallery {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: var(--space-3);
+}
+
+.thumb {
+  border: 1px solid var(--rule);
+  background: var(--bg-raised);
+  display: flex;
+  flex-direction: column;
+}
+
+.thumb a {
+  display: block;
+  background: var(--bg-sunken);
+}
+
+.thumb img {
+  display: block;
+  width: 100%;
+  height: 170px;
+  object-fit: contain;
+  /* Receipts are documents: the theme never inverts or tints them. */
+  filter: none;
+}
+
+.thumbMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--space-2);
+  font-size: var(--text-xs);
+  min-width: 0;
+}
+
+.thumbMeta .mono {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uploading {
+  height: 170px;
+  display: flex;
+  align-items: flex-end;
+  background: var(--bg-sunken);
+}
+
+.progressFill {
+  display: block;
+  height: 6px;
+  background: var(--accent);
+  transition: width var(--duration-fast);
+}
+
+.failure {
+  color: var(--negative);
+  font-size: var(--text-sm);
+}

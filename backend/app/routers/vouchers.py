@@ -28,7 +28,6 @@ router = APIRouter(prefix="/vouchers", tags=["vouchers"])
 OFFICE = roles(Role.ADMIN, Role.ACCOUNTANT, Role.APPROVER)
 BOOKKEEPERS = roles(Role.ADMIN, Role.ACCOUNTANT)
 REVIEWERS = roles(Role.ADMIN, Role.APPROVER)
-ADMIN = roles(Role.ADMIN)
 
 
 def _read(voucher: Any, actor: Principal, service: VoucherService) -> VoucherRead:
@@ -153,7 +152,7 @@ def post_voucher(
     return _read(service.post(actor, voucher_id, version, key), actor, service)
 
 
-@router.post("/{voucher_id}/void", operation_id="void_voucher", **ADMIN)
+@router.post("/{voucher_id}/void", operation_id="void_voucher", **BOOKKEEPERS)
 def void_voucher(
     voucher_id: int,
     body: VoidRequest,

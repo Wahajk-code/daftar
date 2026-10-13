@@ -11,7 +11,7 @@ from app.core import csv_export
 from app.core.enums import DocumentStatus, Role, VoucherType
 from app.deps import PrincipalDep, ReportServiceDep, roles
 from app.schemas.page import Page, PageParamsDep
-from app.schemas.reports import ExpenseReport, PurchaseReport, VoucherRegisterRow
+from app.schemas.reports import ActivityReport, ExpenseReport, PurchaseReport, VoucherRegisterRow
 from app.services.reports import CsvFile
 
 router = APIRouter(prefix="/reports", tags=["reports"])
@@ -109,3 +109,16 @@ def export_voucher_register(
     voucher_type: VoucherType | None = None,
 ) -> StreamingResponse:
     return _download(service.register_csv(actor, statuses, date_from, date_to, voucher_type))
+
+
+@router.get("/activity", operation_id="report_activity", **OFFICE)
+def report_activity(service: ReportServiceDep, date_from: DateFrom = None, date_to: DateTo = None) -> ActivityReport:
+    """What each person did in the period: documents made, sent for approval, sent back, decided, posted and voided."""
+    return service.activity(date_from, date_to)
+
+
+@router.get("/activity/csv", operation_id="export_report_activity", **OFFICE)
+def export_activity(
+    actor: PrincipalDep, service: ReportServiceDep, date_from: DateFrom = None, date_to: DateTo = None
+) -> StreamingResponse:
+    return _download(service.activity_csv(actor, date_from, date_to))

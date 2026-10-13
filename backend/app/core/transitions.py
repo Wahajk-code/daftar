@@ -100,7 +100,6 @@ class Transition:
 _AUTHORS = frozenset({Role.ADMIN, Role.ACCOUNTANT, Role.STAFF})  # who may create and submit expenses
 _BOOKKEEPERS = frozenset({Role.ADMIN, Role.ACCOUNTANT})
 _REVIEWERS = frozenset({Role.ADMIN, Role.APPROVER})
-_ADMIN = frozenset({Role.ADMIN})
 
 
 def _flow(
@@ -129,7 +128,7 @@ TRANSITIONS: tuple[Transition, ...] = (
         _BOOKKEEPERS,
         submit_guards=(complete, balanced),
         post_guards=(balanced, period_open),
-        extra=(Transition(T.VOUCHER, S.POSTED, S.VOID, _ADMIN, (reason_required, not_a_reversal, period_open)),),
+        extra=(Transition(T.VOUCHER, S.POSTED, S.VOID, _BOOKKEEPERS, (reason_required, not_a_reversal, period_open)),),
     ),
 )
 

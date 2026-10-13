@@ -336,7 +336,7 @@ class Seeder:
             return
         self.clock.set(self.today.replace(day=1), hour=MORNING + 3)
         voucher = self.vouchers.get(self.void_target)
-        self.vouchers.void(self.people["admin"], voucher.id, voucher.version, data.VOID_REASON, "seed-void-1")
+        self.vouchers.void(self.people["accountant"], voucher.id, voucher.version, data.VOID_REASON, "seed-void-1")
 
     def close_history(self) -> None:
         """The two months before this one are over: close them, so a change dated in them is refused."""

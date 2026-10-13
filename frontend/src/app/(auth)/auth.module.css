@@ -1,0 +1,222 @@
+.split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: 100dvh;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-6);
+  padding: var(--space-6) var(--space-7);
+  background: var(--bg-sunken);
+  border-right: 1px solid var(--rule-strong);
+  color: var(--text-1);
+}
+
+.brandTop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--accent);
+}
+
+.wordmark {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.urdu {
+  font-family: var(--font-urdu);
+  font-size: var(--text-xl);
+  color: var(--text-3);
+}
+
+/* Ruled ledger paper: a margin, a debit column and a credit column, and the lines between them. */
+.sheet {
+  display: grid;
+  grid-template-columns: 1fr 96px 96px;
+  align-content: start;
+  border: 1px solid var(--rule-strong);
+  background: var(--bg-surface);
+  max-width: 460px;
+  width: 100%;
+}
+
+.sheetHead {
+  display: contents;
+}
+
+.sheetHead span {
+  padding: 8px 12px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--rule-strong);
+  letter-spacing: 0.04em;
+}
+
+.sheetHead span:nth-child(2) {
+  background: var(--debit-wash);
+  border-left: 1px solid var(--rule-strong);
+  text-align: right;
+}
+
+.sheetHead span:nth-child(3) {
+  background: var(--credit-wash);
+  border-left: 1px solid var(--rule-strong);
+  text-align: right;
+}
+
+.sheetRow {
+  display: contents;
+}
+
+.sheetRow::before,
+.sheetRow::after {
+  content: "";
+  height: 30px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.sheetRow::before {
+  grid-column: 1;
+}
+
+.sheetRow::after {
+  grid-column: 2 / 4;
+  border-left: 1px solid var(--rule-strong);
+  background: linear-gradient(to right, transparent calc(50% - 0.5px), var(--rule-strong) calc(50% - 0.5px), var(--rule-strong) calc(50% + 0.5px), transparent calc(50% + 0.5px));
+}
+
+.line {
+  max-width: 34ch;
+  font-size: var(--text-lg);
+  line-height: 1.35;
+  color: var(--text-1);
+}
+
+.formSide {
+  display: grid;
+  place-items: center;
+  padding: var(--space-6) var(--space-5);
+  background: var(--bg-surface);
+}
+
+.formWrap {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.title {
+  font-size: var(--text-2xl);
+}
+
+.intro {
+  margin-top: var(--space-2);
+  color: var(--text-2);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.submit {
+  width: 100%;
+}
+
+.links {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  font-size: var(--text-sm);
+}
+
+.demo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--rule);
+}
+
+.demoTitle {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.demoHint {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}
+
+.demoList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--rule);
+}
+
+.demoList li + li {
+  border-top: 1px solid var(--rule);
+}
+
+.demoButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 40px;
+  padding: 0 var(--space-3);
+  background: none;
+  border: 0;
+  text-align: left;
+}
+
+.demoButton:hover {
+  background: var(--accent-wash);
+}
+
+.demoName {
+  font-weight: 500;
+}
+
+.demoRole {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}
+
+@media (max-width: 860px) {
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+  }
+
+  .brand {
+    flex-direction: row;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    border-right: 0;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+
+  .sheet,
+  .line {
+    display: none;
+  }
+
+  .formSide {
+    place-items: start center;
+    padding: var(--space-5) var(--space-4);
+  }
+}

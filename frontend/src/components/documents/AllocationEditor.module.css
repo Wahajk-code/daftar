@@ -1,0 +1,126 @@
+.editor {
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.editor legend {
+  padding: 0 var(--space-2);
+  font-weight: 600;
+}
+
+.method {
+  display: inline-grid;
+  grid-auto-flow: column;
+  align-self: flex-start;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.method button {
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  background: var(--bg-raised);
+  border: 0;
+  border-right: 1px solid var(--rule-strong);
+  font-size: var(--text-sm);
+  color: var(--text-2);
+}
+
+.method button:last-child {
+  border-right: 0;
+}
+
+.method button[aria-pressed="true"] {
+  background: var(--accent-wash);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px auto;
+  gap: var(--space-2);
+  align-items: start;
+}
+
+.value input {
+  text-align: right;
+}
+
+.tools {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* The ledger's footer for a split: what has been given out and what is left. */
+.strip {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--text-1);
+  border-bottom: 3px double var(--text-1);
+  background: var(--bg-sunken);
+  font-variant-numeric: tabular-nums;
+}
+
+.ok {
+  background: var(--k-balance-ok-bg);
+  color: var(--k-balance-ok-text);
+}
+
+.off {
+  background: var(--k-balance-off-bg);
+  color: var(--k-balance-off-text);
+}
+
+.preview {
+  width: 100%;
+  font-size: var(--text-sm);
+}
+
+.preview th,
+.preview td {
+  padding: var(--space-1) var(--space-2);
+  text-align: left;
+  border-bottom: 1px solid var(--rule);
+}
+
+.preview th {
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.preview .num {
+  text-align: right;
+}
+
+.error {
+  color: var(--negative);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 600px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .row .value {
+    grid-column: 1 / 2;
+  }
+}

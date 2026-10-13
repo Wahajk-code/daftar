@@ -1,0 +1,135 @@
+.wrap {
+  min-width: 0;
+}
+
+.scroll {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  font-size: var(--text-base);
+}
+
+.table th,
+.table td {
+  padding: 0 var(--space-3);
+  height: var(--row-height);
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--k-table-rule);
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--k-table-head-bg);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-2);
+  white-space: nowrap;
+  border-bottom: 1px solid var(--rule-strong);
+}
+
+.table tbody tr:hover {
+  background: var(--k-table-row-hover);
+}
+
+.table tfoot td,
+.table tfoot th {
+  font-weight: 600;
+  border-top: 1px solid var(--k-table-total-rule);
+  border-bottom: 3px double var(--k-table-total-rule);
+  background: var(--bg-surface);
+}
+
+.numeric {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+
+.sortButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+
+.sortButton:hover {
+  color: var(--text-1);
+}
+
+.sortIdle {
+  opacity: 0.45;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--k-table-rule);
+  font-size: var(--text-sm);
+}
+
+.pageButtons {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--k-table-rule);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px 2px 8px;
+  background: var(--accent-wash);
+  color: var(--accent);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.chip button {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 2px;
+  color: inherit;
+}
+
+.chip button:hover {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.clearAll {
+  background: none;
+  border: 0;
+  padding: 2px 4px;
+  color: var(--text-2);
+  font-size: var(--text-sm);
+  text-decoration: underline;
+}
+
+.clearAll:hover {
+  color: var(--text-1);
+}
