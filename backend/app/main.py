@@ -37,7 +37,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         yield
 
     # `debug` is never passed to FastAPI: its debug page would replace the bare 500 with a traceback.
-    app = FastAPI(title="Daftar API", version=__version__, lifespan=lifespan)
+    # The interactive documentation is for development; a live API does not publish a map of itself.
+    live = settings.environment == "production"
+    app = FastAPI(
+        title="Daftar API",
+        version=__version__,
+        lifespan=lifespan,
+        docs_url=None if live else "/docs",
+        redoc_url=None if live else "/redoc",
+        openapi_url=None if live else "/openapi.json",
+    )
     app.add_middleware(CorrelationIdMiddleware)
     # In memory, one process: the counters reset on restart (docs/architecture.md section 9a). Tests replace this.
     app.state.rate_limiter = RateLimiter(

@@ -544,7 +544,8 @@ def test_c5_a_draft_cannot_be_approved_and_a_decision_is_made_once(
     approver = auth(make(Role.APPROVER))
     draft = create(client, author, direct_expense(lookups)).json()
     early = act(client, approver, draft, "approve")
-    assert (early.status_code, early.json()["code"]) == (409, "INVALID_TRANSITION")
+    # An approver cannot even see a draft, so there is nothing for them to decide on until it is submitted.
+    assert (early.status_code, early.json()["code"]) == (404, "NOT_FOUND")
     expense = submitted_expense(client, author, lookups)
     approved = act(client, approver, expense, "approve").json()
     for action, body in (("approve", {}), ("reject", {"comment": "changed my mind"})):
@@ -665,8 +666,10 @@ def test_a3_staff_lists_show_only_their_own_and_everyone_else_sees_all(
     create(client, auth(theirs), direct_expense(lookups, description="Theirs"))
     assert [e["description"] for e in client.get("/api/v1/expenses", headers=auth(mine)).json()["items"]] == ["Mine"]
     assert client.get("/api/v1/expenses?mine=false", headers=auth(mine)).json()["total"] == 1
-    for role in (Role.ACCOUNTANT, Role.APPROVER, Role.ADMIN):
+    for role in (Role.ACCOUNTANT, Role.ADMIN):
         assert client.get("/api/v1/expenses", headers=auth(make(role))).json()["total"] == 2
+    # Both are still drafts, which an approver does not see until they are submitted.
+    assert client.get("/api/v1/expenses", headers=auth(make(Role.APPROVER))).json()["total"] == 0
     assert client.get("/api/v1/expenses?mine=true", headers=auth(make(Role.ADMIN))).json()["total"] == 0
 
 

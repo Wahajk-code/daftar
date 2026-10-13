@@ -52,6 +52,7 @@ from app.core.money import ZERO, to_paisa
 from app.core.numbering import format_number, voucher_year
 from app.core.principal import Principal
 from app.core.transitions import start_posted
+from app.core.visibility import drafts_hidden_from
 from app.models.base import JsonDict
 from app.models.documents import DocumentEvent, Expense, Purchase
 from app.models.master import Account, Category, CostCenter, Project
@@ -78,15 +79,18 @@ class VoucherService:
 
     # Reading ---------------------------------------------------------------------------------------------------------
 
-    def get(self, voucher_id: int) -> Voucher:
+    def get(self, voucher_id: int, actor: Principal | None = None) -> Voucher:
         voucher = voucher_repository.get_voucher(self._session, voucher_id)
-        if voucher is None:
+        if voucher is None or (
+            actor is not None and drafts_hidden_from(actor) and voucher.status is DocumentStatus.DRAFT
+        ):
             raise NotFoundError("There is no such voucher.")
         return voucher
 
     def list_vouchers(
         self,
         *,
+        actor: Principal | None = None,
         voucher_type: VoucherType | None,
         status: DocumentStatus | None,
         date_from: date | None,
@@ -110,10 +114,11 @@ class VoucherService:
             sort=sort,
             limit=limit,
             offset=offset,
+            hide_drafts=actor is not None and drafts_hidden_from(actor),
         )
 
-    def history(self, voucher_id: int) -> list[DocumentEvent]:
-        self.get(voucher_id)
+    def history(self, voucher_id: int, actor: Principal | None = None) -> list[DocumentEvent]:
+        self.get(voucher_id, actor)
         return document_repository.events_of(self._session, DocumentType.VOUCHER, voucher_id)
 
     def actions(self, actor: Principal, voucher: Voucher) -> list[str]:

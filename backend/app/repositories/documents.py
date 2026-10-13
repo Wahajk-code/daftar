@@ -69,8 +69,11 @@ def list_expenses(
     sort: str | None,
     limit: int,
     offset: int,
+    hide_drafts: bool = False,
 ) -> tuple[list[Expense], int]:
     statement = _expense_query()
+    if hide_drafts:
+        statement = statement.where(Expense.status != DocumentStatus.DRAFT)
     if only_created_by is not None:
         statement = statement.where(Expense.created_by == only_created_by)
     if status is not None:
@@ -157,8 +160,11 @@ def list_purchases(
     sort: str | None,
     limit: int,
     offset: int,
+    hide_drafts: bool = False,
 ) -> tuple[list[Purchase], int]:
     statement = _purchase_query()
+    if hide_drafts:
+        statement = statement.where(Purchase.status != DocumentStatus.DRAFT)
     if only_created_by is not None:
         statement = statement.where(Purchase.created_by == only_created_by)
     if status is not None:

@@ -396,11 +396,19 @@ def test_d4_rejecting_needs_a_comment_and_nobody_approves_their_own_purchase(
 
 
 def test_purchases_are_for_the_office_only(client: TestClient, make: Make, auth: Auth, lookups: Lookups) -> None:
-    saved = create(client, auth(make(Role.ACCOUNTANT)), purchase_body(lookups.vendors["unreg_nonfiler"])).json()
+    accountant = auth(make(Role.ACCOUNTANT))
+    saved = create(client, accountant, purchase_body(lookups.vendors["unreg_nonfiler"])).json()
     staff, approver = auth(make(Role.STAFF)), auth(make(Role.APPROVER))
-    for path in ("/api/v1/purchases", f"/api/v1/purchases/{saved['id']}", f"/api/v1/purchases/{saved['id']}/history"):
+    own = f"/api/v1/purchases/{saved['id']}"
+    for path in ("/api/v1/purchases", own, f"{own}/history"):
         assert client.get(path, headers=staff).status_code == 403
-        assert client.get(path, headers=approver).status_code == 200
+    # An approver reads the list, but a draft is hidden from them until it is submitted.
+    assert client.get("/api/v1/purchases", headers=approver).status_code == 200
+    assert client.get(own, headers=approver).status_code == 404
+    sent = client.post(f"{own}/submit", headers={**accountant, "If-Match": str(saved["version"])})
+    assert sent.status_code == 200, sent.text
+    assert client.get(own, headers=approver).status_code == 200
+    assert client.get(f"{own}/history", headers=approver).status_code == 200
     assert create(client, staff, purchase_body(lookups.vendors["unreg_nonfiler"])).status_code == 403
     assert create(client, approver, purchase_body(lookups.vendors["unreg_nonfiler"])).status_code == 403
 

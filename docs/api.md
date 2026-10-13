@@ -159,6 +159,8 @@ Every path is under `/api/v1` except the probes. Errors share one shape (`docs/a
 | GET | `/api/v1/reports/activity/csv` | `export_report_activity` | accountant, admin, approver | Export Activity |
 | GET | `/api/v1/reports/expenses` | `report_expenses` | accountant, admin, approver | Expenses by type and cost centre. |
 | GET | `/api/v1/reports/expenses/csv` | `export_report_expenses` | accountant, admin, approver | The same report as a CSV file. Limited per user and recorded in the audit log. |
+| GET | `/api/v1/reports/export/expenses` | `export_expense_list` | accountant, admin, approver | Every expense the list filters match, as a CSV file. Limited per user and recorded in the audit log. |
+| GET | `/api/v1/reports/export/purchases` | `export_purchase_list` | accountant, admin, approver | Every purchase the list filters match, as a CSV file. Limited per user and recorded in the audit log. |
 | GET | `/api/v1/reports/overview` | `report_overview` | accountant, admin, approver | Month by month spend and the spread of documents over statuses: the figures behind the home screen's charts. |
 | GET | `/api/v1/reports/purchases` | `report_purchases` | accountant, admin, approver | Purchases by vendor, split into registered and unregistered vendors. |
 | GET | `/api/v1/reports/purchases/csv` | `export_report_purchases` | accountant, admin, approver | Export Purchases |

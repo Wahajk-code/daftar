@@ -90,8 +90,11 @@ def list_vouchers(
     sort: str | None,
     limit: int,
     offset: int,
+    hide_drafts: bool = False,
 ) -> tuple[list[Voucher], int]:
     statement = _voucher_query()
+    if hide_drafts:
+        statement = statement.where(Voucher.status != DocumentStatus.DRAFT)
     if voucher_type is not None:
         statement = statement.where(Voucher.voucher_type == voucher_type)
     if status is not None:

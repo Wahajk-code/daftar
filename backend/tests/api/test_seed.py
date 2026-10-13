@@ -6,6 +6,7 @@ to it: numbers are gapless, vouchers balance, the period lock holds. Each test r
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -280,6 +281,21 @@ def test_the_command_refuses_to_run_in_production(
     monkeypatch.setattr(seed_command, "get_settings", lambda: settings.model_copy(update={"environment": "production"}))
     assert seed_command.main() == 2
     assert "production" in capsys.readouterr().err
+
+
+def test_a_demonstration_site_can_be_seeded_in_production_only_on_purpose(
+    settings: Settings, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    refused = settings.model_copy(update={"environment": "production", "allow_demo_seed": False})
+    monkeypatch.setattr(seed_command, "get_settings", lambda: refused)
+    assert seed_command.main() == 2
+    assert "ALLOW_DEMO_SEED" in capsys.readouterr().err
+    allowed = settings.model_copy(update={"environment": "production", "allow_demo_seed": True})
+    monkeypatch.setattr(seed_command, "get_settings", lambda: allowed)
+    # With the switch on it gets past the guard. The database is made to look empty so nothing is written.
+    monkeypatch.setattr(seed_command, "inspect", lambda engine: SimpleNamespace(has_table=lambda name: False))
+    assert seed_command.main() == 1
+    assert "no tables" in capsys.readouterr().err
 
 
 def test_the_demonstration_receipts_are_put_back_when_the_store_starts_empty(

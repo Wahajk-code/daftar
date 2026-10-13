@@ -28,6 +28,7 @@ from app.core.errors import (
 from app.core.mail import Outbox
 from app.core.money import ZERO, percent_of
 from app.core.principal import Principal
+from app.core.visibility import drafts_hidden_from
 from app.models.base import JsonDict
 from app.models.documents import DocumentEvent, Expense, ExpenseAllocation
 from app.models.master import Category, CostCenter, Project
@@ -107,13 +108,16 @@ class ExpenseService:
             sort=sort,
             limit=limit,
             offset=offset,
+            hide_drafts=drafts_hidden_from(actor),
         )
 
     def duplicates(self, actor: Principal, expense_id: int) -> list[DuplicateWarning]:
         """Other expenses that look like this one. Staff are shown only their own."""
         expense = self.get(actor, expense_id)
         only_author = actor.id if actor.role is Role.STAFF else None
-        return DuplicateFinder(self._session).for_expense(expense, only_author=only_author)
+        return DuplicateFinder(self._session).for_expense(
+            expense, only_author=only_author, hide_drafts=drafts_hidden_from(actor)
+        )
 
     def history(self, actor: Principal, expense_id: int) -> list[DocumentEvent]:
         self.get(actor, expense_id)
@@ -320,6 +324,8 @@ class ExpenseService:
     def _visible(self, actor: Principal, expense: Expense | None) -> Expense:
         """Staff asking for someone else's expense are told it does not exist, so its existence is not leaked."""
         if expense is None or (actor.role is Role.STAFF and expense.created_by != actor.id):
+            raise NotFoundError("There is no such expense.")
+        if drafts_hidden_from(actor) and expense.status is DocumentStatus.DRAFT:
             raise NotFoundError("There is no such expense.")
         return expense
 

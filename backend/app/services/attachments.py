@@ -28,6 +28,7 @@ from app.core.images import ImageRejected, clean_image
 from app.core.principal import Principal
 from app.core.rate_limit import RateLimiter
 from app.core.storage import Storage, StorageError
+from app.core.visibility import drafts_hidden_from
 from app.models.documents import Attachment, Expense, Purchase
 from app.repositories import documents as document_repository
 from app.services.audit import AuditService
@@ -180,9 +181,13 @@ class AttachmentService:
             expense = self._session.get(Expense, parent_id)
             if expense is None or (actor.role is Role.STAFF and expense.created_by != actor.id):
                 raise NotFoundError("There is no such expense.")
+            if drafts_hidden_from(actor) and expense.status is DocumentStatus.DRAFT:
+                raise NotFoundError("There is no such expense.")
             return expense
         purchase = self._session.get(Purchase, parent_id)
         if purchase is None or actor.role is Role.STAFF:
+            raise NotFoundError("There is no such purchase.")
+        if drafts_hidden_from(actor) and purchase.status is DocumentStatus.DRAFT:
             raise NotFoundError("There is no such purchase.")
         return purchase
 

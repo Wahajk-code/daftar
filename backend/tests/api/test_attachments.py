@@ -213,10 +213,18 @@ def test_c3_who_may_read_a_receipt(client: TestClient, make: Make, auth: Auth, l
     attachment = upload(client, author, expense, image_bytes("JPEG")).json()
     url = f"/api/v1/attachments/{attachment['id']}/content"
     listing = f"/api/v1/expenses/{expense['id']}/attachments"
-    for role in (Role.ADMIN, Role.ACCOUNTANT, Role.APPROVER):
+    for role in (Role.ADMIN, Role.ACCOUNTANT):
         reader = auth(make(role))
         assert client.get(url, headers=reader).status_code == 200
         assert len(client.get(listing, headers=reader).json()) == 1
+    # An approver sees a receipt only once the expense has been submitted.
+    approver = auth(make(Role.APPROVER))
+    assert client.get(url, headers=approver).status_code == 404
+    assert client.get(listing, headers=approver).status_code == 404
+    current = client.get(f"/api/v1/expenses/{expense['id']}", headers=author).json()
+    client.post(f"/api/v1/expenses/{expense['id']}/submit", headers={**author, "If-Match": str(current["version"])})
+    assert client.get(url, headers=approver).status_code == 200
+    assert len(client.get(listing, headers=approver).json()) == 1
     stranger = auth(make(Role.STAFF))
     for path in (url, listing):
         refused = client.get(path, headers=stranger)
@@ -313,8 +321,7 @@ def test_d6_documents_attach_to_a_purchase_under_the_same_rules(
     bad = client.post(path, files={"file": ("memo.pdf", b"%PDF-1.7", "application/pdf")}, headers=accountant)
     assert (bad.status_code, bad.json()["code"]) == (422, "UNSUPPORTED_FILE_TYPE")
     approver = auth(make(Role.APPROVER))
-    assert len(client.get(path, headers=approver).json()) == 1
-    assert client.get(f"/api/v1/attachments/{sent.json()['id']}/content", headers=approver).status_code == 200
+    assert client.get(path, headers=approver).status_code == 404  # a draft purchase is hidden from an approver
     staff = auth(make(Role.STAFF))
     assert client.get(path, headers=staff).status_code == 403
     assert client.get(f"/api/v1/attachments/{sent.json()['id']}/content", headers=staff).status_code == 404
@@ -326,5 +333,8 @@ def test_d6_documents_attach_to_a_purchase_under_the_same_rules(
         f"/api/v1/purchases/{purchase['id']}/submit", headers={**accountant, "If-Match": str(purchase["version"])}
     )
     assert submitted.status_code == 200
+    # Once it is submitted the approver may read its receipts.
+    assert len(client.get(path, headers=approver).json()) == 1
+    assert client.get(f"/api/v1/attachments/{sent.json()['id']}/content", headers=approver).status_code == 200
     locked = client.post(path, files={"file": ("a.png", image_bytes("PNG"), "image/png")}, headers=accountant)
     assert locked.json()["code"] == "DOCUMENT_LOCKED"

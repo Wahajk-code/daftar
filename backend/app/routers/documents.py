@@ -261,6 +261,7 @@ def list_purchases(
     q: Search = None,
 ) -> Page[PurchaseRead]:
     rows, total = service.list_purchases(
+        actor=actor,
         status=status,
         vendor_id=vendor_id,
         registered=registered,
@@ -321,13 +322,15 @@ def preview_purchase(body: PurchasePreviewRequest, service: PurchaseServiceDep) 
 
 @purchases.get("/{purchase_id}", operation_id="get_purchase", **OFFICE)
 def get_purchase(purchase_id: int, actor: PrincipalDep, service: PurchaseServiceDep) -> PurchaseRead:
-    return _purchase(service.get(purchase_id), actor, service)
+    return _purchase(service.get(purchase_id, actor), actor, service)
 
 
 @purchases.get("/{purchase_id}/duplicates", operation_id="get_purchase_duplicates", **OFFICE)
-def get_purchase_duplicates(purchase_id: int, service: PurchaseServiceDep) -> list[DuplicateWarningRead]:
+def get_purchase_duplicates(
+    purchase_id: int, actor: PrincipalDep, service: PurchaseServiceDep
+) -> list[DuplicateWarningRead]:
     """Documents this one resembles. A warning only: saving and approving are never blocked."""
-    return [DuplicateWarningRead.model_validate(w) for w in service.duplicates(purchase_id)]
+    return [DuplicateWarningRead.model_validate(w) for w in service.duplicates(purchase_id, actor)]
 
 
 @purchases.post("", operation_id="create_purchase", status_code=status.HTTP_201_CREATED, **PURCHASE_AUTHORS)
@@ -387,8 +390,8 @@ def reopen_purchase(
 
 
 @purchases.get("/{purchase_id}/history", operation_id="get_purchase_history", **OFFICE)
-def get_purchase_history(purchase_id: int, service: PurchaseServiceDep) -> list[HistoryItem]:
-    return _history(service.history(purchase_id))
+def get_purchase_history(purchase_id: int, actor: PrincipalDep, service: PurchaseServiceDep) -> list[HistoryItem]:
+    return _history(service.history(purchase_id, actor))
 
 
 @purchases.get("/{purchase_id}/attachments", operation_id="list_purchase_attachments", **OFFICE)

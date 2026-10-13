@@ -55,6 +55,7 @@ def list_vouchers(
     q: Annotated[str | None, Query(max_length=100, description="Matches the number or the narration.")] = None,
 ) -> Page[VoucherRead]:
     rows, total = service.list_vouchers(
+        actor=actor,
         voucher_type=voucher_type,
         status=status,
         date_from=date_from,
@@ -84,7 +85,7 @@ def check_voucher_balance(body: BalanceCheckRequest, service: VoucherServiceDep)
 
 @router.get("/{voucher_id}", operation_id="get_voucher", **OFFICE)
 def get_voucher(voucher_id: int, actor: PrincipalDep, service: VoucherServiceDep) -> VoucherRead:
-    return _read(service.get(voucher_id), actor, service)
+    return _read(service.get(voucher_id, actor), actor, service)
 
 
 @router.post("", operation_id="create_voucher", status_code=status.HTTP_201_CREATED, **BOOKKEEPERS)
@@ -172,5 +173,5 @@ def void_voucher(
 
 
 @router.get("/{voucher_id}/history", operation_id="get_voucher_history", **OFFICE)
-def get_voucher_history(voucher_id: int, service: VoucherServiceDep) -> list[HistoryItem]:
-    return _history(service.history(voucher_id))
+def get_voucher_history(voucher_id: int, actor: PrincipalDep, service: VoucherServiceDep) -> list[HistoryItem]:
+    return _history(service.history(voucher_id, actor))

@@ -29,38 +29,48 @@ class DuplicateFinder:
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def for_purchase(self, purchase: Purchase) -> list[DuplicateWarning]:
+    def for_purchase(self, purchase: Purchase, *, hide_drafts: bool = False) -> list[DuplicateWarning]:
         found: list[DuplicateWarning] = []
-        for row in duplicate_repository.purchases_with_invoice(self._session, purchase):
+        for row in duplicate_repository.purchases_with_invoice(self._session, purchase, hide_drafts=hide_drafts):
             reason = f"Purchase {row.id} from the same vendor already uses invoice number {purchase.invoice_number}."
             found.append(_warning(DuplicateKind.SAME_INVOICE, DocumentType.PURCHASE, row, reason))
-        for row in duplicate_repository.similar_purchases(self._session, purchase):
+        for row in duplicate_repository.similar_purchases(self._session, purchase, hide_drafts=hide_drafts):
             reason = f"Purchase {row.id} from the same vendor is {row.amount:,.2f} on {row.document_date.isoformat()}."
             found.append(_warning(DuplicateKind.SIMILAR, DocumentType.PURCHASE, row, reason))
-        found += self._receipts(purchase_id=purchase.id, expense_id=None, only_author=None)
+        found += self._receipts(purchase_id=purchase.id, expense_id=None, only_author=None, hide_drafts=hide_drafts)
         return found
 
-    def for_expense(self, expense: Expense, *, only_author: int | None) -> list[DuplicateWarning]:
+    def for_expense(
+        self, expense: Expense, *, only_author: int | None, hide_drafts: bool = False
+    ) -> list[DuplicateWarning]:
         """`only_author` limits what is shown to documents that person may see (Staff see only their own)."""
         found: list[DuplicateWarning] = []
-        for row in duplicate_repository.similar_expenses(self._session, expense, only_author=only_author):
+        for row in duplicate_repository.similar_expenses(
+            self._session, expense, only_author=only_author, hide_drafts=hide_drafts
+        ):
             reason = f"Expense {row.id} in the same category is {row.amount:,.2f} on {row.document_date.isoformat()}."
             found.append(_warning(DuplicateKind.SIMILAR, DocumentType.EXPENSE, row, reason))
-        found += self._receipts(purchase_id=None, expense_id=expense.id, only_author=only_author)
+        found += self._receipts(
+            purchase_id=None, expense_id=expense.id, only_author=only_author, hide_drafts=hide_drafts
+        )
         return found
 
     def _receipts(
-        self, *, expense_id: int | None, purchase_id: int | None, only_author: int | None
+        self, *, expense_id: int | None, purchase_id: int | None, only_author: int | None, hide_drafts: bool
     ) -> list[DuplicateWarning]:
         found: list[DuplicateWarning] = []
         for row in duplicate_repository.expenses_sharing_a_receipt(
-            self._session, expense_id=expense_id, purchase_id=purchase_id, only_author=only_author
+            self._session,
+            expense_id=expense_id,
+            purchase_id=purchase_id,
+            only_author=only_author,
+            hide_drafts=hide_drafts,
         ):
             reason = f"Expense {row.id} holds a receipt identical to one on this document."
             found.append(_warning(DuplicateKind.SAME_RECEIPT, DocumentType.EXPENSE, row, reason))
         if only_author is None:  # Staff have no access to purchases, so they are never told about one
             for row in duplicate_repository.purchases_sharing_a_receipt(
-                self._session, expense_id=expense_id, purchase_id=purchase_id
+                self._session, expense_id=expense_id, purchase_id=purchase_id, hide_drafts=hide_drafts
             ):
                 reason = f"Purchase {row.id} holds a receipt identical to one on this document."
                 found.append(_warning(DuplicateKind.SAME_RECEIPT, DocumentType.PURCHASE, row, reason))

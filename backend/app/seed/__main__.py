@@ -1,4 +1,5 @@
-"""Run the seed against the configured database: `python -m app.seed`. It never runs in production."""
+"""Run the seed against the configured database: `python -m app.seed`. It never runs in production unless
+ALLOW_DEMO_SEED is set, which is how a demonstration site is filled."""
 
 import sys
 
@@ -15,8 +16,11 @@ from app.seed.run import describe, seed
 
 def main() -> int:
     settings = get_settings()
-    if settings.environment == "production":
-        sys.stderr.write("Refusing to seed: this is a production environment.\n")
+    if settings.environment == "production" and not settings.allow_demo_seed:
+        sys.stderr.write(
+            "Refusing to seed: this is a production environment. "
+            "Set ALLOW_DEMO_SEED=true only for a demonstration site.\n"
+        )
         return 2
     engine = build_engine(settings.database_url, settings)
     if not inspect(engine).has_table("users"):

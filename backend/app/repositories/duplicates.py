@@ -21,6 +21,10 @@ S = DocumentStatus
 COUNTED = (S.DRAFT, S.SUBMITTED, S.APPROVED, S.POSTED)
 
 
+def _counted(hide_drafts: bool) -> tuple[DocumentStatus, ...]:
+    return tuple(s for s in COUNTED if not (hide_drafts and s is S.DRAFT))
+
+
 def _close_in_value(column: Any, amount: Decimal) -> Any:
     return func.abs(column - amount) * 100 <= amount * AMOUNT_TOLERANCE_PERCENT
 
@@ -30,7 +34,7 @@ def _close_in_time(column: Any, day: date) -> Any:
     return column.between(day - window, day + window)
 
 
-def purchases_with_invoice(session: Session, purchase: Purchase) -> Sequence[Any]:
+def purchases_with_invoice(session: Session, purchase: Purchase, *, hide_drafts: bool = False) -> Sequence[Any]:
     """The same vendor's invoice number, ignoring case and stray spaces."""
     if not purchase.invoice_number or not purchase.invoice_number.strip():
         return []
@@ -39,33 +43,35 @@ def purchases_with_invoice(session: Session, purchase: Purchase) -> Sequence[Any
     ).where(
         Purchase.id != purchase.id,
         Purchase.vendor_id == purchase.vendor_id,
-        Purchase.status.in_(COUNTED),
+        Purchase.status.in_(_counted(hide_drafts)),
         func.lower(func.btrim(Purchase.invoice_number)) == purchase.invoice_number.strip().lower(),
     )
     return session.execute(statement.order_by(Purchase.id)).all()
 
 
-def similar_purchases(session: Session, purchase: Purchase) -> Sequence[Any]:
+def similar_purchases(session: Session, purchase: Purchase, *, hide_drafts: bool = False) -> Sequence[Any]:
     """Same vendor, about the same gross value, within a week."""
     statement = select(
         Purchase.id, Purchase.status, Purchase.document_date, Purchase.gross_total.label("amount")
     ).where(
         Purchase.id != purchase.id,
         Purchase.vendor_id == purchase.vendor_id,
-        Purchase.status.in_(COUNTED),
+        Purchase.status.in_(_counted(hide_drafts)),
         _close_in_value(Purchase.gross_total, purchase.gross_total),
         _close_in_time(Purchase.document_date, purchase.document_date),
     )
     return session.execute(statement.order_by(Purchase.id)).all()
 
 
-def similar_expenses(session: Session, expense: Expense, *, only_author: int | None) -> Sequence[Any]:
+def similar_expenses(
+    session: Session, expense: Expense, *, only_author: int | None, hide_drafts: bool = False
+) -> Sequence[Any]:
     """Same author, same category, about the same amount, within a week. `only_author` limits who may be shown."""
     statement = select(Expense.id, Expense.status, Expense.document_date, Expense.amount).where(
         Expense.id != expense.id,
         Expense.created_by == expense.created_by,
         Expense.category_id == expense.category_id,
-        Expense.status.in_(COUNTED),
+        Expense.status.in_(_counted(hide_drafts)),
         _close_in_value(Expense.amount, expense.amount),
         _close_in_time(Expense.document_date, expense.document_date),
     )
@@ -84,7 +90,12 @@ def _receipt_hashes(session: Session, *, expense_id: int | None, purchase_id: in
 
 
 def expenses_sharing_a_receipt(
-    session: Session, *, expense_id: int | None, purchase_id: int | None, only_author: int | None
+    session: Session,
+    *,
+    expense_id: int | None,
+    purchase_id: int | None,
+    only_author: int | None,
+    hide_drafts: bool = False,
 ) -> Sequence[Any]:
     """Other expenses holding a receipt with the same SHA-256 as one on this document."""
     hashes = _receipt_hashes(session, expense_id=expense_id, purchase_id=purchase_id)
@@ -94,7 +105,9 @@ def expenses_sharing_a_receipt(
         select(Expense.id, Expense.status, Expense.document_date, Expense.amount)
         .select_from(Attachment)
         .join(Expense, Expense.id == Attachment.expense_id)
-        .where(Attachment.removed_at.is_(None), Attachment.sha256.in_(hashes), Expense.status.in_(COUNTED))
+        .where(
+            Attachment.removed_at.is_(None), Attachment.sha256.in_(hashes), Expense.status.in_(_counted(hide_drafts))
+        )
         .distinct()
         .order_by(Expense.id)
     )
@@ -105,7 +118,9 @@ def expenses_sharing_a_receipt(
     return session.execute(statement).all()
 
 
-def purchases_sharing_a_receipt(session: Session, *, expense_id: int | None, purchase_id: int | None) -> Sequence[Any]:
+def purchases_sharing_a_receipt(
+    session: Session, *, expense_id: int | None, purchase_id: int | None, hide_drafts: bool = False
+) -> Sequence[Any]:
     hashes = _receipt_hashes(session, expense_id=expense_id, purchase_id=purchase_id)
     if not hashes:
         return []
@@ -113,7 +128,9 @@ def purchases_sharing_a_receipt(session: Session, *, expense_id: int | None, pur
         select(Purchase.id, Purchase.status, Purchase.document_date, Purchase.gross_total.label("amount"))
         .select_from(Attachment)
         .join(Purchase, Purchase.id == Attachment.purchase_id)
-        .where(Attachment.removed_at.is_(None), Attachment.sha256.in_(hashes), Purchase.status.in_(COUNTED))
+        .where(
+            Attachment.removed_at.is_(None), Attachment.sha256.in_(hashes), Purchase.status.in_(_counted(hide_drafts))
+        )
         .distinct()
         .order_by(Purchase.id)
     )

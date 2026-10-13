@@ -455,7 +455,8 @@ def test_d5_a_purchase_and_its_paying_voucher_link_both_ways(
     voucher = generate_purchase(client, bookkeeper, purchase, category_id=lookups.category.id).json()
     shown = client.get(f"/api/v1/purchases/{purchase['id']}", headers=approver).json()
     assert shown["voucher"]["id"] == voucher["id"]
-    assert client.get(f"/api/v1/vouchers/{voucher['id']}", headers=approver).json()["purchase_id"] == purchase["id"]
+    # The voucher is still a draft, which only the office that writes it sees until it is submitted.
+    assert client.get(f"/api/v1/vouchers/{voucher['id']}", headers=bookkeeper).json()["purchase_id"] == purchase["id"]
 
     done = walk_to_posted(client, bookkeeper, approver, voucher)
     final = client.get(f"/api/v1/purchases/{purchase['id']}", headers=approver).json()

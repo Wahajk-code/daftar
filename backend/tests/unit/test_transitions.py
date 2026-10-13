@@ -33,7 +33,7 @@ def expected_moves(document_type: DocumentType) -> dict[tuple[DocumentStatus, Do
         (S.APPROVED, S.POSTED): BOOKKEEPERS,
     }
     if document_type is T.VOUCHER:
-        moves[(S.POSTED, S.VOID)] = {Role.ADMIN}
+        moves[(S.POSTED, S.VOID)] = BOOKKEEPERS  # the owner decided an Accountant may void as well as an Admin
     return moves
 
 

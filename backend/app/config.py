@@ -2,7 +2,7 @@ from functools import lru_cache
 from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import SecretStr, field_validator, model_validator
+from pydantic import AliasChoices, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 MIN_PRODUCTION_KEY_LENGTH = 32
@@ -21,7 +21,11 @@ class Settings(BaseSettings):
     database_url: str
     migration_database_url: str | None = None
     display_timezone: str = "Asia/Karachi"
-    git_sha: str = "unknown"
+    # The commit this build came from, shown by /version. Render supplies RENDER_GIT_COMMIT on its own.
+    git_sha: str = Field("unknown", validation_alias=AliasChoices("GIT_SHA", "RENDER_GIT_COMMIT"))
+    # A production database is never seeded unless this is set on purpose: it is how a demonstration site gets its
+    # sample people and documents. Leave it off for real data.
+    allow_demo_seed: bool = False
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 
     web_base_url: str = "http://localhost:3001"

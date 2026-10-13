@@ -17,4 +17,5 @@ RUN uv sync --frozen --no-install-project
 COPY . .
 
 EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# One worker only (the rate limiter keeps its counters in the process). A host that names the port (Render) is followed.
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --no-server-header"]

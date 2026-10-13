@@ -219,6 +219,67 @@ def test_the_overview_is_for_the_office_and_months_are_bounded(
     assert client.get("/api/v1/reports/overview?months=13", headers=bookkeeper).status_code == 422
 
 
+# The list exports ----------------------------------------------------------------------------------------------------
+
+
+def test_the_expense_list_export_has_one_row_per_expense_with_the_currency_and_plain_amounts(
+    client: TestClient, bookkeeper: dict[str, str], spending: dict[str, dict[str, Any]]
+) -> None:
+    response = client.get("/api/v1/reports/export/expenses?status=approved&sort=x", headers=bookkeeper)
+    assert response.status_code == 200
+    assert response.content.startswith("﻿".encode())
+    assert "daftar-expense-list-" in response.headers["content-disposition"]
+    rows = rows_of(response)
+    header, body = rows[0], rows[1:]
+    assert header[:2] == ["ID", "Date"]
+    assert {"Amount", "Tax", "Currency", "Status", "Created by", "Created at (UTC)"} <= set(header)
+    assert len(body) == 4  # the draft is not approved
+    column = {name: header.index(name) for name in header}
+    assert {row[column["Currency"]] for row in body} == {"PKR"}
+    assert {row[column["Status"]] for row in body} == {"approved"}
+    assert sorted(row[column["Amount"]] for row in body) == ["100.00", "1500.00", "200.00", "500.00"]
+    assert any(row[column["Cost centre"]].startswith("Shared: ") for row in body)
+
+
+def test_the_expense_list_export_follows_the_list_filters_and_neutralises_formulas(
+    client: TestClient, bookkeeper: dict[str, str], staff: dict[str, str], lookups: Lookups
+) -> None:
+    add_expense(client, staff, None, direct_expense(lookups, description="=HYPERLINK(1)", amount="12.50"))
+    add_expense(client, staff, None, direct_expense(lookups, description="Plain lunch", amount="40.00"))
+    body = rows_of(client.get("/api/v1/reports/export/expenses?q=lunch", headers=bookkeeper))[1:]
+    assert [row[2] for row in body] == ["Plain lunch"]
+    formula = rows_of(client.get("/api/v1/reports/export/expenses?amount_max=20", headers=bookkeeper))[1:]
+    assert [row[2] for row in formula] == ["'=HYPERLINK(1)"]
+
+
+def test_the_purchase_list_export_has_the_tax_figures_and_the_currency(
+    client: TestClient, bookkeeper: dict[str, str], approver: dict[str, str], lookups: Lookups
+) -> None:
+    vendor = lookups.vendors["reg_filer"]
+    saved = client.post("/api/v1/purchases", json=purchase_body(vendor), headers=bookkeeper).json()
+    rows = rows_of(client.get("/api/v1/reports/export/purchases", headers=bookkeeper))
+    header, body = rows[0], rows[1:]
+    assert len(body) == 1
+    column = {name: header.index(name) for name in header}
+    assert body[0][column["Gross"]] == saved["gross_total"]
+    assert body[0][column["Currency"]] == "PKR"
+    assert body[0][column["Vendor"]] == vendor.name
+    assert saved["status"] == "draft"
+    assert body[0][column["Status"]] == "draft"
+    assert client.get("/api/v1/reports/export/purchases", headers=approver).status_code == 200
+
+
+def test_the_list_exports_are_for_the_office_and_are_audited(
+    client: TestClient, staff: dict[str, str], approver: dict[str, str], db_session: Session
+) -> None:
+    for path in ("expenses", "purchases"):
+        denied = client.get(f"/api/v1/reports/export/{path}", headers=staff)
+        assert (denied.status_code, denied.json()["code"]) == (403, "FORBIDDEN")
+        assert client.get(f"/api/v1/reports/export/{path}", headers=approver).status_code == 200
+    actions = db_session.execute(text("SELECT count(*) FROM audit_events WHERE action = 'report.exported'")).scalar()
+    assert actions == 2
+
+
 # Purchases by vendor -------------------------------------------------------------------------------------------------
 
 

@@ -30,6 +30,7 @@ from app.core.mail import Outbox
 from app.core.money import MAX_AMOUNT
 from app.core.principal import Principal
 from app.core.tax import LineAmounts, LineError, compute_line, total_lines
+from app.core.visibility import drafts_hidden_from
 from app.models.base import JsonDict
 from app.models.documents import DocumentEvent, Purchase, PurchaseLine
 from app.models.vendor import Vendor
@@ -83,19 +84,23 @@ class PurchaseService:
 
     # Reading ---------------------------------------------------------------------------------------------------------
 
-    def get(self, purchase_id: int) -> Purchase:
+    def get(self, purchase_id: int, actor: Principal | None = None) -> Purchase:
         purchase = document_repository.get_purchase(self._session, purchase_id)
-        if purchase is None:
+        if purchase is None or (
+            actor is not None and drafts_hidden_from(actor) and purchase.status is DocumentStatus.DRAFT
+        ):
             raise NotFoundError("There is no such purchase.")
         return purchase
 
-    def duplicates(self, purchase_id: int) -> list[DuplicateWarning]:
+    def duplicates(self, purchase_id: int, actor: Principal | None = None) -> list[DuplicateWarning]:
         """Other purchases and expenses that look like this one."""
-        return DuplicateFinder(self._session).for_purchase(self.get(purchase_id))
+        hide = actor is not None and drafts_hidden_from(actor)
+        return DuplicateFinder(self._session).for_purchase(self.get(purchase_id, actor), hide_drafts=hide)
 
     def list_purchases(
         self,
         *,
+        actor: Principal | None = None,
         status: DocumentStatus | None,
         vendor_id: int | None,
         registered: bool | None,
@@ -122,10 +127,11 @@ class PurchaseService:
             sort=sort,
             limit=limit,
             offset=offset,
+            hide_drafts=actor is not None and drafts_hidden_from(actor),
         )
 
-    def history(self, purchase_id: int) -> list[DocumentEvent]:
-        self.get(purchase_id)
+    def history(self, purchase_id: int, actor: Principal | None = None) -> list[DocumentEvent]:
+        self.get(purchase_id, actor)
         return document_repository.events_of(self._session, DocumentType.PURCHASE, purchase_id)
 
     def actions(self, actor: Principal, purchase: Purchase) -> list[str]:
