@@ -62,7 +62,7 @@ function NewMenu() {
       {(close) => (
         <ul className={styles.menu}>
           {create.allowed.includes("expense") ? (
-            <li>
+            <li className="touch-only">
               <button
                 type="button"
                 onClick={() => {

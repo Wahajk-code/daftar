@@ -20,7 +20,8 @@
   transform: scale(0.94);
 }
 
-@media (max-width: 900px) {
+/* Only where the main pointer is a finger: a narrow desktop window does not get it. */
+@media (pointer: coarse), (hover: none) {
   .button {
     display: grid;
   }

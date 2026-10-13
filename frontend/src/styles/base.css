@@ -215,6 +215,13 @@ table,
   display: none;
 }
 
+/* Things that only make sense on a phone or tablet (taking a photo): hidden wherever the main pointer is a mouse. */
+@media (pointer: fine) and (hover: hover) {
+  .touch-only {
+    display: none !important;
+  }
+}
+
 /* A report's tables are wide: its pages are printed on a landscape sheet. */
 @page report {
   size: A4 landscape;

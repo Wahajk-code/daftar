@@ -67,7 +67,9 @@ export function Dialog({
       className={`${styles.dialog} ${styles[size]}`}
       aria-labelledby={titleId}
       onCancel={(event) => {
-        // Escape asks to close; the parent decides, and the sheet then animates out.
+        // A file chooser inside the form fires its own "cancel" event when it is dismissed, and that event bubbles up here.
+        // Only the dialog's own cancel (the Escape key) asks to close; the parent decides, and the sheet animates out.
+        if (event.target !== event.currentTarget) return;
         event.preventDefault();
         onClose();
       }}

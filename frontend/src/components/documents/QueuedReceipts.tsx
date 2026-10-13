@@ -70,7 +70,7 @@ export function QueuedReceipts({ files, onChange, empty, chooseLabel }: { files:
         }}
       />
       <div className={styles.buttons}>
-        <Button icon={<IconCamera size={20} stroke={1.75} aria-hidden />} onClick={() => camera.current?.click()}>
+        <Button className="touch-only" icon={<IconCamera size={20} stroke={1.75} aria-hidden />} onClick={() => camera.current?.click()}>
           Take a photo
         </Button>
         <Button icon={<IconFileUpload size={20} stroke={1.75} aria-hidden />} onClick={() => input.current?.click()}>
