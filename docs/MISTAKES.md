@@ -278,4 +278,16 @@ Caught:     The owner, from the missing email and the Render log.
 Why wrong:  A host's network rules were left as an assumption, and the failure is invisible in the app because email errors are logged, not shown.
 Fix:        The limit is documented in `deploy.md` and `build-plan.md`; email from the live site needs a paid instance or an HTTPS mail API, and the owner chose to show the emails as screenshots.
 
+### M46: A change split across two commands left the local API unable to start (submission)
+What:       Adding the security-headers middleware, I edited `main.py` to use it in one command and meant to add its import in the next. The second command was interrupted, so for a while the local API could not import and would not have started.
+Caught:     By me, re-reading the state after the interruption.
+Why wrong:  A change that only works as a pair of edits should be one edit. The cost was small only because the stack was not being used at that moment.
+Fix:        The import was added at once; related edits to one file are now made together.
+
+### M47: An approval request gave the wrong count of emails (deploy)
+What:       I asked the owner to approve sending "8 emails" to test every template. The code has 7 email variants, and I only noticed when writing the script.
+Caught:     By me, and corrected in the next message to the owner.
+Why wrong:  I described the action from memory instead of counting the templates first, in a request whose purpose is to say exactly what will happen.
+Fix:        The request was corrected before anything was sent. I now count from the code when I list what an action will do.
+
 <!-- entries are added as they happen -->
