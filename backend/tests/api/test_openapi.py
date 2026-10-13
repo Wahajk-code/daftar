@@ -1,8 +1,10 @@
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI
 
 from app.core.errors import ErrorCode
+from app.openapi_export import render_openapi
 
 PROBE_PATHS = {"/health", "/ready", "/version"}
 DOCUMENTED_ERRORS = {"400", "401", "403", "404", "409", "413", "422", "429", "500"}
@@ -38,3 +40,13 @@ def test_the_inventory_is_not_empty(route_inventory: list[dict[str, Any]]) -> No
         ("GET", "/version"),
         ("GET", "/api/v1/me"),
     }
+
+
+def test_the_committed_openapi_file_is_current(app: FastAPI) -> None:
+    """Clients generate their types from backend/openapi.json; a stale copy would hand them the wrong API."""
+    committed = Path(__file__).resolve().parents[2] / "openapi.json"
+    assert committed.read_text(encoding="utf-8") == render_openapi(app), (
+        "backend/openapi.json is out of date. From the repository root run: "
+        "docker compose --profile test run --rm backend-test"
+        " python -m app.openapi_export openapi > backend/openapi.json"
+    )

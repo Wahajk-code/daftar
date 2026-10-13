@@ -53,7 +53,7 @@ def test_e4_a_fresh_install_ships_a_chart_where_tax_and_payments_post(settings: 
         assert {kind for *_, kind in categories} == {"expense"}
 
 
-def test_e4_a_fresh_install_turns_an_approved_expense_into_a_posted_voucher(settings: Settings) -> None:
+def test_e4_a_fresh_install_runs_the_whole_flow_from_expense_to_void(settings: Settings) -> None:
     with parallel_app(settings) as world:
         bookkeeper, approver = world.make(Role.ACCOUNTANT), world.make(Role.APPROVER)
         staff = world.make(Role.STAFF)
@@ -124,4 +124,21 @@ def test_e4_a_fresh_install_turns_an_approved_expense_into_a_posted_voucher(sett
         assert posted["status"] == "posted"
         assert posted["number"].startswith("PV-")
         assert posted["number"].endswith("-0001")
+        assert world.scalar("SELECT status FROM expenses WHERE id = :i", i=expense["id"]) == "posted"
+
+        # The last step of the whole flow: an Admin voids it, which posts the mirror image and links the two.
+        admin = world.make(Role.ADMIN)
+        voided = send(
+            world,
+            admin,
+            "POST",
+            f"/api/v1/vouchers/{posted['id']}/void",
+            {"reason": "Paid twice"},
+            **{"If-Match": str(posted["version"]), "Idempotency-Key": "fresh-install-first-void"},
+        )
+        assert voided["voucher"]["status"] == "void"
+        assert voided["reversal"]["status"] == "posted"
+        assert voided["reversal"]["reversal_of_number"] == posted["number"]
+        assert voided["reversal"]["number"].endswith("-0002")
+        assert world.scalar("SELECT count(*) FROM vouchers WHERE number IS NOT NULL") == 2
         assert world.scalar("SELECT status FROM expenses WHERE id = :i", i=expense["id"]) == "posted"

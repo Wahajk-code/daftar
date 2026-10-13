@@ -18,6 +18,7 @@ def make(**overrides: Any) -> Settings:
         "environment": "production",
         "storage_backend": "cloudinary",
         "cloudinary_url": CLOUDINARY,
+        "mail_backend": "smtp",
     }
     return Settings(**{**values, **overrides})
 
@@ -54,6 +55,7 @@ def test_the_process_refuses_to_start_with_an_unsafe_production_environment(monk
     monkeypatch.setenv("DATABASE_URL", URL)
     monkeypatch.setenv("STORAGE_BACKEND", "cloudinary")
     monkeypatch.setenv("CLOUDINARY_URL", CLOUDINARY)
+    monkeypatch.setenv("MAIL_BACKEND", "smtp")
     with pytest.raises(ValidationError, match="DEBUG"):
         Settings()
     monkeypatch.setenv("DEBUG", "false")
