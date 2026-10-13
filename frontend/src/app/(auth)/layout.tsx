@@ -1,33 +1,25 @@
-import { IconNotebook } from "@tabler/icons-react";
+import { LedgerArt } from "@/components/auth/LedgerArt";
+import { Logo } from "@/components/shell/Logo";
 import styles from "./auth.module.css";
 
 /**
- * The four public screens share one layout: a brand panel and the form, equal width from the tablet breakpoint up. Below
- * it the panel shrinks to a compact header. The panel is made from the product's own tokens: ruled paper with a debit
- * and a credit column, and no figures, because there is nothing real to count before someone has signed in.
+ * The four public screens share one layout: an illustrated half and the form, equal width from the tablet breakpoint up,
+ * each a soft rounded card on the grey page. Below it the illustration goes and the panel shrinks to a compact header.
  */
 export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
     <div className={styles.split}>
       <aside className={styles.brand} aria-label="About Daftar">
         <div className={styles.brandTop}>
-          <IconNotebook size={28} stroke={1.5} aria-hidden />
-          <span className={styles.wordmark}>Daftar</span>
-          <span lang="ur" className={styles.urdu}>
-            دفتر
-          </span>
+          <Logo />
         </div>
-        <div className={styles.sheet} aria-hidden>
-          <div className={styles.sheetHead}>
-            <span>Particulars</span>
-            <span>Debit</span>
-            <span>Credit</span>
-          </div>
-          {Array.from({ length: 9 }, (_, row) => (
-            <div key={row} className={styles.sheetRow} />
-          ))}
+        <div className={styles.art}>
+          <LedgerArt />
         </div>
-        <p className={styles.line}>Expenses, purchases and vouchers, balanced, numbered and traceable.</p>
+        <div className={styles.copy}>
+          <p className={styles.line}>Every entry balanced, numbered and traceable.</p>
+          <p className={styles.sub}>Expenses, purchases and vouchers, from the receipt to the ledger.</p>
+        </div>
       </aside>
       <main className={styles.formSide} id="main">
         <div className={styles.formWrap}>{children}</div>

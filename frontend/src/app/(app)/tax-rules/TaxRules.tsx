@@ -32,7 +32,7 @@ const config: MasterConfig<TaxRule> = {
     { key: "rate", header: "Rate", numeric: true, sortKey: "rate_bp", cell: (row) => formatBasisPoints(row.rate_bp), width: "90px" },
     { key: "from", header: "From", sortKey: "effective_from", cell: (row) => <DateText value={row.effective_from} />, width: "120px" },
     { key: "to", header: "Until", cell: (row) => (row.effective_to ? <DateText value={row.effective_to} /> : <span className="faint">Open</span>), width: "120px" },
-    { key: "source", header: "Source", cell: (row) => <span className="user-text">{row.source}</span> },
+    { key: "source", header: "Source", cell: (row) => <span className="user-text">{row.source}</span>, title: (row) => row.source, maxWidth: "44ch" },
   ],
   fields: [
     {

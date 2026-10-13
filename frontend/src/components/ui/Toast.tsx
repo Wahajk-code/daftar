@@ -50,13 +50,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <div className={styles.region} role="region" aria-label="Notifications">
         {items.map((item) => (
           <div key={item.id} className={`${styles.toast} ${styles[item.tone]}`} role={item.tone === "error" ? "alert" : "status"}>
-            {item.tone === "success" ? <IconCheck size={18} stroke={1.75} aria-hidden /> : <IconAlertTriangle size={18} stroke={1.75} aria-hidden />}
+            {item.tone === "success" ? <IconCheck size={20} stroke={1.75} aria-hidden /> : <IconAlertTriangle size={20} stroke={1.75} aria-hidden />}
             <div className={styles.body}>
               <p>{item.text}</p>
               {item.reference ? <p className={styles.reference}>Reference {item.reference}</p> : null}
             </div>
             <button type="button" className={styles.close} onClick={() => dismiss(item.id)} aria-label="Dismiss notification">
-              <IconX size={16} stroke={1.75} aria-hidden />
+              <IconX size={18} stroke={1.75} aria-hidden />
             </button>
           </div>
         ))}

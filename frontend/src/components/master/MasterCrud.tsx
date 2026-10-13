@@ -148,16 +148,16 @@ export function MasterCrud<T extends Row>({ config }: { config: MasterConfig<T> 
       ? [
           {
             key: "actions",
-            header: <span className="sr-only">Actions</span>,
+            header: "Actions",
             width: config.hasActive ? "200px" : "110px",
             cell: (row: T) => (
               <span className={styles.rowActions}>
                 {config.extraActions?.(row)}
-                <Button small variant="quiet" icon={<IconPencil size={14} stroke={1.75} aria-hidden />} onClick={() => open({ mode: "edit", row })}>
+                <Button small variant="secondary" icon={<IconPencil size={16} stroke={1.75} aria-hidden />} onClick={() => open({ mode: "edit", row })}>
                   Edit
                 </Button>
                 {config.hasActive ? (
-                  <Button small variant="quiet" pending={toggle.isPending && toggle.variables?.id === row.id} onClick={() => toggle.mutate(row)}>
+                  <Button small variant="secondary" pending={toggle.isPending && toggle.variables?.id === row.id} onClick={() => toggle.mutate(row)}>
                     {row.is_active ? "Deactivate" : "Activate"}
                   </Button>
                 ) : null}
@@ -177,7 +177,7 @@ export function MasterCrud<T extends Row>({ config }: { config: MasterConfig<T> 
         description={config.description}
         actions={
           canWrite ? (
-            <Button variant="primary" icon={<IconPlus size={16} stroke={1.75} aria-hidden />} onClick={() => open({ mode: "create" })}>
+            <Button variant="primary" icon={<IconPlus size={18} stroke={1.75} aria-hidden />} onClick={() => open({ mode: "create" })}>
               New {config.noun}
             </Button>
           ) : undefined
@@ -191,6 +191,7 @@ export function MasterCrud<T extends Row>({ config }: { config: MasterConfig<T> 
           columns={columns}
           rows={list.data?.items}
           getKey={(row) => row.id}
+          onRowClick={canWrite ? (row) => open({ mode: "edit", row }) : undefined}
           loading={list.isPending}
           error={list.error}
           onRetry={() => list.refetch()}

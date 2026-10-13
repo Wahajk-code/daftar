@@ -47,7 +47,7 @@ export function Periods() {
     { key: "closed", header: "Closed", sortKey: "closed_at", cell: (row) => <Instant value={row.closed_at} /> },
     { key: "reopened", header: "Reopened", cell: (row) => (row.reopened_at ? <Instant value={row.reopened_at} /> : null) },
     ...(isAdmin
-      ? [{ key: "actions", header: <span className="sr-only">Actions</span>, width: "120px", cell: (row: Period) => (row.status === "closed" ? <Button small variant="quiet" onClick={() => setReopening(row)}>Reopen</Button> : null) } as Column<Period>]
+      ? [{ key: "actions", header: "Actions", width: "120px", cell: (row: Period) => (row.status === "closed" ? <Button small variant="secondary" onClick={() => setReopening(row)}>Reopen</Button> : null) } as Column<Period>]
       : []),
   ];
   const error = close.error instanceof ApiError ? close.error : null;
@@ -62,7 +62,7 @@ export function Periods() {
       <PageHeader
         title="Accounting periods"
         description="A closed period is locked: nothing dated inside it can be posted or voided. Admins close and reopen periods, and each change is recorded."
-        actions={isAdmin ? <Button variant="primary" icon={<IconLock size={16} stroke={1.75} aria-hidden />} onClick={() => { close.reset(); setClosing(true); }}>Close a period</Button> : undefined}
+        actions={isAdmin ? <Button variant="primary" icon={<IconLock size={18} stroke={1.75} aria-hidden />} onClick={() => { close.reset(); setClosing(true); }}>Close a period</Button> : undefined}
       />
       <Panel flush>
         <DataTable

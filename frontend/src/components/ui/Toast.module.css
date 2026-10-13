@@ -10,40 +10,48 @@
   pointer-events: none;
 }
 
+/* A toast is a white card with dark text. The icon, the message and the close button share one centre line, and the message is
+   centred between the two equal-width ends so it sits in the middle of the card. */
 .toast {
   pointer-events: auto;
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 28px;
+  align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-3);
   background: var(--k-toast-bg);
   color: var(--k-toast-text);
-  border-left: 4px solid var(--k-toast-text);
-  border-radius: var(--radius-sm);
-  box-shadow: 0 0 0 1px var(--rule);
-  animation: arrive var(--duration-base) ease-out;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-pop);
+  animation: arrive var(--duration-base) var(--ease-out);
 }
 
-.success {
-  border-left-color: var(--positive-wash);
+.toast > svg {
+  justify-self: center;
 }
 
-.error {
-  border-left-color: var(--negative-wash);
+.success > svg {
+  color: var(--positive);
+}
+
+.error > svg {
+  color: var(--negative);
 }
 
 .body {
-  flex: 1;
   min-width: 0;
   font-size: var(--text-sm);
+  font-weight: 500;
   line-height: 1.4;
+  text-align: center;
 }
 
 .reference {
   margin-top: var(--space-1);
-  opacity: 0.75;
-  font-family: var(--font-mono);
+  color: var(--text-3);
+  font-family: var(--font-data);
   font-size: var(--text-xs);
+  font-weight: 400;
 }
 
 .close {
@@ -52,7 +60,6 @@
   place-items: center;
   width: 28px;
   height: 28px;
-  margin: -4px -4px 0 0;
   background: none;
   border: 0;
   color: inherit;

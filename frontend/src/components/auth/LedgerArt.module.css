@@ -1,0 +1,93 @@
+.art {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+}
+
+.stage {
+  fill: var(--bg-surface);
+}
+
+.dotA {
+  fill: var(--chart-1);
+  opacity: 0.55;
+}
+
+.dotB {
+  fill: var(--caution);
+  opacity: 0.6;
+}
+
+.dotC {
+  fill: var(--chart-2);
+  opacity: 0.55;
+}
+
+.bars {
+  animation: rise 900ms ease-out both;
+  transform-origin: 430px 484px;
+}
+
+.personA,
+.personB {
+  animation: arrive 700ms ease-out both;
+}
+
+.personB {
+  animation-delay: 160ms;
+}
+
+/* The loose paper and coins drift a little, each at its own pace. */
+.float {
+  animation: drift 6s ease-in-out infinite;
+}
+
+.slow {
+  animation-duration: 8s;
+}
+
+.fast {
+  animation-duration: 4.5s;
+  animation-delay: -1.5s;
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-9px);
+  }
+}
+
+@keyframes arrive {
+  from {
+    transform: translateY(18px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: scaleY(0.2);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float,
+  .bars,
+  .personA,
+  .personB {
+    animation: none !important;
+  }
+}

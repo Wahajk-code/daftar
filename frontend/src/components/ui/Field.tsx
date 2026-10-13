@@ -5,10 +5,10 @@ import {
   useId,
   type InputHTMLAttributes,
   type ReactNode,
-  type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from "react";
 import { ZERO_PAISA, isAmount, stripSeparators, toPaisa } from "@/lib/money";
+import { Select } from "./Select";
 import styles from "./Field.module.css";
 
 interface Shell {
@@ -89,21 +89,20 @@ export interface Option {
   disabled?: boolean;
 }
 
+/** What a choice reports: the same shape a native field gives, so callers read `event.target.value`. */
+export interface SelectChange {
+  target: { value: string };
+}
+
+/** A labelled drop-down, drawn by the app (see Select) so it matches every other field. */
 export const SelectField = forwardRef<
-  HTMLSelectElement,
-  Shell & Omit<SelectHTMLAttributes<HTMLSelectElement>, "className"> & { options: Option[]; placeholder?: string }
->(function SelectField({ label, hint, error, required, hideLabel, className, options, placeholder, ...input }, ref) {
+  HTMLButtonElement,
+  Shell & { options: Option[]; placeholder?: string; value: string | number; onChange?: (event: SelectChange) => void; disabled?: boolean }
+>(function SelectField({ label, hint, error, required, hideLabel, className, options, placeholder, value, onChange, disabled }, ref) {
   return (
     <FieldShell {...{ label, hint, error, required, hideLabel, className }}>
       {(aria) => (
-        <select ref={ref} className={`${styles.control} ${styles.select}`} {...aria} {...input}>
-          {placeholder !== undefined ? <option value="">{placeholder}</option> : null}
-          {options.map((option) => (
-            <option key={option.value} value={option.value} disabled={option.disabled}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        <Select ref={ref} {...aria} value={String(value)} options={options} placeholder={placeholder} disabled={disabled} onChange={(next) => onChange?.({ target: { value: next } })} />
       )}
     </FieldShell>
   );

@@ -42,6 +42,7 @@ export function Button({
       className={classes({ variant, small }, className)}
       disabled={disabled || pending}
       aria-busy={pending || undefined}
+      data-noprint
     >
       {pending ? <Spinner /> : icon}
       {children ? <span>{children}</span> : null}
@@ -60,7 +61,7 @@ export function ButtonLink({
   ...rest
 }: Shared & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> & { href: string }) {
   return (
-    <Link {...rest} href={href} className={classes({ variant, small }, className)}>
+    <Link {...rest} href={href} className={classes({ variant, small }, className)} data-noprint>
       {icon}
       <span>{children}</span>
     </Link>

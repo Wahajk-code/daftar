@@ -49,7 +49,7 @@ function payloadLines(lines: Line[]) {
   return out.every((line) => line !== null) && out.length > 0 ? (out as NonNullable<(typeof out)[number]>[]) : null;
 }
 
-export function PurchaseForm({ initial }: { initial?: Purchase }) {
+export function PurchaseForm({ initial, onClose }: { initial?: Purchase; onClose?: () => void }) {
   const router = useRouter();
   const toast = useToast();
   const zone = useZone();
@@ -108,12 +108,13 @@ export function PurchaseForm({ initial }: { initial?: Purchase }) {
     success: ({ sendError }, { send }) => (send && !sendError ? "Purchase saved and sent for approval" : initial ? "Purchase saved" : "Purchase saved as a draft"),
     invalidate: DOCUMENT_KEYS,
     onSuccess: ({ saved, sendError }) => {
+      onClose?.();
       router.push(`/purchases/${saved.id}`);
       if (sendError) toast.error(`It was saved as a draft, but could not be sent: ${messageFor(sendError)}`);
     },
   });
 
-  if (vendors.isPending) return <LoadingBlock label="Loading the form" />;
+  if (vendors.isPending) return <LoadingBlock shape="form" label="Loading the form" />;
   if (vendors.error) return <ErrorState error={vendors.error} onRetry={() => vendors.refetch()} />;
 
   const error = save.error instanceof ApiError ? save.error : null;
@@ -242,7 +243,7 @@ export function PurchaseForm({ initial }: { initial?: Purchase }) {
                         </td>
                         <td className={`num ${styles.worked}`}>{worked ? <Money value={worked.payable} strong /> : ""}</td>
                         <td>
-                          <Button variant="quiet" icon={<IconTrash size={16} stroke={1.75} aria-hidden />} onClick={() => setLines(lines.filter((other) => other.key !== line.key))} disabled={lines.length === 1} aria-label={`Remove line ${index + 1}`} />
+                          <Button variant="quiet" icon={<IconTrash size={18} stroke={1.75} aria-hidden />} onClick={() => setLines(lines.filter((other) => other.key !== line.key))} disabled={lines.length === 1} aria-label={`Remove line ${index + 1}`} />
                         </td>
                       </tr>
                     );
@@ -263,7 +264,7 @@ export function PurchaseForm({ initial }: { initial?: Purchase }) {
               </table>
             </div>
             <div className={styles.lineTools}>
-              <Button small icon={<IconPlus size={14} stroke={1.75} aria-hidden />} onClick={() => setLines([...lines, blankLine()])}>
+              <Button small icon={<IconPlus size={16} stroke={1.75} aria-hidden />} onClick={() => setLines([...lines, blankLine()])}>
                 Add a line
               </Button>
               {problem("lines") ? <span className={styles.error} role="alert">{problem("lines")}</span> : null}
@@ -300,13 +301,13 @@ export function PurchaseForm({ initial }: { initial?: Purchase }) {
                 <ul>
                   {queued.map((file, index) => (
                     <li key={`${file.name}-${index}`}>
-                      <span className="mono">{file.name}</span>
-                      <Button small variant="quiet" icon={<IconX size={14} stroke={1.75} aria-hidden />} onClick={() => setQueued(queued.filter((_, at) => at !== index))} aria-label={`Remove ${file.name}`} />
+                      <span className="ident">{file.name}</span>
+                      <Button small variant="quiet" icon={<IconX size={16} stroke={1.75} aria-hidden />} onClick={() => setQueued(queued.filter((_, at) => at !== index))} aria-label={`Remove ${file.name}`} />
                     </li>
                   ))}
                 </ul>
                 <input ref={files} type="file" hidden multiple accept="image/jpeg,image/png,image/webp" onChange={(event) => { setQueued([...queued, ...Array.from(event.target.files ?? [])]); event.target.value = ""; }} />
-                <Button icon={<IconFileUpload size={16} stroke={1.75} aria-hidden />} onClick={() => files.current?.click()}>
+                <Button icon={<IconFileUpload size={18} stroke={1.75} aria-hidden />} onClick={() => files.current?.click()}>
                   Choose files
                 </Button>
               </div>
@@ -316,7 +317,7 @@ export function PurchaseForm({ initial }: { initial?: Purchase }) {
       </div>
 
       <div className={form.footer}>
-        <ButtonLink href={initial ? `/purchases/${initial.id}` : "/purchases"}>Cancel</ButtonLink>
+        {onClose ? <Button onClick={onClose}>Cancel</Button> : <ButtonLink href={initial ? `/purchases/${initial.id}` : "/purchases"}>Cancel</ButtonLink>}
         <Button type="submit" pending={save.isPending && save.variables?.send === false} disabled={!canSave || save.isPending}>
           Save draft
         </Button>

@@ -4,11 +4,14 @@
 
 .scroll {
   overflow-x: auto;
+  padding: 0 var(--space-3);
 }
 
 .table {
   width: 100%;
   font-size: var(--text-base);
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .table th,
@@ -18,36 +21,104 @@
   text-align: left;
   vertical-align: middle;
   border-bottom: 1px solid var(--k-table-rule);
+  color: var(--text-2);
 }
 
+/* The header is a soft grey band with rounded ends, not a ruled line. */
 .table thead th {
   position: sticky;
   top: 0;
   z-index: 1;
+  height: 44px;
   background: var(--k-table-head-bg);
   font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text-2);
+  font-weight: 500;
+  color: var(--text-3);
   white-space: nowrap;
-  border-bottom: 1px solid var(--rule-strong);
+  border-bottom: 0;
+}
+
+.table thead th:first-child {
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.table thead th:last-child {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table tbody tr {
+  transition: background var(--duration-fast);
 }
 
 .table tbody tr:hover {
   background: var(--k-table-row-hover);
 }
 
-.table tfoot td,
-.table tfoot th {
-  font-weight: 600;
-  border-top: 1px solid var(--k-table-total-rule);
-  border-bottom: 3px double var(--k-table-total-rule);
-  background: var(--bg-surface);
+.table tbody tr:hover td:first-child {
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.table tbody tr:hover td:last-child {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+/* The main thing in a row, and the figures, are the darkest and heaviest. */
+.primary,
+.numeric {
+  color: var(--text-1) !important;
+}
+
+.primary {
+  font-weight: 700;
 }
 
 .numeric {
   text-align: right !important;
+  font-weight: 600;
   font-variant-numeric: tabular-nums lining-nums;
   white-space: nowrap;
+}
+
+.table thead .numeric {
+  color: var(--text-3) !important;
+  font-weight: 500;
+}
+
+.clip {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A row that leads somewhere is pressable all along, and ends in an arrow. */
+.pressable {
+  cursor: pointer;
+}
+
+.chevronCell {
+  width: 40px;
+  padding-left: 0 !important;
+  text-align: right;
+  color: var(--text-3) !important;
+}
+
+.pressable:hover .chevronCell {
+  color: var(--text-1) !important;
+}
+
+.table tfoot td,
+.table tfoot th {
+  height: 52px;
+  font-weight: 600;
+  color: var(--text-1);
+  border-top: 1px solid var(--rule-strong);
+  border-bottom: 0;
+  background: var(--bg-surface);
 }
 
 .sortButton {
@@ -75,14 +146,13 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  border-top: 1px solid var(--k-table-rule);
+  padding: var(--space-3) var(--space-5);
   font-size: var(--text-sm);
 }
 
 .pageButtons {
   display: flex;
-  gap: var(--space-1);
+  gap: var(--space-2);
 }
 
 .chips {
@@ -90,41 +160,41 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--k-table-rule);
+  padding: 0 var(--space-5) var(--space-3);
 }
 
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 2px 4px 2px 8px;
+  padding: 4px 6px 4px 12px;
   background: var(--accent-wash);
-  color: var(--accent);
-  border-radius: var(--radius-sm);
+  color: var(--text-1);
+  border-radius: var(--radius-pill);
   font-size: var(--text-sm);
+  font-weight: 500;
 }
 
 .chip button {
   display: grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   padding: 0;
   background: none;
   border: 0;
-  border-radius: 2px;
+  border-radius: 50%;
   color: inherit;
 }
 
 .chip button:hover {
-  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  background: var(--rule-strong);
 }
 
 .clearAll {
   background: none;
   border: 0;
-  padding: 2px 4px;
+  padding: 2px 6px;
   color: var(--text-2);
   font-size: var(--text-sm);
   text-decoration: underline;
@@ -132,4 +202,10 @@
 
 .clearAll:hover {
   color: var(--text-1);
+}
+
+/* The action column has its own visible heading and its buttons line up on the centre. */
+.table th.actions,
+.table td.actions {
+  text-align: center;
 }

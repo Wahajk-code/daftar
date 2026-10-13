@@ -16,7 +16,7 @@
 /* The margin rail of a document: its record and history stay in view while the page scrolls. */
 .rail {
   position: sticky;
-  top: calc(var(--topbar-height) + var(--space-4));
+  top: calc(var(--topbar-height) + var(--space-2));
   max-height: calc(100dvh - var(--topbar-height) - 2 * var(--space-4));
   overflow-y: auto;
 }
@@ -37,16 +37,22 @@
 
 .details dt {
   font-size: var(--text-xs);
+  font-weight: 400;
   color: var(--text-3);
 }
 
 .details dd {
   margin: 0;
   overflow-wrap: anywhere;
+  font-weight: 600;
+  color: var(--text-1);
 }
 
+/* The figure a document is about: the largest, heaviest thing on the card. */
 .big {
-  font-size: var(--text-xl);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
 .split {
@@ -63,6 +69,7 @@
 
 .split thead th {
   background: var(--bg-sunken);
+  font-weight: 600;
   font-size: var(--text-sm);
   color: var(--text-2);
 }
@@ -73,8 +80,8 @@
 
 .split tfoot th,
 .split tfoot td {
-  border-top: 1px solid var(--text-1);
-  border-bottom: 3px double var(--text-1);
+  border-top: 1px solid var(--rule-strong);
+  border-bottom: 0;
   font-weight: 600;
 }
 

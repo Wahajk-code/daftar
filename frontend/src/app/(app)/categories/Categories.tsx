@@ -15,7 +15,7 @@ export function Categories() {
     description: "What an expense is for. Each category points at the expense account its voucher is charged to.",
     path: "/categories",
     columns: [
-      { key: "name", header: "Name", sortKey: "name", cell: (row) => <span className="user-text">{row.name}</span> },
+      { key: "name", header: "Name", sortKey: "name", primary: true, cell: (row) => <span className="user-text">{row.name}</span>, title: (row) => row.name, maxWidth: "36ch" },
       { key: "account", header: "Expense account", cell: (row) => names.get(row.account_id) ?? row.account_id },
     ],
     fields: [

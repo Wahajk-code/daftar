@@ -11,7 +11,7 @@ import { EmptyState, ErrorState, LoadingBlock } from "@/components/ui/States";
 export function EditExpense({ id }: { id: number }) {
   const me = useMe();
   const expense = useRecord<Expense>(["expenses", id], `/expenses/${id}`);
-  if (expense.isPending) return <LoadingBlock label="Loading the expense" />;
+  if (expense.isPending) return <LoadingBlock shape="form" label="Loading the expense" />;
   if (expense.error) return <ErrorState error={expense.error} onRetry={() => expense.refetch()} />;
   const editable = expense.data.status === "draft" && expense.data.created_by === me.id;
   return (

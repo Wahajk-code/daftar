@@ -1,0 +1,7 @@
+/* Inside the modal the sheet is already a card, so the form's own cards become soft grey inset blocks with no shadow, and the
+   sticky button row sits on the sheet colour. */
+.modalForm {
+  --k-card-bg: var(--bg-sunken);
+  --k-card-shadow: none;
+  --footer-bg: var(--bg-surface);
+}

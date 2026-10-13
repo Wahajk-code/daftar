@@ -10,7 +10,7 @@ import styles from "./States.module.css";
 export function EmptyState({ title, children, action }: { title: string; children?: ReactNode; action?: ReactNode }) {
   return (
     <div className={styles.state}>
-      <IconInbox size={28} stroke={1.25} aria-hidden className={styles.icon} />
+      <IconInbox size={30} stroke={1.25} aria-hidden className={styles.icon} />
       <p className={styles.title}>{title}</p>
       {children ? <p className={`${styles.text} muted`}>{children}</p> : null}
       {action ? <div className={styles.action}>{action}</div> : null}
@@ -23,10 +23,10 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
   const reference = error instanceof ApiError ? error.correlationId : "";
   return (
     <div className={styles.state} role="alert">
-      <IconAlertTriangle size={28} stroke={1.25} aria-hidden className={styles.problem} />
+      <IconAlertTriangle size={30} stroke={1.25} aria-hidden className={styles.problem} />
       <p className={styles.title}>This could not be loaded</p>
       <p className={`${styles.text} muted`}>{messageFor(error)}</p>
-      {reference ? <p className={`${styles.reference} faint mono`}>Reference {reference}</p> : null}
+      {reference ? <p className={`${styles.reference} faint ident`}>Reference {reference}</p> : null}
       {onRetry ? (
         <div className={styles.action}>
           <Button onClick={onRetry}>Try again</Button>
@@ -36,10 +36,55 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
   );
 }
 
-export function LoadingBlock({ label = "Loading" }: { label?: string }) {
+/**
+ * Shaped placeholders for whatever is loading, so a screen never looks empty and does not jump when the data lands:
+ * `lines` for a small list or a note, `form` for a card of fields, `detail` for a document (the document and its side rail),
+ * `page` for a whole screen (a header and a table). The label is read out to assistive technology.
+ */
+export function LoadingBlock({ label = "Loading", shape = "lines" }: { label?: string; shape?: "lines" | "form" | "detail" | "page" }) {
   return (
-    <div className={styles.state} role="status" aria-live="polite">
-      <span className={styles.bar} aria-hidden />
+    <div className={styles.loading} role="status" aria-live="polite">
+      {shape === "lines" ? <SkeletonLines lines={4} /> : null}
+      {shape === "form" ? (
+        <div className={styles.cardSkeleton}>
+          <Skeleton width="30%" height="18px" />
+          <div className={styles.fields}>
+            {Array.from({ length: 6 }, (_, index) => (
+              <div key={index} className={styles.field}>
+                <Skeleton width="34%" height="10px" />
+                <Skeleton width="100%" height="44px" block />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {shape === "detail" ? (
+        <div className={styles.detail}>
+          <div className={styles.cardSkeleton}>
+            <Skeleton width="42%" height="22px" />
+            <SkeletonLines lines={3} />
+            <Skeleton width="100%" height="120px" block />
+            <SkeletonLines lines={2} />
+          </div>
+          <div className={styles.cardSkeleton}>
+            <Skeleton width="50%" height="18px" />
+            <Skeleton width="38%" height="26px" />
+            <SkeletonLines lines={4} />
+          </div>
+        </div>
+      ) : null}
+      {shape === "page" ? (
+        <div className={styles.pageSkeleton}>
+          <Skeleton width="220px" height="30px" />
+          <Skeleton width="360px" height="12px" />
+          <div className={styles.cardSkeleton}>
+            <Skeleton width="100%" height="44px" block />
+            <table className={styles.fakeTable}>
+              <SkeletonRows rows={7} columns={5} />
+            </table>
+          </div>
+        </div>
+      ) : null}
       <span className="sr-only">{label}</span>
     </div>
   );
@@ -59,6 +104,34 @@ export function SkeletonRows({ rows = 6, columns = 5 }: { rows?: number; columns
         </tr>
       ))}
     </tbody>
+  );
+}
+
+/** One shimmering bar: a line of text, a figure, a heading. Width and height are CSS lengths. */
+export function Skeleton({ width = "100%", height, block }: { width?: string; height?: string; block?: boolean }) {
+  return <span className={`${styles.skeleton} ${block ? styles.block : ""}`} style={{ width, height }} aria-hidden />;
+}
+
+/** A few lines of placeholder text, the last one shorter. */
+export function SkeletonLines({ lines = 3 }: { lines?: number }) {
+  return (
+    <div className={styles.lines} aria-hidden>
+      {Array.from({ length: lines }, (_, index) => (
+        <Skeleton key={index} width={index === lines - 1 ? "60%" : "100%"} />
+      ))}
+    </div>
+  );
+}
+
+/** A card-shaped placeholder: a title bar, a big figure and a line, the shape of a dashboard card. */
+export function SkeletonCard({ height }: { height?: string }) {
+  return (
+    <div className={styles.cardSkeleton} style={{ minHeight: height }} role="status" aria-live="polite">
+      <Skeleton width="38%" />
+      <Skeleton width="55%" height="28px" />
+      <Skeleton width="80%" />
+      <span className="sr-only">Loading</span>
+    </div>
   );
 }
 

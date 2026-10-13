@@ -26,7 +26,7 @@ function Changes({ before, after }: { before: Event["before"]; after: Event["aft
       <dl>
         {keys.map((key) => (
           <div key={key}>
-            <dt className="mono">{key}</dt>
+            <dt className="ident">{key}</dt>
             <dd>
               {before && key in before ? <span className={styles.was}>{show(before[key])}</span> : null}
               {before && key in before && after && key in after ? " to " : null}
@@ -61,7 +61,7 @@ export function AuditLog() {
   const columns: Column<Event>[] = [
     { key: "when", header: "When", cell: (row) => <Instant value={row.occurred_at} />, width: "180px" },
     { key: "who", header: "Who", cell: (row) => row.actor_name ?? <span className="faint">No signed-in user</span>, width: "190px" },
-    { key: "action", header: "Action", cell: (row) => <span className="mono">{row.action}</span>, width: "230px" },
+    { key: "action", header: "Action", cell: (row) => <span className="ident">{row.action}</span>, width: "230px" },
     {
       key: "record",
       header: "Record",

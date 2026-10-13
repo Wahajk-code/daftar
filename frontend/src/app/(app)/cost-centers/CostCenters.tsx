@@ -9,8 +9,8 @@ const config: MasterConfig<CostCenter> = {
   description: "The parts of the business that costs are charged to. Nothing is deleted: a cost centre that is no longer used is deactivated.",
   path: "/cost-centers",
   columns: [
-    { key: "code", header: "Code", sortKey: "code", cell: (row) => <span className="mono">{row.code}</span>, width: "140px" },
-    { key: "name", header: "Name", sortKey: "name", cell: (row) => <span className="user-text">{row.name}</span> },
+    { key: "code", header: "Code", sortKey: "code", cell: (row) => <span className="ident">{row.code}</span>, width: "140px" },
+    { key: "name", header: "Name", sortKey: "name", primary: true, cell: (row) => <span className="user-text">{row.name}</span>, title: (row) => row.name, maxWidth: "36ch" },
   ],
   fields: [
     { key: "code", label: "Code", type: "text", required: true, createOnly: true, hint: "Short and unique, such as HO. It cannot be changed later." },

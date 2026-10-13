@@ -1,56 +1,93 @@
+/* A status is an outlined chip with a dot: coloured border and text, no fill. The word carries the meaning; the colour is the second cue. */
 .stamp {
-  display: inline-block;
-  padding: 1px 6px;
-  border: 1px solid currentColor;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 1.5;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  --tone: var(--slate);
+  --tone-wash: var(--slate-wash);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px 2px 8px;
+  border: 1.5px solid var(--tone);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--tone);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.4;
   white-space: nowrap;
   vertical-align: middle;
 }
 
+.stamp::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
 .draft {
-  color: var(--k-stamp-draft);
-  border-style: dashed;
+  --tone: var(--slate);
+  --tone-wash: var(--slate-wash);
 }
 
 .submitted {
-  color: var(--k-stamp-waiting);
+  --tone: var(--caution);
+  --tone-wash: var(--caution-wash);
 }
 
 .approved {
-  color: var(--accent);
+  --tone: var(--info);
+  --tone-wash: var(--info-wash);
 }
 
 .rejected {
-  color: var(--k-stamp-stopped);
+  --tone: var(--negative);
+  --tone-wash: var(--negative-wash);
 }
 
 .posted {
-  color: var(--k-stamp-posted);
+  --tone: var(--positive);
+  --tone-wash: var(--positive-wash);
 }
 
 .void {
-  color: var(--k-stamp-stopped);
+  --tone: var(--slate);
+  --tone-wash: var(--slate-wash);
   text-decoration: line-through;
 }
 
 .tag-neutral {
-  color: var(--k-stamp-neutral);
+  --tone: var(--slate);
+  --tone-wash: var(--slate-wash);
 }
 
 .tag-positive {
-  color: var(--k-stamp-posted);
+  --tone: var(--positive);
+  --tone-wash: var(--positive-wash);
 }
 
 .tag-caution {
-  color: var(--k-stamp-waiting);
+  --tone: var(--caution);
+  --tone-wash: var(--caution-wash);
 }
 
 .tag-negative {
-  color: var(--k-stamp-stopped);
+  --tone: var(--negative);
+  --tone-wash: var(--negative-wash);
+}
+
+.tag-info {
+  --tone: var(--info);
+  --tone-wash: var(--info-wash);
+}
+
+.tag-violet {
+  --tone: var(--violet);
+  --tone-wash: var(--violet-wash);
+}
+
+.tag-teal {
+  --tone: var(--teal);
+  --tone-wash: var(--teal-wash);
 }

@@ -1,0 +1,90 @@
+/* Settings are compact: a narrow column of small cards, one row per choice, with the control and its button on one line. */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 920px;
+}
+
+.intro {
+  max-width: 68ch;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.rows {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 440px);
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--rule);
+}
+
+.what {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.label {
+  font-weight: 700;
+}
+
+.about {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}
+
+/* The box takes the space and the button sits beside it, on the same centre line and the same height. */
+.control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 84px;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.control > :first-child:last-child {
+  grid-column: 1 / -1;
+}
+
+.control button[type="button"]:not([aria-haspopup]) {
+  width: 100%;
+  padding-inline: var(--space-3);
+}
+
+.single {
+  display: grid;
+  grid-template-columns: minmax(220px, 320px) auto;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 460px;
+}
+
+.hint {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+@media (max-width: 760px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+
+  .single {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

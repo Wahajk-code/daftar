@@ -57,22 +57,22 @@ export function DocumentActions({ kind, doc, children }: { kind: Kind; doc: Acti
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)" }}>
         {can("submit") ? (
-          <Button variant="primary" icon={<IconSend size={16} stroke={1.75} aria-hidden />} pending={pendingAction === "submit"} onClick={() => run("submit").catch(() => undefined)}>
+          <Button variant="primary" icon={<IconSend size={18} stroke={1.75} aria-hidden />} pending={pendingAction === "submit"} onClick={() => run("submit").catch(() => undefined)}>
             Send for approval
           </Button>
         ) : null}
         {can("approve") ? (
-          <Button variant="primary" icon={<IconCheck size={16} stroke={1.75} aria-hidden />} onClick={() => setDialog("approve")}>
+          <Button variant="primary" icon={<IconCheck size={18} stroke={1.75} aria-hidden />} onClick={() => setDialog("approve")}>
             Approve
           </Button>
         ) : null}
         {can("reject") ? (
-          <Button variant="danger" icon={<IconX size={16} stroke={1.75} aria-hidden />} onClick={() => setDialog("reject")}>
+          <Button variant="danger" icon={<IconX size={18} stroke={1.75} aria-hidden />} onClick={() => setDialog("reject")}>
             Reject
           </Button>
         ) : null}
         {can("reopen") ? (
-          <Button icon={<IconArrowBackUp size={16} stroke={1.75} aria-hidden />} pending={pendingAction === "reopen"} onClick={() => run("reopen").catch(() => undefined)}>
+          <Button icon={<IconArrowBackUp size={18} stroke={1.75} aria-hidden />} pending={pendingAction === "reopen"} onClick={() => run("reopen").catch(() => undefined)}>
             Reopen for editing
           </Button>
         ) : null}

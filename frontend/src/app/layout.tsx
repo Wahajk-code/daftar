@@ -1,21 +1,20 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import { IBM_Plex_Mono, IBM_Plex_Sans, Noto_Naskh_Arabic } from "next/font/google";
-import { DENSITY_COOKIE, SIDEBAR_COOKIE, THEME_COOKIE } from "@/lib/server/config";
+import { Inter, Inter_Tight, Noto_Naskh_Arabic } from "next/font/google";
+import { SIDEBAR_COOKIE, THEME_COOKIE } from "@/lib/server/config";
 import { Providers } from "./providers";
 import "@/styles/tokens.css";
 import "@/styles/base.css";
 
-const plexSans = IBM_Plex_Sans({
+// Inter Tight sets the interface and the headings; Inter, a little wider and more open, sets tables and figures.
+const tight = Inter_Tight({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-plex-sans",
+  variable: "--font-tight",
   display: "swap",
 });
-const plexMono = IBM_Plex_Mono({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-plex-mono",
+  variable: "--font-inter",
   display: "swap",
 });
 const naskh = Noto_Naskh_Arabic({
@@ -40,7 +39,6 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const jar = await cookies();
   const theme = jar.get(THEME_COOKIE)?.value;
-  const density = jar.get(DENSITY_COOKIE)?.value === "comfortable" ? "comfortable" : "compact";
   const sidebar = jar.get(SIDEBAR_COOKIE)?.value === "collapsed" ? "collapsed" : "expanded";
   // "System" is the absence of a choice: the stylesheet follows the operating system. Light and Dark are set here, on the
   // server, so the first paint is already right and nothing flashes.
@@ -50,9 +48,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       data-theme={dataTheme}
-      data-density={density}
       data-sidebar={sidebar}
-      className={`${plexSans.variable} ${plexMono.variable} ${naskh.variable}`}
+      className={`${tight.variable} ${inter.variable} ${naskh.variable}`}
     >
       <body>
         <Providers>{children}</Providers>

@@ -1,64 +1,52 @@
 "use client";
 
-import { Joyride, EVENTS, STATUS, type EventData, type Step } from "react-joyride";
+import { Joyride, EVENTS, STATUS, type EventData, type Step, type TooltipRenderProps } from "react-joyride";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api } from "@/api/client";
-import type { Role } from "@/api/types";
+import type { Me, Role } from "@/api/types";
+import { Button } from "@/components/ui/Button";
+import { useWorkQueues } from "@/lib/queues";
 import { useMe } from "./MeContext";
+import { ROLE_LINE } from "./roles";
+import { useCreate } from "./CreateModal";
+import styles from "./Tour.module.css";
 
 interface Plain {
   title: string;
   body: ReactNode;
-  /** A data-tour value in the page, or nothing for a card in the middle of the screen. */
+  /** A selector in the page, or nothing for a card in the middle of the screen. */
   target?: string;
   /** Needs the sidebar on screen, which is off to the side on a phone. */
   sidebar?: boolean;
 }
 
-const OPENING: Plain = {
-  title: "Welcome to Daftar",
-  body: "A short look at where things are. Skip it any time with the Skip button or the Escape key; it will not come back unless you ask for it from your account menu.",
-};
+const ROLE_ARTICLE: Record<Role, string> = { admin: "an Admin", accountant: "an Accountant", approver: "an Approver", staff: "a member of staff" };
 
-const SIDEBAR: Plain = {
-  title: "Everything you can open is here",
-  body: "The menu shows only what your role may use. The button at the bottom folds it to a strip of icons to give the screens more room.",
-  target: "#sidebar",
-  sidebar: true,
-};
+const FIRST_NAME = (me: Me) => me.full_name.split(/\s+/)[0] ?? me.full_name;
 
-const BY_ROLE: Record<Role, Plain[]> = {
-  staff: [
-    { title: "Add an expense", body: "Write what it was for, attach the receipt, and send it for approval. If it comes back, the reason is in its history.", target: '[data-tour="nav-expenses"]', sidebar: true },
-    { title: "Your home screen", body: "It lists what is sent back to you, your drafts, and what is waiting for approval.", target: "#main" },
-  ],
-  approver: [
-    { title: "Decide what is waiting", body: "Documents other people sent for approval collect here. Open one to read it, look at the receipt, and approve or reject it with a comment.", target: '[data-tour="nav-approvals"]', sidebar: true },
-    { title: "Your home screen", body: "It shows what is waiting for your decision, and this month's spend by cost centre.", target: "#main" },
-  ],
-  accountant: [
-    { title: "Turn approved items into vouchers", body: "Open an approved expense or purchase and generate its payment voucher. Check the lines, send it, and post it when it is approved.", target: '[data-tour="nav-vouchers"]', sidebar: true },
-    { title: "Your home screen", body: "It lists approved items that still need a voucher, vouchers ready to post, and your unfinished ones.", target: "#main" },
-  ],
-  admin: [
-    { title: "Manage the people", body: "Invite people by email and choose their role, change a role, or switch an account off. You never see or set anyone's password.", target: '[data-tour="nav-users"]', sidebar: true },
-    { title: "Your home screen", body: "It shows what is waiting for a decision and what is ready to post, the same lists the approvers and accountants work from.", target: "#main" },
-  ],
-};
+function plural(count: number, one: string, many: string): string {
+  return `${count} ${count === 1 ? one : many}`;
+}
 
-const ACCOUNT: Plain = {
-  title: "Your account menu",
-  body: "Choose a light or dark theme, the row density, change your password, or take this tour again.",
-  target: '[data-tour="profile"]',
+/** The role's own step in the sidebar. */
+const NAV_STEP: Record<Role, Plain> = {
+  staff: { title: "Your expenses", body: "Every expense you wrote, and where it stands. If one is sent back, the reason is in its history.", target: '[data-tour="nav-expenses"]', sidebar: true },
+  approver: { title: "Approvals", body: "Documents other people sent for approval collect here. Open one, check the receipt, then approve or reject it with a comment.", target: '[data-tour="nav-approvals"]', sidebar: true },
+  accountant: { title: "Vouchers", body: "Generate a payment voucher from an approved expense or purchase, check its lines, send it, and post it once it is approved.", target: '[data-tour="nav-vouchers"]', sidebar: true },
+  admin: { title: "People", body: "Invite people by email and choose their role, change a role, or switch an account off. You never see or set anyone's password.", target: '[data-tour="nav-users"]', sidebar: true },
 };
 
 /**
- * The first-use tour. It starts by itself for someone who has not seen it (the server remembers, so it follows them across
- * devices), can be skipped at every step, closes on Escape, and is started again from the account menu. Finishing or
- * skipping is saved on the server. The tour library does the spotlight, the placement and the focus trap.
+ * The first-use tour, written for the person taking it: their name and role, and what is waiting for them right now. It
+ * starts by itself for someone who has not seen it (the server remembers, so it follows them across devices), can be
+ * skipped at every step, closes on Escape, and can be started again only from the Help center. Finishing or skipping is
+ * saved on the server. The tour library does the spotlight, the placement and the focus trap; the card is ours.
  */
 export function Tour() {
   const me = useMe();
+  const create = useCreate();
+  const queues = useWorkQueues(me).filter((queue) => queue.attention);
+  const waiting = queues.reduce((total, queue) => total + (queue.items?.length ?? 0), 0);
   const [run, setRun] = useState(false);
   const [narrow, setNarrow] = useState(false);
   const started = useRef(false);
@@ -75,11 +63,11 @@ export function Tour() {
     const timer = window.setTimeout(() => {
       setNarrow(window.matchMedia("(max-width: 900px)").matches);
       setRun(true);
-    }, 800);
+    }, 900);
     return () => window.clearTimeout(timer);
   }, [me.tour_completed_at]);
 
-  // "Take the tour" in the account menu.
+  // "Take the tour" in the Help center.
   useEffect(() => {
     const restart = () => {
       setNarrow(window.matchMedia("(max-width: 900px)").matches);
@@ -98,22 +86,65 @@ export function Tour() {
   }, [run, finish]);
 
   const steps = useMemo<Step[]>(() => {
-    const plain = [OPENING, SIDEBAR, ...BY_ROLE[me.role], ACCOUNT].filter((step) => !(narrow && step.sidebar));
+    const opening: Plain = {
+      title: `Welcome, ${FIRST_NAME(me)}`,
+      body: (
+        <>
+          <p>
+            You are signed in as {ROLE_ARTICLE[me.role]}. {ROLE_LINE[me.role]}
+          </p>
+          <p className={styles.live}>
+            {waiting > 0 ? `Right now ${plural(waiting, "thing needs", "things need")} you.` : "Nothing needs you right now."}
+          </p>
+        </>
+      ),
+    };
+    const sidebar: Plain = {
+      title: "Everything you can open is here",
+      body: "The menu shows only what your role may use. The arrow at its foot folds it to a strip of icons to give the screens more room.",
+      target: "#sidebar",
+      sidebar: true,
+    };
+    const make: Plain | null = create.allowed.length
+      ? {
+          title: "Start something new",
+          body:
+            me.role === "staff"
+              ? "Press New to write an expense. It opens over the screen you are on, so you never lose your place. Attach the receipt, save it, then send it for approval."
+              : `Press New to start ${create.allowed.includes("voucher") ? "an expense, a purchase, a voucher or an invitation" : "a document"}. It opens over the screen you are on, so you never lose your place.`,
+          target: '[data-tour="new"]',
+        }
+      : null;
+    const bell: Plain = {
+      title: "What is waiting for you",
+      body:
+        waiting > 0
+          ? `The bell counts the things that need you: ${plural(waiting, "item", "items")} today. Press it to jump straight to one.`
+          : "The bell counts the things that need you, such as documents to decide or vouchers to post. It is empty now; it fills as work arrives.",
+      target: '[data-tour="bell"]',
+    };
+    const look: Plain = {
+      title: "Theme and help",
+      body: "Switch between the light and dark theme here. The question mark opens the Help center, where you can take this tour again.",
+      target: '[data-tour="theme"]',
+    };
+
+    const plain = [opening, sidebar, NAV_STEP[me.role], ...(make ? [make] : []), bell, look].filter((step) => !(narrow && step.sidebar));
     return plain.map((step, index) => ({
       id: `step-${index}`,
       target: step.target ?? "body",
-      placement: step.target ? (step.target === "#main" ? "bottom" : step.sidebar ? "right" : "bottom-end") : "center",
+      placement: step.target ? (step.sidebar ? "right" : "bottom") : "center",
       title: step.title,
       content: (
-        <div>
-          <p style={{ marginBottom: 6, fontSize: 12, color: "var(--text-3)" }}>
+        <div className={styles.content}>
+          <p className={styles.progress}>
             Step {index + 1} of {plain.length}
           </p>
-          <p>{step.body}</p>
+          <div className={styles.body}>{step.body}</div>
         </div>
       ),
     }));
-  }, [me.role, narrow]);
+  }, [me, waiting, create.allowed, narrow]);
 
   const onEvent = useCallback(
     (data: EventData) => {
@@ -130,22 +161,41 @@ export function Tour() {
       continuous
       onEvent={onEvent}
       scrollToFirstStep
-      locale={{ back: "Back", close: "Close", last: "Done", next: "Next", nextWithProgress: "Next", skip: "Skip the tour" }}
+      tooltipComponent={TourCard}
       options={{
-        buttons: ["back", "skip", "primary"],
-        showProgress: false,
         skipBeacon: true,
         dismissKeyAction: false,
         overlayClickAction: false,
-        primaryColor: "var(--accent)",
-        backgroundColor: "var(--bg-raised)",
-        textColor: "var(--text-1)",
         overlayColor: "color-mix(in srgb, var(--k-tour-scrim) 55%, transparent)",
-        arrowColor: "var(--bg-raised)",
+        arrowColor: "var(--bg-surface)",
         zIndex: 90,
-        spotlightRadius: 4,
-        width: 360,
+        spotlightRadius: 16,
+        width: 380,
       }}
     />
+  );
+}
+
+/** The tour's card: a white rounded sheet with clear Back, Skip and Next buttons, in the same style as the rest of the app. */
+function TourCard({ backProps, primaryProps, skipProps, tooltipProps, index, isLastStep, step }: TooltipRenderProps) {
+  return (
+    <div {...tooltipProps} className={styles.card}>
+      {step.title ? <h2 className={styles.title}>{step.title}</h2> : null}
+      {step.content}
+      <div className={styles.footer}>
+        <Button {...skipProps} variant="quiet" small>
+          Skip the tour
+        </Button>
+        <span className={styles.spacer} />
+        {index > 0 ? (
+          <Button {...backProps} small>
+            Back
+          </Button>
+        ) : null}
+        <Button {...primaryProps} variant="primary" small>
+          {isLastStep ? "Done" : "Next"}
+        </Button>
+      </div>
+    </div>
   );
 }

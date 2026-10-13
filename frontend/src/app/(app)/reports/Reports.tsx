@@ -75,16 +75,19 @@ export function Reports() {
 
   return (
     <>
-      <PageHeader title="Reports" description={current.about} actions={<Button icon={<IconDownload size={16} stroke={1.75} aria-hidden />} pending={exportCsv.isPending} onClick={() => exportCsv.mutate()}>Download CSV</Button>} />
+      <PageHeader title="Reports" description={current.about} actions={<Button icon={<IconDownload size={18} stroke={1.75} aria-hidden />} pending={exportCsv.isPending} onClick={() => exportCsv.mutate()}>Download CSV</Button>} />
       <Panel flush>
-        <div className={styles.tabs} role="tablist" aria-label="Report">
+        <div className={styles.tabs} data-noprint role="tablist" aria-label="Report">
           {REPORTS.map((report) => (
             <button key={report.value} type="button" role="tab" aria-selected={name === report.value} onClick={() => url.set({ report: report.value === "expenses" ? null : report.value, statuses: null, offset: null, voucher_type: null, registered: null })}>
               {report.label}
             </button>
           ))}
         </div>
-        <div className={styles.filters}>
+        <p className="print-only">
+          {current.label}, {from} to {to}.
+        </p>
+        <div className={styles.filters} data-noprint>
           <TextField label="From" type="date" value={from} onChange={(event) => url.set({ date_from: event.target.value })} />
           <TextField label="To" type="date" value={to} onChange={(event) => url.set({ date_to: event.target.value })} />
           {name === "expenses" || name === "purchases" ? <StatusChoice chosen={statuses} options={SPEND_STATUSES.map((value) => ({ value, label: STATUS_OPTIONS.find((option) => option.value === value)?.label ?? value }))} onChange={setStatuses} /> : null}
@@ -107,7 +110,7 @@ type Range = { date_from: string; date_to: string };
 function ExpensesReport({ range, statuses }: { range: Range; statuses: string[] }) {
   const report = useQuery({ queryKey: ["report", "expenses", range, statuses], queryFn: () => api<ExpenseReport>("/reports/expenses", { query: { ...range, statuses } }) });
   const columns: Column<ExpenseReport["rows"][number]>[] = [
-    { key: "type", header: "Type", cell: (row) => (row.expense_type === "direct" ? "Direct" : "Indirect"), width: "110px" },
+    { key: "type", header: "Type", cell: (row) => <Tag tone={row.expense_type === "direct" ? "teal" : "violet"}>{row.expense_type === "direct" ? "Direct" : "Indirect"}</Tag>, width: "120px" },
     { key: "centre", header: "Cost centre", cell: (row) => (row.cost_center_name ? `${row.cost_center_code} ${row.cost_center_name}` : <span className="faint">No cost centre (project or product)</span>) },
     { key: "count", header: "Expenses", numeric: true, cell: (row) => row.expenses, width: "110px" },
     { key: "amount", header: "Amount", numeric: true, cell: (row) => <Money value={row.amount} />, width: "150px" },

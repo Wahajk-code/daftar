@@ -27,7 +27,9 @@
 }
 
 .thumb {
-  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
   background: var(--bg-raised);
   display: flex;
   flex-direction: column;
@@ -57,7 +59,7 @@
   min-width: 0;
 }
 
-.thumbMeta .mono {
+.thumbMeta .ident {
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;

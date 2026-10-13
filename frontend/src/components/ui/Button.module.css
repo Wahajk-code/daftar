@@ -1,23 +1,28 @@
+/* Pills, like the reference: a near-black primary, a white secondary with a hairline, a quiet one with no fill. */
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  min-height: calc(var(--row-height) + 2px);
-  padding: 0 var(--space-3);
+  min-height: var(--control-height);
+  padding: 0 var(--space-5);
   border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   font-size: var(--text-base);
   font-weight: 500;
   line-height: 1;
   text-decoration: none;
   white-space: nowrap;
-  transition: background var(--duration-fast), border-color var(--duration-fast);
+  transition: background var(--duration-fast), border-color var(--duration-fast), box-shadow var(--duration-fast), transform var(--duration-fast) var(--ease-out);
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .button:disabled,
 .button[aria-disabled="true"] {
-  opacity: 0.55;
+  opacity: 0.5;
 }
 
 .primary {
@@ -34,6 +39,7 @@
   background: var(--bg-raised);
   border-color: var(--rule-strong);
   color: var(--text-1);
+  box-shadow: var(--shadow-soft);
 }
 
 .secondary:hover:not(:disabled) {
@@ -44,6 +50,7 @@
 .quiet {
   background: transparent;
   color: var(--text-1);
+  padding: 0 var(--space-4);
 }
 
 .quiet:hover:not(:disabled) {
@@ -63,8 +70,8 @@
 }
 
 .small {
-  min-height: 28px;
-  padding: 0 var(--space-2);
+  min-height: 34px;
+  padding: 0 var(--space-3);
   font-size: var(--text-sm);
 }
 

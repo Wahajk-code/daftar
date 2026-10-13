@@ -1,7 +1,8 @@
 "use client";
 
 import { IconArrowDown, IconArrowUp, IconArrowsSort, IconChevronLeft, IconChevronRight, IconX } from "@tabler/icons-react";
-import type { ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import type { MouseEvent, ReactNode } from "react";
 import { Button } from "./Button";
 import { EmptyState, ErrorState, SkeletonRows } from "./States";
 import styles from "./DataTable.module.css";
@@ -15,6 +16,12 @@ export interface Column<T> {
   /** The name the API sorts this column by; the header becomes a button. */
   sortKey?: string;
   width?: string;
+  /** The row's main thing: set darker and heavier so the eye lands on it first. */
+  primary?: boolean;
+  /** Plain text of the cell. When given, long text is cut with an ellipsis and the whole of it shows on hover. */
+  title?: (row: T) => string;
+  /** How wide a cut cell may grow (a CSS length). */
+  maxWidth?: string;
 }
 
 /** The sort the API understands: a field name, with a leading minus for descending. */
@@ -34,6 +41,8 @@ export function DataTable<T>({
   empty,
   caption,
   footer,
+  rowHref,
+  onRowClick,
 }: {
   columns: Column<T>[];
   rows: T[] | undefined;
@@ -46,8 +55,25 @@ export function DataTable<T>({
   empty: { title: string; hint?: ReactNode; action?: ReactNode };
   caption: string;
   footer?: ReactNode;
+  /** Where a row leads. The whole row is then pressable, and an arrow at its end says so. */
+  rowHref?: (row: T) => string;
+  /** For a row that opens something on the same screen (an editor) rather than another screen. */
+  onRowClick?: (row: T) => void;
 }) {
   const current = sort ? parseSort(sort) : null;
+  const router = useRouter();
+
+  function open(event: MouseEvent<HTMLTableRowElement>, row: T) {
+    // A link, button or field inside the row keeps its own job; so does a text selection or a modified click.
+    if ((event.target as HTMLElement).closest("a, button, input, select, textarea, label")) return;
+    if (window.getSelection()?.toString()) return;
+    const href = rowHref?.(row);
+    if (href) {
+      if (event.metaKey || event.ctrlKey) window.open(href, "_blank");
+      else router.push(href);
+    } else onRowClick?.(row);
+  }
+  const pressable = rowHref !== undefined || onRowClick !== undefined;
 
   return (
     <div className={styles.wrap}>
@@ -64,8 +90,9 @@ export function DataTable<T>({
                     key={column.key}
                     scope="col"
                     aria-sort={ariaSort}
-                    className={column.numeric ? styles.numeric : undefined}
+                    className={[column.numeric ? styles.numeric : "", column.key === "actions" ? styles.actions : ""].filter(Boolean).join(" ") || undefined}
                     style={column.width ? { width: column.width } : undefined}
+                    data-noprint={column.key === "actions" ? "" : undefined}
                   >
                     {column.sortKey && onSort ? (
                       <button
@@ -78,9 +105,9 @@ export function DataTable<T>({
                       >
                         {column.header}
                         {active ? (
-                          current.descending ? <IconArrowDown size={14} stroke={1.75} aria-hidden /> : <IconArrowUp size={14} stroke={1.75} aria-hidden />
+                          current.descending ? <IconArrowDown size={16} stroke={1.75} aria-hidden /> : <IconArrowUp size={16} stroke={1.75} aria-hidden />
                         ) : (
-                          <IconArrowsSort size={14} stroke={1.5} aria-hidden className={styles.sortIdle} />
+                          <IconArrowsSort size={16} stroke={1.5} aria-hidden className={styles.sortIdle} />
                         )}
                       </button>
                     ) : (
@@ -89,21 +116,43 @@ export function DataTable<T>({
                   </th>
                 );
               })}
+              {pressable ? (
+                <th scope="col" className={styles.chevronCell} data-noprint>
+                  <span className="sr-only">Open</span>
+                </th>
+              ) : null}
             </tr>
           </thead>
           {loading && !rows ? (
-            <SkeletonRows columns={columns.length} />
+            <SkeletonRows columns={columns.length + (pressable ? 1 : 0)} />
           ) : rows && rows.length > 0 ? (
             <tbody>
-              {rows.map((row) => (
-                <tr key={getKey(row)}>
-                  {columns.map((column) => (
-                    <td key={column.key} className={column.numeric ? styles.numeric : undefined}>
-                      {column.cell(row)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
+              {rows.map((row) => {
+                return (
+                  <tr key={getKey(row)} className={pressable ? styles.pressable : undefined} onClick={pressable ? (event) => open(event, row) : undefined}>
+                    {columns.map((column) => (
+                      <td
+                        key={column.key}
+                        data-noprint={column.key === "actions" ? "" : undefined}
+                        className={[column.numeric ? styles.numeric : "", column.primary ? styles.primary : "", column.key === "actions" ? styles.actions : ""].filter(Boolean).join(" ") || undefined}
+                      >
+                        {column.title ? (
+                          <span className={styles.clip} style={{ maxWidth: column.maxWidth ?? "32ch" }} title={column.title(row)}>
+                            {column.cell(row)}
+                          </span>
+                        ) : (
+                          column.cell(row)
+                        )}
+                      </td>
+                    ))}
+                    {pressable ? (
+                      <td className={styles.chevronCell} aria-hidden data-noprint>
+                        <IconChevronRight size={18} stroke={1.75} />
+                      </td>
+                    ) : null}
+                  </tr>
+                );
+              })}
             </tbody>
           ) : null}
           {footer && rows && rows.length > 0 ? <tfoot>{footer}</tfoot> : null}
@@ -133,13 +182,13 @@ export function Pagination({
   const first = offset + 1;
   const last = Math.min(offset + limit, total);
   return (
-    <nav className={styles.pagination} aria-label="Pages">
+    <nav className={styles.pagination} aria-label="Pages" data-noprint>
       <p className="muted">
         {first} to {last} of {total} {noun}
       </p>
       <div className={styles.pageButtons}>
-        <Button small icon={<IconChevronLeft size={16} stroke={1.75} aria-hidden />} disabled={offset === 0} onClick={() => onOffset(Math.max(0, offset - limit))} aria-label="Previous page" />
-        <Button small icon={<IconChevronRight size={16} stroke={1.75} aria-hidden />} disabled={offset + limit >= total} onClick={() => onOffset(offset + limit)} aria-label="Next page" />
+        <Button small icon={<IconChevronLeft size={18} stroke={1.75} aria-hidden />} disabled={offset === 0} onClick={() => onOffset(Math.max(0, offset - limit))} aria-label="Previous page" />
+        <Button small icon={<IconChevronRight size={18} stroke={1.75} aria-hidden />} disabled={offset + limit >= total} onClick={() => onOffset(offset + limit)} aria-label="Next page" />
       </div>
     </nav>
   );
@@ -149,7 +198,7 @@ export function Pagination({
 export function FilterChips({ chips, onRemove, onClear }: { chips: Array<{ key: string; label: string }>; onRemove: (key: string) => void; onClear: () => void }) {
   if (chips.length === 0) return null;
   return (
-    <div className={styles.chips} role="group" aria-label="Filters in use">
+    <div className={styles.chips} role="group" aria-label="Filters in use" data-noprint>
       {chips.map((chip) => (
         <span key={chip.key} className={styles.chip}>
           {chip.label}

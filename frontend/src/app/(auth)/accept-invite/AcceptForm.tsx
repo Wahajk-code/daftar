@@ -67,7 +67,7 @@ export function AcceptForm({ token }: { token: string }) {
     );
   }
 
-  if (!invite) return <LoadingBlock label="Checking your invitation" />;
+  if (!invite) return <LoadingBlock shape="form" label="Checking your invitation" />;
 
   if (done) {
     return (

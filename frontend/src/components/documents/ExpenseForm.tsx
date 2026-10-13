@@ -39,7 +39,7 @@ function initialLines(expense: Expense | undefined): AllocationLine[] {
  * Create a draft expense, or change one that is still a draft. Direct expenses go to one cost centre, project or product;
  * indirect ones are split across cost centres. A new expense can be saved with its receipts in one go.
  */
-export function ExpenseForm({ initial }: { initial?: Expense }) {
+export function ExpenseForm({ initial, onClose }: { initial?: Expense; onClose?: () => void }) {
   const router = useRouter();
   const toast = useToast();
   const zone = useZone();
@@ -102,12 +102,13 @@ export function ExpenseForm({ initial }: { initial?: Expense }) {
       send && !sendError ? "Expense saved and sent for approval" : initial ? "Expense saved" : "Expense saved as a draft",
     invalidate: DOCUMENT_KEYS,
     onSuccess: ({ saved, sendError }) => {
+      onClose?.();
       router.push(`/expenses/${saved.id}`);
       if (sendError) toast.error(`It was saved as a draft, but could not be sent: ${messageFor(sendError)}`);
     },
   });
 
-  if (categories.isPending || centres.isPending || projects.isPending) return <LoadingBlock label="Loading the form" />;
+  if (categories.isPending || centres.isPending || projects.isPending) return <LoadingBlock shape="form" label="Loading the form" />;
   const loadError = categories.error ?? centres.error ?? projects.error;
   if (loadError) return <ErrorState error={loadError} onRetry={() => { categories.refetch(); centres.refetch(); projects.refetch(); }} />;
 
@@ -232,8 +233,8 @@ export function ExpenseForm({ initial }: { initial?: Expense }) {
                 <ul>
                   {queued.map((file, index) => (
                     <li key={`${file.name}-${index}`}>
-                      <span className="mono">{file.name}</span>
-                      <Button small variant="quiet" icon={<IconX size={14} stroke={1.75} aria-hidden />} onClick={() => setQueued(queued.filter((_, at) => at !== index))} aria-label={`Remove ${file.name}`} />
+                      <span className="ident">{file.name}</span>
+                      <Button small variant="quiet" icon={<IconX size={16} stroke={1.75} aria-hidden />} onClick={() => setQueued(queued.filter((_, at) => at !== index))} aria-label={`Remove ${file.name}`} />
                     </li>
                   ))}
                 </ul>
@@ -248,7 +249,7 @@ export function ExpenseForm({ initial }: { initial?: Expense }) {
                     event.target.value = "";
                   }}
                 />
-                <Button icon={<IconFileUpload size={16} stroke={1.75} aria-hidden />} onClick={() => files.current?.click()}>
+                <Button icon={<IconFileUpload size={18} stroke={1.75} aria-hidden />} onClick={() => files.current?.click()}>
                   Choose receipts
                 </Button>
               </div>
@@ -258,7 +259,7 @@ export function ExpenseForm({ initial }: { initial?: Expense }) {
       </div>
 
       <div className={styles.footer}>
-        <ButtonLink href={initial ? `/expenses/${initial.id}` : "/expenses"}>Cancel</ButtonLink>
+        {onClose ? <Button onClick={onClose}>Cancel</Button> : <ButtonLink href={initial ? `/expenses/${initial.id}` : "/expenses"}>Cancel</ButtonLink>}
         <Button type="submit" pending={save.isPending && save.variables?.send === false} disabled={!canSave || save.isPending}>
           Save draft
         </Button>

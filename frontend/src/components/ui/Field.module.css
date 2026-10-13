@@ -17,11 +17,12 @@
 
 .control {
   width: 100%;
-  min-height: calc(var(--row-height) + 2px);
-  padding: 0 var(--space-2);
+  min-height: var(--control-height);
+  padding: 0 var(--space-3);
   background: var(--k-input-bg);
   border: 1px solid var(--k-input-rule);
   border-radius: var(--radius-sm);
+  transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
   color: var(--text-1);
 }
 
@@ -36,7 +37,7 @@
 .control:focus {
   outline: none;
   border-color: var(--k-input-rule-focus);
-  box-shadow: 0 0 0 1px var(--k-input-rule-focus);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .control:disabled {
@@ -57,15 +58,16 @@
 
 .select {
   appearance: none;
-  padding-right: 28px;
+  padding-right: 32px;
   background-image: linear-gradient(45deg, transparent 50%, var(--text-2) 50%),
     linear-gradient(135deg, var(--text-2) 50%, transparent 50%);
-  background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
+  background-position: calc(100% - 17px) 50%, calc(100% - 12px) 50%;
   background-size: 5px 5px, 5px 5px;
   background-repeat: no-repeat;
 }
 
 .money {
+  font-family: var(--font-data);
   font-variant-numeric: tabular-nums lining-nums;
 }
 
@@ -87,7 +89,7 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-2);
-  min-height: var(--row-height);
+  min-height: var(--control-height);
 }
 
 .check input {

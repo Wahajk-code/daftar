@@ -13,7 +13,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
       <div role="alert" style={{ maxWidth: 480, display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
         <h1>Something went wrong on this page</h1>
         <p className="muted">Nothing you did was lost. Try again; if it keeps happening, tell an Admin and quote the reference below.</p>
-        {error.digest ? <p className="mono faint">Reference {error.digest}</p> : null}
+        {error.digest ? <p className="ident faint">Reference {error.digest}</p> : null}
         <div style={{ display: "flex", gap: "var(--space-2)" }}>
           <Button variant="primary" onClick={reset}>
             Try again

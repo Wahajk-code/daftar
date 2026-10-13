@@ -42,8 +42,8 @@
 
 .lines tfoot th,
 .lines tfoot td {
-  border-top: 1px solid var(--text-1);
-  border-bottom: 3px double var(--text-1);
+  border-top: 1px solid var(--rule-strong);
+  border-bottom: 0;
   font-weight: 600;
 }
 

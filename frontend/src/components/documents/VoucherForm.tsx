@@ -9,6 +9,7 @@ import { DOCUMENT_KEYS, useAccounts, useAction, useCostCenters, useProjects } fr
 import type { Voucher } from "@/api/types";
 import { useZone } from "@/components/shell/MeContext";
 import { Button, ButtonLink } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/Field";
 import { Money } from "@/components/ui/Format";
 import { FormGrid, Panel } from "@/components/ui/Layout";
@@ -66,7 +67,7 @@ function fromDifference(debit: string, credit: string): string {
  * in an amount goes to the next line, and a new line opens after the last. The strip at the bottom always shows debits,
  * credits and the difference, and one button adds the exact line that balances them.
  */
-export function VoucherForm({ initial }: { initial?: Voucher }) {
+export function VoucherForm({ initial, onClose }: { initial?: Voucher; onClose?: () => void }) {
   const router = useRouter();
   const toast = useToast();
   const zone = useZone();
@@ -90,7 +91,7 @@ export function VoucherForm({ initial }: { initial?: Voucher }) {
         }))
       : [blank(), blank()],
   );
-  const accountRefs = useRef(new Map<string, HTMLSelectElement>());
+  const accountRefs = useRef(new Map<string, HTMLButtonElement>());
   // A line added by a key press or a button is focused once it has been drawn.
   const focusAfterDraw = useRef<string | null>(null);
   useEffect(() => {
@@ -139,12 +140,13 @@ export function VoucherForm({ initial }: { initial?: Voucher }) {
     success: ({ sendError }, { send }) => (send && !sendError ? "Voucher saved and sent for approval" : "Voucher saved as a draft"),
     invalidate: DOCUMENT_KEYS,
     onSuccess: ({ saved, sendError }) => {
+      onClose?.();
       router.push(`/vouchers/${saved.id}`);
       if (sendError) toast.error(`It was saved as a draft, but could not be sent: ${messageFor(sendError)}`);
     },
   });
 
-  if (accounts.isPending || centres.isPending || projects.isPending) return <LoadingBlock label="Loading the form" />;
+  if (accounts.isPending || centres.isPending || projects.isPending) return <LoadingBlock shape="form" label="Loading the form" />;
   const loadError = accounts.error ?? centres.error ?? projects.error;
   if (loadError) return <ErrorState error={loadError} onRetry={() => { accounts.refetch(); centres.refetch(); projects.refetch(); }} />;
 
@@ -242,42 +244,27 @@ export function VoucherForm({ initial }: { initial?: Voucher }) {
                 <tr key={line.key}>
                   <td className={styles.no}>{index + 1}</td>
                   <td>
-                    <select
+                    <Select
+                      variant="cell"
                       ref={(element) => {
                         if (element) accountRefs.current.set(line.key, element);
                         else accountRefs.current.delete(line.key);
                       }}
-                      className={styles.cell}
                       aria-label={`Account, line ${index + 1}`}
                       value={line.accountId}
-                      onChange={(event) => change(line.key, { accountId: event.target.value })}
-                    >
-                      <option value="">Choose an account</option>
-                      {postable.map((account) => (
-                        <option key={account.id} value={account.id}>
-                          {account.code} {account.name}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="Choose an account"
+                      options={postable.map((account) => ({ value: account.id, label: `${account.code} ${account.name}` }))}
+                      onChange={(next) => change(line.key, { accountId: next })}
+                    />
                   </td>
                   <td>
                     <input className={`${styles.cell} user-text`} aria-label={`Note, line ${index + 1}`} value={line.description} onChange={(event) => change(line.key, { description: event.target.value })} />
                   </td>
                   <td>
-                    <select className={styles.cell} aria-label={`Cost centre, line ${index + 1}`} value={line.centreId} onChange={(event) => change(line.key, { centreId: event.target.value })}>
-                      <option value="">None</option>
-                      {(centres.data ?? []).map((centre) => (
-                        <option key={centre.id} value={centre.id}>{centre.code}</option>
-                      ))}
-                    </select>
+                    <Select variant="cell" aria-label={`Cost centre, line ${index + 1}`} value={line.centreId} placeholder="None" options={(centres.data ?? []).map((centre) => ({ value: centre.id, label: centre.code }))} onChange={(next) => change(line.key, { centreId: next })} />
                   </td>
                   <td>
-                    <select className={styles.cell} aria-label={`Project, line ${index + 1}`} value={line.projectId} onChange={(event) => change(line.key, { projectId: event.target.value })}>
-                      <option value="">None</option>
-                      {(projects.data ?? []).map((project) => (
-                        <option key={project.id} value={project.id}>{project.code}</option>
-                      ))}
-                    </select>
+                    <Select variant="cell" aria-label={`Project, line ${index + 1}`} value={line.projectId} placeholder="None" options={(projects.data ?? []).map((project) => ({ value: project.id, label: project.code }))} onChange={(next) => change(line.key, { projectId: next })} />
                   </td>
                   <td className={styles.debitCell}>
                     <input
@@ -313,7 +300,7 @@ export function VoucherForm({ initial }: { initial?: Voucher }) {
           </table>
         </div>
         <div className={styles.addRow}>
-          <Button small icon={<IconPlus size={14} stroke={1.75} aria-hidden />} onClick={() => { focusAfterDraw.current = addLine(); }}>
+          <Button small icon={<IconPlus size={16} stroke={1.75} aria-hidden />} onClick={() => { focusAfterDraw.current = addLine(); }}>
             Add a line
           </Button>
           {error?.fieldMessage("lines") ? <span className={styles.error} role="alert">{error.fieldMessage("lines")}</span> : null}
@@ -328,7 +315,7 @@ export function VoucherForm({ initial }: { initial?: Voucher }) {
             <div><dt>Difference</dt><dd><Money value={difference.replace("-", "")} strong /></dd></div>
           </dl>
           <p className={styles.state}>{balanced ? (lines.length >= 2 ? "Balanced" : "Add lines") : `${(toPaisa(difference) ?? ZERO_PAISA) > ZERO_PAISA ? "Debits are higher" : "Credits are higher"}`}</p>
-          <Button icon={<IconScale size={16} stroke={1.75} aria-hidden />} onClick={addBalancing} disabled={balanced}>
+          <Button icon={<IconScale size={18} stroke={1.75} aria-hidden />} onClick={addBalancing} disabled={balanced}>
             Add the balancing line
           </Button>
         </div>
@@ -346,7 +333,7 @@ export function VoucherForm({ initial }: { initial?: Voucher }) {
             <p className="muted">Ready to save.</p>
           )}
           <div className={styles.buttons}>
-            <ButtonLink href={initial ? `/vouchers/${initial.id}` : "/vouchers"}>Cancel</ButtonLink>
+            {onClose ? <Button onClick={onClose}>Cancel</Button> : <ButtonLink href={initial ? `/vouchers/${initial.id}` : "/vouchers"}>Cancel</ButtonLink>}
             <Button type="submit" pending={save.isPending && save.variables?.send === false} disabled={!canSave || save.isPending} aria-describedby={problems.length > 0 ? "why-not" : undefined}>
               Save draft
             </Button>

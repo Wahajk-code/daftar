@@ -67,7 +67,7 @@ export function PurchaseDetail({ id }: { id: number }) {
   const purchase = useRecord<Purchase>(["purchases", id], `/purchases/${id}`);
   const [generating, setGenerating] = useState(false);
 
-  if (purchase.isPending) return <LoadingBlock label="Loading the purchase" />;
+  if (purchase.isPending) return <LoadingBlock shape="detail" label="Loading the purchase" />;
   if (purchase.error) return <ErrorState error={purchase.error} onRetry={() => purchase.refetch()} />;
   const doc = purchase.data;
   const editable = doc.created_by === me.id && doc.status === "draft";
@@ -87,7 +87,7 @@ export function PurchaseDetail({ id }: { id: number }) {
         }
         actions={
           editable ? (
-            <ButtonLink href={`/purchases/${id}/edit`} icon={<IconPencil size={16} stroke={1.75} aria-hidden />}>
+            <ButtonLink href={`/purchases/${id}/edit`} icon={<IconPencil size={18} stroke={1.75} aria-hidden />}>
               Edit
             </ButtonLink>
           ) : undefined
@@ -98,7 +98,7 @@ export function PurchaseDetail({ id }: { id: number }) {
           <DuplicatePanel kind="purchases" id={id} />
           <DocumentActions kind="purchases" doc={doc}>
             {canGenerate ? (
-              <Button variant="primary" icon={<IconFilePlus size={16} stroke={1.75} aria-hidden />} onClick={() => setGenerating(true)}>
+              <Button variant="primary" icon={<IconFilePlus size={18} stroke={1.75} aria-hidden />} onClick={() => setGenerating(true)}>
                 Generate payment voucher
               </Button>
             ) : null}
@@ -160,7 +160,7 @@ export function PurchaseDetail({ id }: { id: number }) {
             </dl>
           </Panel>
 
-          <Panel title="Receipts">
+          <Panel title="Receipts" noPrint>
             <ReceiptPanel kind="purchases" id={id} editable={editable} />
           </Panel>
         </div>
@@ -184,7 +184,7 @@ export function PurchaseDetail({ id }: { id: number }) {
               ]}
             />
           </Panel>
-          <Panel title="History">
+          <Panel title="History" noPrint>
             <HistoryPanel kind="purchases" id={id} />
           </Panel>
         </aside>

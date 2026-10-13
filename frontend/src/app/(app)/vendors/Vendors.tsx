@@ -17,12 +17,12 @@ export function Vendors() {
     description: "The people and companies purchases are bought from. Whether a vendor is registered for sales tax, and whether they are a filer, decide how a purchase is taxed.",
     path: "/vendors",
     columns: [
-      { key: "name", header: "Name", cell: (row) => <span className="user-text">{row.name}</span> },
+      { key: "name", header: "Name", primary: true, cell: (row) => <span className="user-text">{row.name}</span>, title: (row) => row.name, maxWidth: "34ch" },
       { key: "reg", header: "Registration", cell: (row) => <Tag tone={row.is_sales_tax_registered ? "positive" : "caution"}>{row.is_sales_tax_registered ? "Registered" : "Not registered"}</Tag>, width: "150px" },
       { key: "filer", header: "Filer", cell: (row) => <Tag tone={row.is_filer ? "positive" : "caution"}>{row.is_filer ? "Filer" : "Non-filer"}</Tag>, width: "110px" },
-      { key: "ntn", header: "NTN", cell: (row) => <span className="mono">{row.ntn}</span>, width: "130px" },
-      { key: "contact", header: "Contact", cell: (row) => <span className="user-text">{[row.contact_name, row.phone].filter(Boolean).join(", ")}</span> },
-      { key: "bank", header: "Bank account", cell: (row) => <span className="mono">{row.bank_account_masked}</span>, width: "190px" },
+      { key: "ntn", header: "NTN", cell: (row) => <span className="ident">{row.ntn}</span>, width: "130px" },
+      { key: "contact", header: "Contact", cell: (row) => <span className="user-text">{[row.contact_name, row.phone].filter(Boolean).join(", ")}</span>, title: (row) => [row.contact_name, row.phone].filter(Boolean).join(", "), maxWidth: "28ch" },
+      { key: "bank", header: "Bank account", cell: (row) => <span className="ident">{row.bank_account_masked}</span>, width: "190px" },
     ],
     fields: [
       { key: "name", label: "Name", type: "text", required: true },

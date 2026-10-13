@@ -73,3 +73,15 @@ export function todayInZone(zone: string = DEFAULT_ZONE, now: Date = new Date())
 export function startOfMonth(date: string): string {
   return `${date.slice(0, 8)}01`;
 }
+
+/** The first day of the year containing `date` (YYYY-MM-DD). */
+export function startOfYear(date: string): string {
+  return `${date.slice(0, 5)}01-01`;
+}
+
+/** A calendar date moved by a number of days (negative goes back), as YYYY-MM-DD. Plain date arithmetic, no zone. */
+export function addDays(date: string, days: number): string {
+  const [year, month, day] = date.split("-").map(Number);
+  const moved = new Date(Date.UTC(year, month - 1, day + days));
+  return moved.toISOString().slice(0, 10);
+}

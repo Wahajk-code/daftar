@@ -134,13 +134,13 @@ export function AllocationEditor({
                 className={styles.value}
               />
             )}
-            <Button variant="quiet" icon={<IconTrash size={16} stroke={1.75} aria-hidden />} onClick={() => onLines(lines.filter((other) => other.key !== line.key))} aria-label={`Remove line ${index + 1}`} disabled={lines.length === 1} />
+            <Button variant="quiet" icon={<IconTrash size={18} stroke={1.75} aria-hidden />} onClick={() => onLines(lines.filter((other) => other.key !== line.key))} aria-label={`Remove line ${index + 1}`} disabled={lines.length === 1} />
           </div>
         ))}
       </div>
 
       <div className={styles.tools}>
-        <Button small icon={<IconPlus size={14} stroke={1.75} aria-hidden />} onClick={() => onLines([...lines, newLine()])} disabled={lines.length >= centres.length}>
+        <Button small icon={<IconPlus size={16} stroke={1.75} aria-hidden />} onClick={() => onLines([...lines, newLine()])} disabled={lines.length >= centres.length}>
           Add a cost centre
         </Button>
         {method === "percentage" && lines.length > 1 ? (

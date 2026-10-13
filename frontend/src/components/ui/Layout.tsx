@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { IconChevronLeft } from "@tabler/icons-react";
 import type { ReactNode } from "react";
+import { PrintButton, PrintStamp } from "./PrintButton";
 import styles from "./Layout.module.css";
 
 /** The title of a screen, what it is for, and the things that can be done from it. */
@@ -10,18 +11,22 @@ export function PageHeader({
   actions,
   back,
   meta,
+  print = true,
 }: {
   title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
   back?: { href: string; label: string };
   meta?: ReactNode;
+  /** Draws the Print button beside the actions. Off for screens that are not worth printing. */
+  print?: boolean;
 }) {
   return (
     <header className={styles.header}>
+      <PrintStamp />
       {back ? (
-        <Link href={back.href} className={styles.back}>
-          <IconChevronLeft size={16} stroke={1.75} aria-hidden />
+        <Link href={back.href} className={styles.back} data-noprint>
+          <IconChevronLeft size={18} stroke={1.75} aria-hidden />
           {back.label}
         </Link>
       ) : null}
@@ -31,13 +36,18 @@ export function PageHeader({
           {meta ? <div className={styles.meta}>{meta}</div> : null}
           {description ? <p className={`${styles.description} muted`}>{description}</p> : null}
         </div>
-        {actions ? <div className={styles.actions}>{actions}</div> : null}
+        {actions || print ? (
+          <div className={styles.actions} data-noprint>
+            {actions}
+            {print ? <PrintButton /> : null}
+          </div>
+        ) : null}
       </div>
     </header>
   );
 }
 
-/** A ruled sheet: the unit the screens are built from. Rules carry the structure; there are no shadows. */
+/** A white card with a soft shadow: the unit the screens are built from. */
 export function Panel({
   title,
   actions,
@@ -45,6 +55,7 @@ export function Panel({
   flush,
   className,
   id,
+  noPrint,
 }: {
   title?: ReactNode;
   actions?: ReactNode;
@@ -53,9 +64,17 @@ export function Panel({
   flush?: boolean;
   className?: string;
   id?: string;
+  /** Left off the paper copy (a history, a set of receipt pictures). */
+  noPrint?: boolean;
 }) {
   return (
-    <section className={`${styles.panel} ${className ?? ""}`} aria-labelledby={title && id ? `${id}-title` : undefined} id={id}>
+    <section
+      className={`${styles.panel} ${className ?? ""}`}
+      aria-labelledby={title && id ? `${id}-title` : undefined}
+      id={id}
+      data-print-card
+      data-noprint={noPrint ? "" : undefined}
+    >
       {title || actions ? (
         <div className={styles.panelHead}>
           {title ? <h2 id={id ? `${id}-title` : undefined}>{title}</h2> : <span />}

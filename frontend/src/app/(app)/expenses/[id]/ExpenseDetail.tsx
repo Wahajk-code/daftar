@@ -32,7 +32,7 @@ export function ExpenseDetail({ id }: { id: number }) {
     onSuccess: (voucher) => router.push(`/vouchers/${voucher.id}`),
   });
 
-  if (expense.isPending) return <LoadingBlock label="Loading the expense" />;
+  if (expense.isPending) return <LoadingBlock shape="detail" label="Loading the expense" />;
   if (expense.error) return <ErrorState error={expense.error} onRetry={() => expense.refetch()} />;
   const doc = expense.data;
   const isAuthor = doc.created_by === me.id;
@@ -55,7 +55,7 @@ export function ExpenseDetail({ id }: { id: number }) {
         }
         actions={
           editable ? (
-            <ButtonLink href={`/expenses/${id}/edit`} icon={<IconPencil size={16} stroke={1.75} aria-hidden />}>
+            <ButtonLink href={`/expenses/${id}/edit`} icon={<IconPencil size={18} stroke={1.75} aria-hidden />}>
               Edit
             </ButtonLink>
           ) : undefined
@@ -67,7 +67,7 @@ export function ExpenseDetail({ id }: { id: number }) {
           <DuplicatePanel kind="expenses" id={id} />
           <DocumentActions kind="expenses" doc={doc}>
             {canGenerate ? (
-              <Button variant="primary" icon={<IconFilePlus size={16} stroke={1.75} aria-hidden />} pending={generate.isPending} onClick={() => generate.mutate()}>
+              <Button variant="primary" icon={<IconFilePlus size={18} stroke={1.75} aria-hidden />} pending={generate.isPending} onClick={() => generate.mutate()}>
                 Generate payment voucher
               </Button>
             ) : null}
@@ -142,7 +142,7 @@ export function ExpenseDetail({ id }: { id: number }) {
             </Panel>
           ) : null}
 
-          <Panel title="Receipts">
+          <Panel title="Receipts" noPrint>
             <ReceiptPanel kind="expenses" id={id} editable={editable} />
           </Panel>
         </div>
@@ -166,7 +166,7 @@ export function ExpenseDetail({ id }: { id: number }) {
               ]}
             />
           </Panel>
-          <Panel title="History">
+          <Panel title="History" noPrint>
             <HistoryPanel kind="expenses" id={id} />
           </Panel>
         </aside>

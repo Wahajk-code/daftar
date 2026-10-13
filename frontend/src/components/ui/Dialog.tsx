@@ -1,7 +1,7 @@
 "use client";
 
 import { IconX } from "@tabler/icons-react";
-import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { messageFor } from "@/api/errors";
 import { Button } from "./Button";
 import { TextAreaField } from "./Field";
@@ -18,40 +18,73 @@ export function Dialog({
   children,
   footer,
   wide,
+  size = wide ? "lg" : "sm",
+  description,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
   footer?: ReactNode;
+  /** Same as size "lg". */
   wide?: boolean;
+  /** sm (a question), lg (a short form), xl (a document form). On a phone every size fills the screen. */
+  size?: "sm" | "lg" | "xl";
+  description?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  // The sheet stays drawn while it leaves, so closing is an animation rather than a cut.
+  const [shown, setShown] = useState(open);
+  if (open && !shown) setShown(true);
+
+  const finishClosing = useCallback(() => {
+    const dialog = ref.current;
+    if (!dialog || !dialog.hasAttribute("data-closing")) return;
+    dialog.removeAttribute("data-closing");
+    dialog.close();
+    setShown(false);
+  }, []);
 
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
+    if (open) {
+      dialog.removeAttribute("data-closing");
+      if (!dialog.open) dialog.showModal();
+      return;
+    }
+    if (!dialog.open) return;
+    dialog.setAttribute("data-closing", "");
+    // The animation end closes it; this timer is the backstop (reduced motion, or an interrupted animation).
+    const timer = window.setTimeout(finishClosing, 260);
+    return () => window.clearTimeout(timer);
+  }, [open, finishClosing]);
 
   return (
     <dialog
       ref={ref}
-      className={`${styles.dialog} ${wide ? styles.wide : ""}`}
+      className={`${styles.dialog} ${styles[size]}`}
       aria-labelledby={titleId}
-      onClose={onClose}
+      onCancel={(event) => {
+        // Escape asks to close; the parent decides, and the sheet then animates out.
+        event.preventDefault();
+        onClose();
+      }}
+      onAnimationEnd={(event) => event.target === ref.current && finishClosing()}
       onClick={(event) => {
         if (event.target === ref.current) onClose();
       }}
     >
-      {open ? (
+      {open || shown ? (
         <div className={styles.frame}>
           <div className={styles.head}>
-            <h2 id={titleId}>{title}</h2>
+            <div className={styles.headText}>
+              <h2 id={titleId}>{title}</h2>
+              {description ? <p className="muted">{description}</p> : null}
+            </div>
             <button type="button" className={styles.close} onClick={onClose} aria-label="Close">
-              <IconX size={18} stroke={1.75} aria-hidden />
+              <IconX size={20} stroke={1.75} aria-hidden />
             </button>
           </div>
           <div className={styles.body}>{children}</div>

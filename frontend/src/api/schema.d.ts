@@ -516,6 +516,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reports/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Report Overview
+         * @description Month by month spend and the spread of documents over statuses: the figures behind the home screen's charts.
+         */
+        get: operations["report_overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reports/expenses": {
         parameters: {
             query?: never;
@@ -2393,6 +2413,36 @@ export interface components {
             /** Amount */
             amount: string;
         };
+        /**
+         * Overview
+         * @description The figures behind the home screen's charts: a run of months, and how documents are spread over statuses.
+         */
+        Overview: {
+            /** Months */
+            months: components["schemas"]["OverviewMonth"][];
+            /** Expense Statuses */
+            expense_statuses: components["schemas"]["StatusCount"][];
+            /** Purchase Statuses */
+            purchase_statuses: components["schemas"]["StatusCount"][];
+            /** Voucher Statuses */
+            voucher_statuses: components["schemas"]["StatusCount"][];
+        };
+        /**
+         * OverviewMonth
+         * @description What was decided in one calendar month: approved and posted documents by their document date.
+         */
+        OverviewMonth: {
+            /** Month */
+            month: string;
+            /** Expenses */
+            expenses: string;
+            /** Purchases */
+            purchases: string;
+            /** Expense Count */
+            expense_count: number;
+            /** Purchase Count */
+            purchase_count: number;
+        };
         /** Page[AccountRead] */
         Page_AccountRead_: {
             /** Items */
@@ -2948,6 +2998,12 @@ export interface components {
         /** RoleChange */
         RoleChange: {
             role: components["schemas"]["Role"];
+        };
+        /** StatusCount */
+        StatusCount: {
+            status: components["schemas"]["DocumentStatus"];
+            /** Count */
+            count: number;
         };
         /** StatusRead */
         StatusRead: {
@@ -6350,6 +6406,110 @@ export interface operations {
             };
         };
     };
+    report_overview: {
+        parameters: {
+            query?: {
+                /** @description How many months to show, ending with the current one. */
+                months?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Overview"];
+                };
+            };
+            /** @description The request could not be understood */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The request is too large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The request has invalid fields */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Too many requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Something went wrong on our side */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
     report_expenses: {
         parameters: {
             query?: {
@@ -7347,6 +7507,8 @@ export interface operations {
                 category_id?: number | null;
                 date_from?: string | null;
                 date_to?: string | null;
+                amount_min?: number | string | null;
+                amount_max?: number | string | null;
                 q?: string | null;
                 /** @description Page size; values above 100 are treated as 100. */
                 limit?: number;
@@ -8834,6 +8996,8 @@ export interface operations {
                 registered?: boolean | null;
                 date_from?: string | null;
                 date_to?: string | null;
+                amount_min?: number | string | null;
+                amount_max?: number | string | null;
                 q?: string | null;
                 /** @description Page size; values above 100 are treated as 100. */
                 limit?: number;
@@ -10532,6 +10696,8 @@ export interface operations {
                 status?: components["schemas"]["DocumentStatus"] | null;
                 date_from?: string | null;
                 date_to?: string | null;
+                amount_min?: number | string | null;
+                amount_max?: number | string | null;
                 /** @description Matches the number or the narration. */
                 q?: string | null;
                 /** @description Page size; values above 100 are treated as 100. */

@@ -5,7 +5,6 @@ export const REFRESH_COOKIE = "daftar_rt";
 
 /** Preference cookies. They hold no secret, so the page can render with the right theme and sidebar on the first byte. */
 export const THEME_COOKIE = "daftar_theme";
-export const DENSITY_COOKIE = "daftar_density";
 export const SIDEBAR_COOKIE = "daftar_sidebar";
 
 export const REFRESH_MAX_AGE_SECONDS = 7 * 24 * 60 * 60; // matches the API's REFRESH_TOKEN_TTL_DAYS

@@ -9,6 +9,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const tokens = JSON.parse(readFileSync(join(root, "design/tokens.json"), "utf8"));
 
 const primitive = (reference) => {
+  if (reference.startsWith("raw:")) return reference.slice(4);
   const [ramp, step] = reference.split(".");
   if (!tokens.primitives[ramp]?.[step]) throw new Error(`unknown primitive ${reference}`);
   return `var(--p-${ramp}-${step})`;

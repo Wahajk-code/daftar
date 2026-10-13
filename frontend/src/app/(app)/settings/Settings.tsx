@@ -8,10 +8,11 @@ import { useAccounts, useAction } from "@/api/queries";
 import type { AccountingSettings, Account, PostingAccount } from "@/api/types";
 import { useMe } from "@/components/shell/MeContext";
 import { Button } from "@/components/ui/Button";
-import { SelectField } from "@/components/ui/Field";
+import { Select } from "@/components/ui/Select";
 import { Instant } from "@/components/ui/Format";
 import { PageHeader, Panel } from "@/components/ui/Layout";
 import { Banner, ErrorState, LoadingBlock } from "@/components/ui/States";
+import styles from "./Settings.module.css";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -32,27 +33,36 @@ function NumberingYear({ canWrite }: { canWrite: boolean }) {
     invalidate: [["record", "accounting-settings"]],
     onSuccess: () => setMonth(null),
   });
-  if (settings.isPending) return <LoadingBlock label="Loading the settings" />;
+  if (settings.isPending) return <LoadingBlock shape="form" label="Loading the settings" />;
   if (settings.error) return <ErrorState error={settings.error} onRetry={() => settings.refetch()} />;
   const chosen = month ?? String(settings.data.fiscal_year_start_month);
   const changed = chosen !== String(settings.data.fiscal_year_start_month);
   const error = save.error instanceof ApiError ? save.error : null;
   return (
     <Panel title="When the numbering year starts" id="numbering">
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)", maxWidth: 620 }}>
-        <p>
-          Voucher numbers read like <span className="mono">PV-2026-0007</span>: the type, the year, and a running number with no gaps. The year follows the date on the voucher.
+      <div className={styles.stack}>
+        <p className={styles.intro}>
+          Voucher numbers read like <span className="ident">PV-2026-0007</span>: the type, the year, and a running number with no gaps. The year follows the date on the voucher.
           Choose January for the calendar year, or the month your financial year starts in; the year is then named by the year it ends in
           (a July start makes 1 July 2026 part of year 2027).
         </p>
-        <SelectField
-          label="Numbering year starts in"
-          value={chosen}
-          onChange={(event) => setMonth(event.target.value)}
-          options={MONTHS.map((name, index) => ({ value: index + 1, label: name }))}
-          disabled={!canWrite}
-          hint={`A voucher dated today would be numbered in year ${settings.data.numbering_year_today}.`}
-        />
+        <div className={styles.single}>
+          <Select
+            aria-label="Numbering year starts in"
+            value={chosen}
+            onChange={setMonth}
+            options={MONTHS.map((name, index) => ({ value: index + 1, label: name }))}
+            disabled={!canWrite}
+          />
+          {canWrite ? (
+            <Button variant="primary" pending={save.isPending} disabled={!changed} onClick={() => save.mutate()}>
+              Save
+            </Button>
+          ) : null}
+        </div>
+        <p className={styles.hint}>
+          A voucher dated today would be numbered in year {settings.data.numbering_year_today}. Last changed <Instant value={settings.data.updated_at} />.
+        </p>
         {changed ? (
           <Banner tone="caution" title="This affects vouchers posted from now on">
             Numbers already given never change. A different year start begins a new count for any year label it creates, so the same year can end up with
@@ -60,14 +70,6 @@ function NumberingYear({ canWrite }: { canWrite: boolean }) {
           </Banner>
         ) : null}
         {error && error.fields.length === 0 ? <Banner tone="negative" title="Could not save">{messageFor(error)}</Banner> : null}
-        {canWrite ? (
-          <div>
-            <Button variant="primary" pending={save.isPending} disabled={!changed} onClick={() => save.mutate()}>
-              Save numbering year
-            </Button>
-          </div>
-        ) : null}
-        <p className="faint">Last changed <Instant value={settings.data.updated_at} />.</p>
       </div>
     </Panel>
   );
@@ -83,30 +85,36 @@ function PostingAccounts({ canWrite }: { canWrite: boolean }) {
     invalidate: [["record", "posting-accounts"]],
     onSuccess: (_, { key }) => setDraft((current) => { const next = { ...current }; delete next[key]; return next; }),
   });
-  if (rows.isPending || accounts.isPending) return <LoadingBlock label="Loading the posting accounts" />;
+  if (rows.isPending || accounts.isPending) return <LoadingBlock shape="form" label="Loading the posting accounts" />;
   const failure = rows.error ?? accounts.error;
   if (failure) return <ErrorState error={failure} onRetry={() => { rows.refetch(); accounts.refetch(); }} />;
   const current = new Map((rows.data ?? []).map((row) => [row.key, row.account_id]));
   return (
     <Panel title="Where generated vouchers post" id="posting">
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
-        <p className="muted">When a voucher is made from an approved expense or purchase, these accounts are used for the payment and the taxes. The expense itself goes to the account of its category.</p>
+      <p className={styles.intro}>When a voucher is made from an approved expense or purchase, these accounts are used for the payment and the taxes. The expense itself goes to the account of its category.</p>
+      <ul className={styles.rows}>
         {KEYS.map(({ key, label, about, type }) => {
           const options = (accounts.data ?? []).filter((account) => account.is_postable && account.type === type).map((account) => ({ value: account.id, label: `${account.code} ${account.name}` }));
           const value = draft[key] ?? (current.has(key) ? String(current.get(key)) : "");
           const changed = value !== "" && value !== String(current.get(key) ?? "");
           return (
-            <div key={key} style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: "var(--space-3)", alignItems: "end" }}>
-              <SelectField label={label} hint={about} value={value} placeholder="Not set" onChange={(event) => setDraft({ ...draft, [key]: event.target.value })} options={options} disabled={!canWrite} />
-              {canWrite ? (
-                <Button pending={save.isPending && save.variables?.key === key} disabled={!changed} onClick={() => save.mutate({ key, accountId: Number(value) })}>
-                  Save
-                </Button>
-              ) : null}
-            </div>
+            <li key={key} className={styles.row}>
+              <div className={styles.what}>
+                <span className={styles.label}>{label}</span>
+                <span className={styles.about}>{about}</span>
+              </div>
+              <div className={styles.control}>
+                <Select aria-label={label} value={value} placeholder="Not set" onChange={(next) => setDraft({ ...draft, [key]: next })} options={options} disabled={!canWrite} />
+                {canWrite ? (
+                  <Button pending={save.isPending && save.variables?.key === key} disabled={!changed} onClick={() => save.mutate({ key, accountId: Number(value) })}>
+                    Save
+                  </Button>
+                ) : null}
+              </div>
+            </li>
           );
         })}
-      </div>
+      </ul>
     </Panel>
   );
 }
@@ -117,7 +125,7 @@ export function Settings() {
   return (
     <>
       <PageHeader title="Accounting settings" description="Choices that apply to the whole company. The Accountant in charge decides them." />
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+      <div className={styles.page}>
         <NumberingYear canWrite={canWrite} />
         <PostingAccounts canWrite={canWrite} />
       </div>

@@ -45,7 +45,7 @@ export function BankAccountButton({ vendor }: { vendor: Vendor }) {
   const error = change.error instanceof ApiError ? change.error : null;
   return (
     <>
-      <Button small variant="quiet" icon={<IconBuildingBank size={14} stroke={1.75} aria-hidden />} onClick={() => { change.reset(); setPassword(""); setOpen(true); }}>
+      <Button small variant="secondary" icon={<IconBuildingBank size={16} stroke={1.75} aria-hidden />} onClick={() => { change.reset(); setPassword(""); setOpen(true); }}>
         Bank account
       </Button>
       <Dialog open={open} onClose={() => !change.isPending && setOpen(false)} title={`Bank account for ${vendor.name}`}>

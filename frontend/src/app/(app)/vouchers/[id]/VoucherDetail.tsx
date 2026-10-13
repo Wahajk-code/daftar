@@ -1,6 +1,6 @@
 "use client";
 
-import { IconBan, IconCircleCheck, IconPencil, IconPrinter } from "@tabler/icons-react";
+import { IconBan, IconCircleCheck, IconPencil } from "@tabler/icons-react";
 import Link from "next/link";
 import { useState } from "react";
 import { api, newIdempotencyKey } from "@/api/client";
@@ -39,7 +39,7 @@ export function VoucherDetail({ id }: { id: number }) {
     invalidate: DOCUMENT_KEYS,
   });
 
-  if (voucher.isPending) return <LoadingBlock label="Loading the voucher" />;
+  if (voucher.isPending) return <LoadingBlock shape="detail" label="Loading the voucher" />;
   if (voucher.error) return <ErrorState error={voucher.error} onRetry={() => voucher.refetch()} />;
   const doc = voucher.data;
   const can = (action: string) => doc.actions.includes(action);
@@ -67,16 +67,11 @@ export function VoucherDetail({ id }: { id: number }) {
           </>
         }
         actions={
-          <>
-            {editable ? (
-              <ButtonLink href={`/vouchers/${id}/edit`} icon={<IconPencil size={16} stroke={1.75} aria-hidden />}>
-                Edit
-              </ButtonLink>
-            ) : null}
-            <Button icon={<IconPrinter size={16} stroke={1.75} aria-hidden />} onClick={() => window.print()}>
-              Print
-            </Button>
-          </>
+          editable ? (
+            <ButtonLink href={`/vouchers/${id}/edit`} icon={<IconPencil size={18} stroke={1.75} aria-hidden />}>
+              Edit
+            </ButtonLink>
+          ) : undefined
         }
       />
 
@@ -97,12 +92,12 @@ export function VoucherDetail({ id }: { id: number }) {
           <div className={styles.noprint}>
             <DocumentActions kind="vouchers" doc={doc}>
               {can("post") ? (
-                <Button variant="primary" icon={<IconCircleCheck size={16} stroke={1.75} aria-hidden />} onClick={() => open("post")}>
+                <Button variant="primary" icon={<IconCircleCheck size={18} stroke={1.75} aria-hidden />} onClick={() => open("post")}>
                   Post voucher
                 </Button>
               ) : null}
               {can("void") ? (
-                <Button variant="danger" icon={<IconBan size={16} stroke={1.75} aria-hidden />} onClick={() => open("void")}>
+                <Button variant="danger" icon={<IconBan size={18} stroke={1.75} aria-hidden />} onClick={() => open("void")}>
                   Void voucher
                 </Button>
               ) : null}
@@ -133,7 +128,7 @@ export function VoucherDetail({ id }: { id: number }) {
                     <tr key={line.line_no}>
                       <td className={styles.no}>{line.line_no}</td>
                       <td>
-                        <span className="mono">{line.account_code}</span> {line.account_name}
+                        <span className="ident">{line.account_code}</span> {line.account_name}
                       </td>
                       <td className="user-text">{line.description}</td>
                       <td>{line.cost_center_id ? centreNames.get(line.cost_center_id) : null}</td>

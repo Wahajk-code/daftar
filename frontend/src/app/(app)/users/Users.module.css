@@ -1,34 +1,42 @@
 .tabs {
-  display: flex;
+  display: inline-flex;
   margin-bottom: var(--space-4);
-  border-bottom: 1px solid var(--rule-strong);
+  gap: var(--space-1);
+  max-width: 100%;
+  padding: 3px;
+  background: var(--bg-sunken);
+  border-radius: var(--radius-pill);
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
 .tabs button {
-  min-height: 42px;
+  min-height: 36px;
   padding: 0 var(--space-4);
-  background: none;
+  background: transparent;
   border: 0;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  border-radius: var(--radius-pill);
   color: var(--text-2);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .tabs button:hover {
   color: var(--text-1);
-  background: var(--bg-sunken);
 }
 
 .tabs button[aria-selected="true"] {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-  font-weight: 500;
+  background: var(--bg-surface);
+  color: var(--text-1);
+  font-weight: 600;
+  box-shadow: var(--shadow-soft);
 }
 
 .rowActions {
   display: inline-flex;
   gap: var(--space-1);
-  justify-content: flex-end;
+  justify-content: center;
   width: 100%;
 }
 

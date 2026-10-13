@@ -1,13 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { usePage } from "@/api/queries";
 import type { Expense, Purchase, Voucher } from "@/api/types";
 import { useMe } from "@/components/shell/MeContext";
 import { DataTable, type Column } from "@/components/ui/DataTable";
-import { DateText, Money } from "@/components/ui/Format";
+import { DateText, Money, TwoLine } from "@/components/ui/Format";
 import { PageHeader, Panel } from "@/components/ui/Layout";
-import { Stamp } from "@/components/ui/Stamp";
+import { Stamp, Tag } from "@/components/ui/Stamp";
 import { KIND_LABEL, amountOf, href, titleOf, type Kind } from "@/lib/documents";
 import { useUrlState } from "@/lib/url-state";
 import styles from "./Approvals.module.css";
@@ -28,6 +27,8 @@ function rows(kind: Kind, docs: Array<Expense | Purchase | Voucher> | undefined,
     .filter((doc) => doc.created_by !== meId)
     .map((doc) => ({ key: `${kind}-${doc.id}`, kind, id: doc.id, title: titleOf(kind, doc), by: doc.created_by_name, date: doc.document_date, amount: amountOf(kind, doc), status: doc.status }));
 }
+
+const KIND_TONE = { expenses: "teal", purchases: "info", vouchers: "violet" } as const;
 
 const TABS: Array<{ value: "all" | Kind; label: string }> = [
   { value: "all", label: "Everything" },
@@ -53,27 +54,18 @@ export function Approvals() {
   const count = (kind: "all" | Kind) => (all ?? []).filter((row) => kind === "all" || row.kind === kind).length;
 
   const columns: Column<Row>[] = [
-    { key: "kind", header: "Type", cell: (row) => KIND_LABEL[row.kind].singular, width: "100px" },
-    {
-      key: "title",
-      header: "What",
-      cell: (row) => (
-        <Link href={href(row.kind, row.id)} className="user-text">
-          {row.title}
-        </Link>
-      ),
-    },
-    { key: "by", header: "Sent by", cell: (row) => row.by },
+    { key: "title", header: "What", primary: true, cell: (row) => <TwoLine title={row.title} sub={`Sent by ${row.by}`} />, title: (row) => row.title, maxWidth: "40ch" },
+    { key: "kind", header: "Type", cell: (row) => <Tag tone={KIND_TONE[row.kind]}>{KIND_LABEL[row.kind].singular}</Tag>, width: "120px" },
     { key: "date", header: "Dated", cell: (row) => <DateText value={row.date} />, width: "120px" },
-    { key: "amount", header: "Amount", numeric: true, cell: (row) => <Money value={row.amount} />, width: "130px" },
-    { key: "status", header: "Status", cell: (row) => <Stamp status={row.status} />, width: "120px" },
+    { key: "amount", header: "Amount", numeric: true, cell: (row) => <Money value={row.amount} />, width: "140px" },
+    { key: "status", header: "Status", cell: (row) => <Stamp status={row.status} />, width: "130px" },
   ];
 
   return (
     <>
       <PageHeader title="Approvals" description="Documents sent for approval by other people. Nobody approves their own." />
       <Panel flush>
-        <div className={styles.tabs} role="tablist" aria-label="Kind of document">
+        <div className={styles.tabs} data-noprint role="tablist" aria-label="Kind of document">
           {TABS.map((item) => (
             <button key={item.value} type="button" role="tab" aria-selected={tab === item.value} onClick={() => url.set({ kind: item.value === "all" ? null : item.value })}>
               {item.label}
@@ -86,6 +78,7 @@ export function Approvals() {
           columns={columns}
           rows={shown}
           getKey={(row) => row.key}
+          rowHref={(row) => href(row.kind, row.id)}
           loading={!ready}
           error={expenses.error ?? purchases.error ?? vouchers.error}
           empty={{ title: "Nothing is waiting for you", hint: "When someone sends a document for approval, it appears here." }}

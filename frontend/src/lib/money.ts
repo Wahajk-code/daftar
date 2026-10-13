@@ -85,3 +85,35 @@ export function bpToPercent(bp: number): string {
   const rest = bp % 100;
   return rest === 0 ? String(whole) : `${whole}.${String(rest).padStart(2, "0").replace(/0$/, "")}`;
 }
+
+/** A short amount for an axis: 0, 500, 1.5K, 2M. Whole rupees only above a thousand; never rounds up. */
+export function compactMoney(paisa: bigint): string {
+  const rupees = paisa / BigInt(100);
+  const oneDecimal = (value: bigint, unit: bigint) => {
+    const tenths = (value * BigInt(10)) / unit;
+    const rest = tenths % BigInt(10);
+    return `${tenths / BigInt(10)}${rest === ZERO_PAISA ? "" : `.${rest}`}`;
+  };
+  if (rupees >= BigInt(1_000_000)) return `${oneDecimal(rupees, BigInt(1_000_000))}M`;
+  if (rupees >= BigInt(1_000)) return `${oneDecimal(rupees, BigInt(1_000))}K`;
+  return paisa % BigInt(100) === ZERO_PAISA ? String(rupees) : fromPaisa(paisa).replace(/0$/, "");
+}
+
+/** The next round number (1, 2, 5 times a power of ten rupees) at or above `paisa`: the top of a chart's axis. */
+export function niceCeiling(paisa: bigint): bigint {
+  const hundred = BigInt(100);
+  const rupees = paisa / hundred + (paisa % hundred > ZERO_PAISA ? BigInt(1) : ZERO_PAISA);
+  if (rupees <= ZERO_PAISA) return hundred;
+  let magnitude = BigInt(1);
+  while (magnitude * BigInt(10) <= rupees) magnitude *= BigInt(10);
+  for (const step of [BigInt(1), BigInt(2), BigInt(5), BigInt(10)]) {
+    if (step * magnitude >= rupees) return step * magnitude * hundred;
+  }
+  return BigInt(10) * magnitude * hundred;
+}
+
+/** What share of `whole` is `part`, as a percentage with two places (for a bar's height or width, never for money). */
+export function percentOf(part: bigint, whole: bigint): number {
+  if (whole <= ZERO_PAISA || part <= ZERO_PAISA) return 0;
+  return Number((part * BigInt(10000)) / whole) / 100;
+}

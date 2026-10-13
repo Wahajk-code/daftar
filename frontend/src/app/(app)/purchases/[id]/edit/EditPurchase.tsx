@@ -11,7 +11,7 @@ import { EmptyState, ErrorState, LoadingBlock } from "@/components/ui/States";
 export function EditPurchase({ id }: { id: number }) {
   const me = useMe();
   const purchase = useRecord<Purchase>(["purchases", id], `/purchases/${id}`);
-  if (purchase.isPending) return <LoadingBlock label="Loading the purchase" />;
+  if (purchase.isPending) return <LoadingBlock shape="form" label="Loading the purchase" />;
   if (purchase.error) return <ErrorState error={purchase.error} onRetry={() => purchase.refetch()} />;
   const editable = purchase.data.status === "draft" && purchase.data.created_by === me.id;
   return (

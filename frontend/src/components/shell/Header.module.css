@@ -1,0 +1,316 @@
+/* The bar floats on the page: no rule under it, a soft blur behind it so content passes beneath without clutter. */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-topbar);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--topbar-height);
+  padding: 0 var(--space-5);
+  background: color-mix(in srgb, var(--bg-page) 82%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.iconButton {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  background: var(--bg-surface);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: var(--shadow-soft);
+  color: var(--text-1);
+  text-decoration: none;
+  transition: background var(--duration-fast), box-shadow var(--duration-fast);
+}
+
+.iconButton:hover {
+  background: var(--accent-wash);
+  color: var(--text-1);
+}
+
+.iconButton[aria-expanded="true"] {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.menuButton {
+  display: none;
+}
+
+.badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--negative);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--negative);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  font-family: var(--font-data);
+}
+
+/* The theme icon shows the theme you would switch to. */
+.theme .sun {
+  display: none;
+}
+
+:global(html[data-theme="dark"]) .theme .moon {
+  display: none;
+}
+
+:global(html[data-theme="dark"]) .theme .sun {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(html:not([data-theme="light"])) .theme .moon {
+    display: none;
+  }
+
+  :global(html:not([data-theme="light"])) .theme .sun {
+    display: block;
+  }
+}
+
+/* "New" is the one dark pill on the bar. */
+.newButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 42px;
+  padding: 0 var(--space-4) 0 var(--space-3);
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border: 0;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: var(--text-base);
+  transition: background var(--duration-fast);
+}
+
+.newButton:hover,
+.newButton[aria-expanded="true"] {
+  background: var(--accent-hover);
+}
+
+.menu {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2);
+}
+
+.menu button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  text-align: left;
+}
+
+.menu button:hover {
+  background: var(--bg-sunken);
+}
+
+.menuIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-wash);
+}
+
+.menuText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.menuTitle {
+  font-weight: 600;
+}
+
+.menuHint {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}
+
+.bell {
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  max-height: min(74dvh, 560px);
+  overflow-y: auto;
+}
+
+.bellTitle {
+  font-weight: 700;
+  font-size: var(--text-lg);
+  letter-spacing: -0.02em;
+  padding: 0 var(--space-1) var(--space-2);
+}
+
+.bellEmpty {
+  padding: var(--space-3) var(--space-1);
+}
+
+.bellSkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+/* Each group of notifications is set apart by a line and a heading with its count. */
+.bell section + section {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--rule-strong);
+}
+
+.bellGroup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: 0 var(--space-1) var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+.bellCount {
+  min-width: 24px;
+  padding: 0 8px;
+  border: 1.5px solid var(--negative);
+  border-radius: var(--radius-pill);
+  color: var(--negative);
+  font-family: var(--font-data);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.bellList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* One notification: what it is and what it comes to, what kind and where it stands, who and when. A hairline between each. */
+.bellList li + li {
+  border-top: 1px solid var(--rule);
+}
+
+.bellItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-2);
+  margin: 0 calc(-1 * var(--space-1));
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  font-weight: 400;
+  transition: background var(--duration-fast);
+}
+
+.bellItem:hover {
+  background: var(--bg-sunken);
+}
+
+.bellTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.bellWhat {
+  min-width: 0;
+  font-weight: 700;
+  font-size: var(--text-base);
+}
+
+.bellAmount {
+  flex: none;
+  font-weight: 700;
+}
+
+.bellMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.bellFoot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}
+
+.bellFoot .clip {
+  min-width: 0;
+}
+
+.bellMore {
+  display: inline-block;
+  margin: var(--space-2) var(--space-1) 0;
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 900px) {
+  .menuButton {
+    display: grid;
+  }
+
+  .railButton {
+    display: none;
+  }
+
+  .topbar {
+    padding: 0 var(--space-3);
+  }
+}
+
+@media (max-width: 520px) {
+  .newButton span {
+    display: none;
+  }
+
+  .newButton {
+    width: 42px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
+@media print {
+  .topbar {
+    display: none;
+  }
+}

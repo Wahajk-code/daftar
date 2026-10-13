@@ -49,6 +49,9 @@ export type ExpenseReport = S["ExpenseReport"];
 export type PurchaseReport = S["PurchaseReport"];
 export type VoucherRegisterRow = S["VoucherRegisterRow"];
 export type ActivityReport = S["ActivityReport"];
+export type Overview = S["Overview"];
+export type OverviewMonth = S["OverviewMonth"];
+export type StatusCount = S["StatusCount"];
 
 /** The paged answer every list gives. */
 export interface Page<T> {

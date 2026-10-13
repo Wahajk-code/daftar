@@ -1,16 +1,18 @@
 "use client";
 
-import { IconMailForward, IconPlus } from "@tabler/icons-react";
-import { useState, type FormEvent } from "react";
+import { IconMailForward } from "@tabler/icons-react";
+import { useState } from "react";
 import { api } from "@/api/client";
 import { ApiError, messageFor } from "@/api/errors";
 import { useAction, usePage } from "@/api/queries";
 import type { Invite, Role, User } from "@/api/types";
+import { NewDocumentButton } from "@/components/shell/CreateModal";
 import { useMe } from "@/components/shell/MeContext";
+import { ROLE_OPTIONS } from "@/components/shell/roles";
 import { Button } from "@/components/ui/Button";
 import { DataTable, Pagination, type Column } from "@/components/ui/DataTable";
 import { ConfirmDialog, Dialog } from "@/components/ui/Dialog";
-import { SelectField, TextField } from "@/components/ui/Field";
+import { SelectField } from "@/components/ui/Field";
 import { Instant } from "@/components/ui/Format";
 import { ListFilters, type FilterDef } from "@/components/ui/ListFilters";
 import { PageHeader, Panel } from "@/components/ui/Layout";
@@ -19,14 +21,8 @@ import { Tag } from "@/components/ui/Stamp";
 import { PAGE_SIZE, useUrlState } from "@/lib/url-state";
 import styles from "./Users.module.css";
 
-const ROLES: Array<{ value: Role; label: string; about: string }> = [
-  { value: "admin", label: "Admin", about: "Manages people and roles, closes periods, reads the audit log, and can do everything else." },
-  { value: "accountant", label: "Accountant", about: "Keeps the books: master data, tax rates, purchases, vouchers, posting and voiding." },
-  { value: "approver", label: "Approver", about: "Reads everything and approves or rejects documents other people wrote." },
-  { value: "staff", label: "Staff", about: "Writes and sends their own expenses with receipts." },
-];
-
-const roleLabel = (role: Role) => ROLES.find((item) => item.value === role)?.label ?? role;
+const ROLE_TONE = { admin: "violet", accountant: "teal", approver: "info", staff: "neutral" } as const;
+const roleLabel = (role: Role) => ROLE_OPTIONS.find((item) => item.value === role)?.label ?? role;
 
 function UsersTable() {
   const me = useMe();
@@ -56,24 +52,24 @@ function UsersTable() {
 
   const filters: FilterDef[] = [
     { key: "q", label: "Search", type: "search", placeholder: "Search names and emails" },
-    { key: "role", label: "Role", type: "select", options: ROLES.map((item) => ({ value: item.value, label: item.label })) },
+    { key: "role", label: "Role", type: "select", options: ROLE_OPTIONS.map((item) => ({ value: item.value, label: item.label })) },
     { key: "is_active", label: "Status", type: "select", options: [{ value: "true", label: "Active" }, { value: "false", label: "Deactivated" }] },
   ];
   const columns: Column<User>[] = [
-    { key: "name", header: "Name", sortKey: "full_name", cell: (row) => <span className="user-text">{row.full_name}</span> },
-    { key: "email", header: "Email", sortKey: "email", cell: (row) => row.email },
-    { key: "role", header: "Role", sortKey: "role", cell: (row) => roleLabel(row.role), width: "120px" },
+    { key: "name", header: "Name", sortKey: "full_name", primary: true, cell: (row) => <span className="user-text">{row.full_name}</span>, title: (row) => row.full_name, maxWidth: "28ch" },
+    { key: "email", header: "Email", sortKey: "email", cell: (row) => row.email, title: (row) => row.email, maxWidth: "30ch" },
+    { key: "role", header: "Role", sortKey: "role", cell: (row) => <Tag tone={ROLE_TONE[row.role]}>{roleLabel(row.role)}</Tag>, width: "130px" },
     { key: "status", header: "Status", cell: (row) => <Tag tone={row.is_active ? "positive" : "neutral"}>{row.is_active ? "Active" : "Deactivated"}</Tag>, width: "120px" },
     { key: "since", header: "Joined", cell: (row) => <Instant value={row.created_at} />, width: "170px" },
     {
       key: "actions",
-      header: <span className="sr-only">Actions</span>,
+      header: "Actions",
       width: "330px",
       cell: (row) => (
         <span className={styles.rowActions}>
-          <Button small variant="quiet" disabled={row.id === me.id} onClick={() => { changeRole.reset(); setRole(row.role); setRoleFor(row); }}>Change role</Button>
-          <Button small variant="quiet" disabled={!row.is_active} onClick={() => setResetFor(row)}>Send reset link</Button>
-          <Button small variant="quiet" disabled={row.id === me.id} pending={toggle.isPending && toggle.variables?.id === row.id} onClick={() => toggle.mutate(row)}>
+          <Button small variant="secondary" disabled={row.id === me.id} onClick={() => { changeRole.reset(); setRole(row.role); setRoleFor(row); }}>Change role</Button>
+          <Button small variant="secondary" disabled={!row.is_active} onClick={() => setResetFor(row)}>Send reset link</Button>
+          <Button small variant="secondary" disabled={row.id === me.id} pending={toggle.isPending && toggle.variables?.id === row.id} onClick={() => toggle.mutate(row)}>
             {row.is_active ? "Deactivate" : "Reactivate"}
           </Button>
         </span>
@@ -103,7 +99,7 @@ function UsersTable() {
       <Dialog open={roleFor !== null} onClose={() => !changeRole.isPending && setRoleFor(null)} title={`Change the role of ${roleFor?.full_name ?? ""}`}>
         <form onSubmit={(event) => { event.preventDefault(); changeRole.mutate(); }} className={styles.form}>
           {error ? <Banner tone="negative" title="Could not change it">{messageFor(error)}</Banner> : null}
-          <SelectField label="Role" value={role} onChange={(event) => setRole(event.target.value as Role)} options={ROLES.map((item) => ({ value: item.value, label: item.label }))} hint={ROLES.find((item) => item.value === role)?.about} />
+          <SelectField label="Role" value={role} onChange={(event) => setRole(event.target.value as Role)} options={ROLE_OPTIONS.map((item) => ({ value: item.value, label: item.label }))} hint={ROLE_OPTIONS.find((item) => item.value === role)?.about} />
           <p className="muted">They are signed out everywhere, and the new role applies at once.</p>
           <div className={styles.actions}>
             <Button onClick={() => setRoleFor(null)} disabled={changeRole.isPending}>Cancel</Button>
@@ -122,36 +118,25 @@ function InvitesTable() {
   const url = useUrlState();
   const offset = Number(url.get("offset") || 0);
   const list = usePage<Invite>("/invites", { sort: url.get("sort"), limit: PAGE_SIZE, offset });
-  const [inviting, setInviting] = useState(false);
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState<Role>("staff");
   const [revoking, setRevoking] = useState<Invite | null>(null);
 
-  const invite = useAction<void, Invite>({
-    mutationFn: () => api<Invite>("/invites", { method: "POST", body: { email, role } }),
-    success: "Invitation sent",
-    invalidate: [["list"]],
-    onSuccess: () => { setInviting(false); setEmail(""); },
-  });
   const resend = useAction<Invite, Invite>({ mutationFn: (item) => api<Invite>(`/invites/${item.id}/resend`, { method: "POST" }), success: "Invitation sent again", invalidate: [["list"]] });
   const revoke = useAction<Invite, unknown>({ mutationFn: (item) => api(`/invites/${item.id}/revoke`, { method: "POST" }), success: "Invitation cancelled", invalidate: [["list"]] });
-  const error = invite.error instanceof ApiError ? invite.error : null;
-
   const columns: Column<Invite>[] = [
     { key: "email", header: "Email", cell: (row) => row.email },
-    { key: "role", header: "Role", cell: (row) => roleLabel(row.role), width: "120px" },
+    { key: "role", header: "Role", cell: (row) => <Tag tone={ROLE_TONE[row.role]}>{roleLabel(row.role)}</Tag>, width: "130px" },
     { key: "status", header: "Status", cell: (row) => <Tag tone={row.status === "pending" ? "caution" : row.status === "accepted" ? "positive" : "neutral"}>{row.status}</Tag>, width: "120px" },
     { key: "sent", header: "Sent", sortKey: "created_at", cell: (row) => <Instant value={row.created_at} />, width: "170px" },
     { key: "expires", header: "Expires", cell: (row) => <Instant value={row.expires_at} />, width: "170px" },
     {
       key: "actions",
-      header: <span className="sr-only">Actions</span>,
+      header: "Actions",
       width: "220px",
       cell: (row) =>
         row.status === "pending" || row.status === "expired" ? (
           <span className={styles.rowActions}>
-            <Button small variant="quiet" icon={<IconMailForward size={14} stroke={1.75} aria-hidden />} pending={resend.isPending && resend.variables?.id === row.id} onClick={() => resend.mutate(row)}>Send again</Button>
-            {row.status === "pending" ? <Button small variant="quiet" onClick={() => setRevoking(row)}>Cancel</Button> : null}
+            <Button small variant="secondary" icon={<IconMailForward size={16} stroke={1.75} aria-hidden />} pending={resend.isPending && resend.variables?.id === row.id} onClick={() => resend.mutate(row)}>Send again</Button>
+            {row.status === "pending" ? <Button small variant="secondary" onClick={() => setRevoking(row)}>Cancel</Button> : null}
           </span>
         ) : null,
     },
@@ -159,11 +144,7 @@ function InvitesTable() {
 
   return (
     <>
-      <Panel
-        flush
-        title="Invitations"
-        actions={<Button variant="primary" icon={<IconPlus size={16} stroke={1.75} aria-hidden />} onClick={() => { invite.reset(); setInviting(true); }}>Invite someone</Button>}
-      >
+      <Panel flush title="Invitations">
         <DataTable
           caption="Invitations"
           columns={columns}
@@ -178,18 +159,6 @@ function InvitesTable() {
         />
         {list.data ? <Pagination total={list.data.total} limit={PAGE_SIZE} offset={offset} onOffset={(next) => url.set({ offset: next })} noun="invitations" /> : null}
       </Panel>
-      <Dialog open={inviting} onClose={() => !invite.isPending && setInviting(false)} title="Invite someone">
-        <form onSubmit={(event: FormEvent) => { event.preventDefault(); invite.mutate(); }} className={styles.form} noValidate>
-          {error && error.fields.length === 0 ? <Banner tone="negative" title="Could not send it">{messageFor(error)}</Banner> : null}
-          <TextField label="Email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} error={error?.fieldMessage("email")} required autoFocus />
-          <SelectField label="Role" value={role} onChange={(event) => setRole(event.target.value as Role)} options={ROLES.map((item) => ({ value: item.value, label: item.label }))} hint={ROLES.find((item) => item.value === role)?.about} />
-          <p className="muted">The link works once and expires in 7 days. Sending it again cancels the earlier one.</p>
-          <div className={styles.actions}>
-            <Button onClick={() => setInviting(false)} disabled={invite.isPending}>Cancel</Button>
-            <Button type="submit" variant="primary" pending={invite.isPending} disabled={!email}>Send invitation</Button>
-          </div>
-        </form>
-      </Dialog>
       <ConfirmDialog open={revoking !== null} onClose={() => setRevoking(null)} title="Cancel this invitation" confirmLabel="Cancel the invitation" danger onConfirm={() => (revoking ? revoke.mutateAsync(revoking) : Promise.resolve())}>
         The link in the email to {revoking?.email} stops working.
       </ConfirmDialog>
@@ -202,8 +171,12 @@ export function Users() {
   const tab = url.get("tab") === "invites" ? "invites" : "users";
   return (
     <>
-      <PageHeader title="Users and invites" description="Admins manage people and what each role may do. Nobody here ever sees or sets a password." />
-      <div className={styles.tabs} role="tablist" aria-label="People">
+      <PageHeader
+        title="Users and invites"
+        description="Admins manage people and what each role may do. Nobody here ever sees or sets a password."
+        actions={<NewDocumentButton kind="invite">Invite someone</NewDocumentButton>}
+      />
+      <div className={styles.tabs} data-noprint role="tablist" aria-label="People">
         <button type="button" role="tab" aria-selected={tab === "users"} onClick={() => url.set({ tab: null, offset: null })}>People</button>
         <button type="button" role="tab" aria-selected={tab === "invites"} onClick={() => url.set({ tab: "invites", offset: null })}>Invitations</button>
       </div>

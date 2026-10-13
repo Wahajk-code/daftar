@@ -118,10 +118,10 @@ export function ReceiptPanel({ kind, id, editable }: { kind: "expenses" | "purch
               <img src={`/api/attachments/${file.id}/content`} alt={`Receipt ${file.original_name}`} loading="lazy" />
             </a>
             <div className={styles.thumbMeta}>
-              <span className="mono">{file.original_name}</span>
+              <span className="ident">{file.original_name}</span>
               <span className="faint">{sizeText(file.size_bytes)}</span>
               {editable ? (
-                <Button small variant="quiet" icon={<IconTrash size={14} stroke={1.75} aria-hidden />} pending={remove.isPending && remove.variables === file.id} onClick={() => remove.mutate(file.id)} aria-label={`Remove ${file.original_name}`}>
+                <Button small variant="quiet" icon={<IconTrash size={16} stroke={1.75} aria-hidden />} pending={remove.isPending && remove.variables === file.id} onClick={() => remove.mutate(file.id)} aria-label={`Remove ${file.original_name}`}>
                   Remove
                 </Button>
               ) : null}
@@ -134,7 +134,7 @@ export function ReceiptPanel({ kind, id, editable }: { kind: "expenses" | "purch
               <span className={styles.progressFill} style={{ width: `${Math.round((progress[name] ?? 0) * 100)}%` }} />
             </div>
             <div className={styles.thumbMeta}>
-              <span className="mono">{name}</span>
+              <span className="ident">{name}</span>
               <span className="faint">{Math.round((progress[name] ?? 0) * 100)}%</span>
             </div>
           </li>
@@ -159,7 +159,7 @@ export function ReceiptPanel({ kind, id, editable }: { kind: "expenses" | "purch
               if (chosen.length > 0) send.mutate(chosen);
             }}
           />
-          <Button icon={<IconFileUpload size={16} stroke={1.75} aria-hidden />} pending={send.isPending} onClick={() => input.current?.click()}>
+          <Button icon={<IconFileUpload size={18} stroke={1.75} aria-hidden />} pending={send.isPending} onClick={() => input.current?.click()}>
             Add a receipt
           </Button>
           <p className={`${styles.advice} faint`}>JPEG, PNG or WebP. Location data is removed from the photo.</p>

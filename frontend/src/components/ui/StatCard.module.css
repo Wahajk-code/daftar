@@ -1,0 +1,80 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-5);
+  background: var(--k-card-bg);
+  color: var(--text-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--k-card-shadow);
+  text-decoration: none;
+  font-weight: 400;
+  transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out);
+}
+
+.link:hover {
+  color: var(--text-1);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-pop);
+}
+
+/* The one card a screen leads with: the near-black pill colour, in both themes. */
+.dark {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.dark:hover {
+  color: var(--text-on-accent);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+/* Label and hint are light and quiet; the figure between them is the heaviest thing on the card. */
+.label {
+  font-size: var(--text-sm);
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.go {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--bg-sunken);
+  color: var(--text-1);
+  flex: none;
+}
+
+.dark .go {
+  background: color-mix(in srgb, var(--text-on-accent) 16%, transparent);
+  color: var(--text-on-accent);
+}
+
+/* Large single figures use proportional digits; only columns of numbers use tabular ones. */
+.value {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  font-family: var(--font-ui);
+}
+
+.hero {
+  font-size: var(--text-3xl);
+}
+
+.hint {
+  font-size: var(--text-sm);
+  font-weight: 400;
+  opacity: 0.7;
+  min-height: 1.2em;
+}

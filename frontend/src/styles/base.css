@@ -9,20 +9,14 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  font-family: var(--font-sans);
+  font-family: var(--font-ui);
   font-size: var(--text-base);
   line-height: var(--leading-normal);
   background: var(--bg-page);
   color: var(--text-1);
-}
-
-html[data-density="comfortable"] {
-  --row-height: var(--row-height-comfortable);
-}
-
-html,
-html[data-density="compact"] {
-  --row-height: var(--row-height-compact);
+  -webkit-font-smoothing: antialiased;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule-strong) transparent;
 }
 
 body {
@@ -30,7 +24,6 @@ body {
   min-height: 100dvh;
   background: var(--bg-page);
   color: var(--text-1);
-  font-feature-settings: "tnum" 1;
 }
 
 h1,
@@ -38,13 +31,14 @@ h2,
 h3,
 h4 {
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
   line-height: var(--leading-tight);
-  letter-spacing: -0.005em;
+  letter-spacing: -0.02em;
 }
 
 h1 {
   font-size: var(--text-xl);
+  letter-spacing: -0.03em;
 }
 
 h2 {
@@ -53,20 +47,33 @@ h2 {
 
 h3 {
   font-size: var(--text-md);
+  font-weight: 600;
+}
+
+/* Body text is regular and a step quieter than headings, so a heading is always the heaviest, darkest line in its card. */
+p,
+dd,
+li {
+  font-weight: 400;
 }
 
 p {
   margin: 0;
 }
 
+/* A link is the ink colour, underlined, so it is plain that it can be pressed. */
 a {
-  color: var(--accent);
+  color: var(--text-1);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
   text-decoration-thickness: 1px;
-  text-underline-offset: 2px;
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--duration-fast);
 }
 
 a:hover {
-  color: var(--accent-hover);
+  text-decoration-color: currentColor;
 }
 
 button,
@@ -86,12 +93,15 @@ button:disabled,
   cursor: not-allowed;
 }
 
-table {
+/* Tables and data are set in the wider, more open face. */
+table,
+.data {
   border-collapse: collapse;
+  font-family: var(--font-data);
 }
 
 ::selection {
-  background: var(--accent-wash);
+  background: var(--accent-soft);
   color: var(--text-1);
 }
 
@@ -104,17 +114,19 @@ table {
 
 /* Figures: tabular, lining, right aligned where they sit in a column. */
 .num {
+  font-family: var(--font-data);
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: "tnum" 1, "lnum" 1;
   text-align: right;
   white-space: nowrap;
 }
 
-/* Identifiers: voucher numbers, invoice numbers, codes. */
-.mono {
-  font-family: var(--font-mono);
-  font-size: 0.93em;
-  letter-spacing: 0.01em;
+/* Identifiers: voucher numbers, invoice numbers, codes. Same face as the data, with figures that line up. */
+.ident {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  letter-spacing: 0.005em;
 }
 
 /* Text that may be Urdu follows its own direction and gets a face that has the letters. */
@@ -124,7 +136,7 @@ table {
 
 :lang(ur),
 [dir="rtl"] {
-  font-family: var(--font-urdu), var(--font-sans);
+  font-family: var(--font-urdu), var(--font-ui);
 }
 
 .sr-only {
@@ -147,6 +159,37 @@ table {
   color: var(--text-3);
 }
 
+/* Long text in a row is cut with an ellipsis; the full text is on the element's title. */
+.clip {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A thin, quiet scrollbar wherever something scrolls. */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--rule-strong);
+  border-radius: var(--radius-pill);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--text-3);
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -158,10 +201,74 @@ table {
   }
 }
 
+/* Text that exists only on paper. */
+.print-only {
+  display: none;
+}
+
+/* On paper: only the page's own data. No buttons, filters, tabs, pagination, menus, arrows or history; no shadows, colour
+   washes or motion; links read as plain text; tables repeat their heading on each page and never split a row. */
 @media print {
+  @page {
+    margin: 14mm;
+  }
+
   html,
   body {
-    background: none;
-    color: black;
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+  }
+
+  [data-noprint],
+  dialog,
+  .skip {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block;
+    font-size: 9pt;
+    color: #555;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+
+  [data-print-card] {
+    background: white !important;
+    border: 1px solid #bbb;
+    border-radius: 6px !important;
+    break-inside: avoid;
+  }
+
+  table {
+    width: 100%;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tr {
+    break-inside: avoid;
+  }
+
+  th,
+  td {
+    position: static !important;
+    background: transparent !important;
+    color: black !important;
   }
 }
