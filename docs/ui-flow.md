@@ -1,26 +1,34 @@
 # UI flow
 
 The screens of the web app, who sees which, and how a person gets from one to the next. Kept current as screens are built.
-The design is the "Ledger" direction (`decisions.md`, 120 and 122): ruled sheets, tabular figures, stamps for statuses, a
-dashboard frame with a sidebar that folds to icons.
+The design is monochrome and soft (`decisions.md`, 130 to 139): white cards with a soft shadow on a light grey page, near-black
+pills for the primary action and the current place, large radii, Inter Tight for the interface and Inter for tables and figures,
+and colour only where it means something (status chips, type chips, charts).
 
 ## The frame
 
 Every signed-in screen sits in one frame.
 
-- **Sidebar.** Lists only what the signed-in role may open. It folds to a strip of icons (the button at the bottom or in the
-  top bar); the choice is remembered in a cookie so the page is drawn the right way on first paint. On a phone it becomes a
-  drawer opened from the menu button and closed by choosing a place, the scrim or Escape.
-- **Top bar.** The fold button and the account menu: theme (System, Light, Dark), row density (Compact, Comfortable), take the
-  tour, change password, sign out.
-- **Content.** A page header (title, what it is for, the actions), then ruled panels. Lists put filters, sort and page in the
-  address bar, show the filters in use as removable chips, and every data surface has loading, empty and error states.
+- **Sidebar.** A floating white card. Lists only what the signed-in role may open. It folds to a strip of icons (the arrow at
+  the foot or in the top bar); the choice is remembered in a cookie so the page is drawn the right way on first paint. Its own
+  thin scrollbar appears when the list is long. The logo draws itself in when the page loads. On a phone it becomes a drawer
+  opened from the menu button and closed by choosing a place, the scrim or Escape.
+- **Top bar.** The fold button on the left; on the right a dark "New" menu (expense, purchase, voucher, only what the role may
+  write), the notification bell (what is waiting for this person, counted from the same lists as the home screen), the light and
+  dark theme toggle, the Help center, and the account menu (Help center, change password, sign out).
+- **Content.** A page header (title, what it is for, the actions), then white cards. Lists show a search box, the status as
+  pills and a Filters panel; the filters in use appear as removable chips. A row that leads somewhere is pressable and ends in an
+  arrow. Long text is cut with an ellipsis and shown whole on hover. Every data surface has a skeleton while it loads, and empty
+  and error states.
+- **New documents** open in a modal over the current screen with the page behind it blurred (`?new=expense`, `?new=purchase`,
+  `?new=voucher`); saving moves to the new document.
 
 ## Who sees what
 
 | Screen | Path | Admin | Accountant | Approver | Staff |
 |---|---|---|---|---|---|
-| Home (work waiting, month so far) | `/` | yes | yes | yes | yes (own work) |
+| Home (work waiting, figures, charts) | `/` | yes | yes | yes | yes (own work, no charts) |
+| Help center | `/help` | yes | yes | yes | yes |
 | Approvals queue | `/approvals` | yes | no | yes | no |
 | Expenses: list, new, edit, detail | `/expenses`, `/expenses/new`, `/expenses/[id]`, `/expenses/[id]/edit` | yes | yes | read | own only |
 | Purchases: list, new, edit, detail | `/purchases`, `/purchases/new`, `/purchases/[id]`, `/purchases/[id]/edit` | yes | yes | read | no |
@@ -40,7 +48,7 @@ A screen a role may not use shows "Your role does not include this screen". That
 
 ## Public screens
 
-One 50/50 layout (brand panel and form; the panel shrinks to a header on a narrow screen). Signed-in people are sent home from
+One 50/50 layout (an illustrated half and the form, each a rounded card; the illustration goes and the panel shrinks to a header on a narrow screen). The left half is a flat illustration of two people at a giant open ledger. Signed-in people are sent home from
 the first two.
 
 | Screen | Path | What it does |
@@ -94,8 +102,22 @@ Everything is reachable with the keyboard. Focus is always visible. Dialogs and 
 dialog, the account menu, the mobile drawer and ends the tour. Tab order follows reading order; the voucher editor's own keys are
 described above.
 
+## The home screen
+
+Cards, most important first. Office roles: a dark "Waiting for you" card, the month's spend as the large figure, then counts for
+expenses, purchases and posted vouchers; then the work lists (each with its count, red when it needs action); then the charts:
+spend by month (expenses and purchases side by side), where documents stand (a stacked bar per kind), and spend by cost centre.
+Every chart has a Table button with the same numbers, and shows a tooltip on hover and keyboard focus. Staff see their own three
+lists as cards: sent back, drafts, waiting for approval.
+
+## The Help center
+
+`/help`: a guide written for the signed-in role (what they do here, in order), how a document moves, a card for every screen they
+can open, and a few tips. It is the only place the tour can be started again.
+
 ## The tour
 
-Five or six steps chosen for the role, one sentence and one pointer each, with "Step 2 of 5" shown. Skip is always visible; Escape
-ends it; finishing or skipping is saved on the server, so it does not reappear on another device. It starts by itself on first
-sign-in and again from "Take the tour" in the account menu. On a narrow screen the steps that point into the sidebar are left out.
+Five to seven steps chosen for the role and written for the person: their name, their role, and what is waiting for them right
+now. "Step 2 of 5" is shown, and Skip is always visible; Escape ends it. It starts by itself on first sign-in and is saved on the
+server, so it does not reappear on another device; it can be started again only from the Help center. The card is our own (white,
+dark text, clear buttons) in both themes. On a narrow screen the steps that point into the sidebar are left out.

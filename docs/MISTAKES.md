@@ -146,4 +146,22 @@ Caught:     Python's own SyntaxError, before anything ran (so nothing was half-a
 Why wrong:  This is M14 again: I knew files with prose or quotes go through the Write tool and wrote the generator anyway.
 Fix:        The files were written directly with the Write tool. The rule I follow now: no script that writes a script.
 
+### M24: A list of weights on a variable font broke the dev server (pass 6)
+What:       I loaded Inter Tight and Inter with an explicit list of weights. Turbopack answered every request with a 500 ("next/font/google queries have exactly one entry"), including sign-in.
+Caught:     The smoke script, when sign-in returned 500, and then the frontend log.
+Why wrong:  Both are variable fonts, which carry every weight in one file; naming weights asks the loader for several files and the dev build cannot do that. I copied the pattern from the old static-weight fonts.
+Fix:        The weight lists were removed. A variable font is declared without weights.
+
+### M25: A test expectation forgot the reversal (pass 6)
+What:       The new voucher amount-range assertion expected one voucher in a range that holds two: the voided voucher and the reversal that cancels it, which come to the same amount.
+Caught:     The test run.
+Why wrong:  The same test asserts two lines earlier that the reversal exists as a numbered, posted voucher; I counted vouchers in my head instead of reading the numbers it already lists.
+Fix:        The expectation names both vouchers and says why.
+
+### M26: Month arithmetic used divmod in a service (pass 6)
+What:       The overview report worked out which months to show with `divmod`, in `services/reports.py`.
+Caught:     `test_division_happens_only_in_money_and_allocation`, on the first run of the architecture tests after the change.
+Why wrong:  The rule is that division lives in `core/money.py` and `core/allocation.py`. The test is blunt on purpose and does not ask whether the numbers are money; a rule that has exceptions for "harmless" cases stops being a rule.
+Fix:        The months are found by stepping back one at a time, with no division.
+
 <!-- entries are added as they happen -->

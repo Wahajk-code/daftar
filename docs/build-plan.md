@@ -145,6 +145,7 @@ Model: strong for design and BFF, cheap for repeated screens · Apply the `dafta
 - [ ] **Checkpoint:** the voucher flow works with the keyboard only; no token is readable in `document.cookie`, storage or any bundle
 
 ---
+- [x] Second design pass after owner QA (decisions 130 to 139): monochrome soft look, header tools and bell, modal new-document flows, personalised tour and Help center, extensive list filters (with amount ranges in the API), skeletons, charts from `GET /reports/overview`, illustrated login.
 
 ## Pass 7: Web finish and hardening
 Model: strong for the security review
