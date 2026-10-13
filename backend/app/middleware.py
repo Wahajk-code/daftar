@@ -55,3 +55,32 @@ class CorrelationIdMiddleware:
             }
             logger.info("request", extra=extra)
             correlation_id_var.reset(token)
+
+
+class SecurityHeadersMiddleware:
+    """Headers that tell a browser not to guess types, frame the API or leak a referrer. The API serves JSON and receipt
+    images, never a page, so these cost nothing. HSTS is sent only in production, where there is HTTPS."""
+
+    def __init__(self, app: ASGIApp, *, hsts: bool) -> None:
+        self.app = app
+        self._headers = {
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": "DENY",
+            "Referrer-Policy": "no-referrer",
+            "Cross-Origin-Resource-Policy": "same-site",
+            **({"Strict-Transport-Security": "max-age=31536000; includeSubDomains"} if hsts else {}),
+        }
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        async def send_with_headers(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                headers = MutableHeaders(scope=message)
+                for name, value in self._headers.items():
+                    headers.setdefault(name, value)
+            await send(message)
+
+        await self.app(scope, receive, send_with_headers)

@@ -1,6 +1,6 @@
 ---
 name: daftar-ui
-description: Use when building or changing any screen, component, theme or copy in the Daftar web or mobile app. Covers the design process, the soft monochrome direction, tokens, themes, tables and forms for dense accounting screens, and the checks that stop it looking generated.
+description: Use when building or changing any screen, component, theme or copy in the Daftar web app. Covers the design process, the soft monochrome direction, tokens, themes, tables and forms for dense accounting screens, and the checks that stop it looking generated.
 ---
 
 # Daftar UI

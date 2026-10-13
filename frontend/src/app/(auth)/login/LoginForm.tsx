@@ -106,11 +106,7 @@ export function LoginForm({ next, demo }: { next?: string; demo: DemoAccount[] }
                     setPassword(DEMO_PASSWORD);
                   }}
                 >
-                  <span>
-                    <span className={styles.demoName}>{account.name}</span>
-                    <br />
-                    <span className={styles.demoRole}>{account.email}</span>
-                  </span>
+                  <span className={styles.demoName}>{account.name}</span>
                   <span className={styles.demoRole}>{account.role}</span>
                 </button>
               </li>

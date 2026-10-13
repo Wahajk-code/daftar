@@ -1,12 +1,12 @@
 # Daftar
 
-Expense, purchase and voucher manager. `backend/` (FastAPI), `frontend/` (Next.js), `mobile/` (Expo).
+Expense, purchase and voucher manager. `backend/` (FastAPI) and `frontend/` (Next.js, installable as a PWA).
 Docs: `docs/architecture.md`, `docs/decisions.md`, `docs/domain-rules.md`, `docs/build-plan.md`, `docs/workflow.md`.
 
 ## How to work
 - Work autonomously through the passes in `docs/build-plan.md`, in order. Read only the current pass and the parts of
   other docs a step needs. Tick checkboxes as steps finish.
-- Order is fixed: backend, web app, owner QA, Expo app.
+- Order is fixed: backend, web app, owner QA, deploy. There is no native mobile app; the web app installs as a PWA.
 - Stop only for: a sensitive command, a gate failing twice, a missing credential, a material ambiguity, the design
   checkpoint, or the end of a pass. Then write the pass report (format in `docs/workflow.md`).
 - Decisions: use `docs/decisions.md`. For a new one, choose the best option, add a row with the reasoning and the
@@ -35,11 +35,11 @@ stop and show me. Tests use `daftar_test` only.
   models. Services never import FastAPI.
 - Status changes only through `core/transitions.py`. Errors only as a `DomainError` with a code from one enum.
 - Separate Create, Update and Read schemas. Reject unknown fields.
-- Rate limits are named policies in `core/rate_limit.py` (`docs/architecture.md` section 9a): key on email or user first, count before
+- Rate limits are named policies in `core/rate_limit.py` (`docs/security.md`): key on email or user first, count before
   the password check, throttle never lock, answer 429 with `Retry-After`, trust a client address only with the BFF secret, run one API worker.
 - Nothing is deleted: master data deactivates, posted data is reversed.
 - Time: UTC in storage, the API, logs and exports; timezone-aware datetimes only; the server stamps every instant. On screen use the
-  `DISPLAY_TIMEZONE` from `/me`, never the device's zone, with identical formats on web and mobile. `document_date` is a plain date,
+  `DISPLAY_TIMEZONE` from `/me`, never the device's zone, with the same formats on every screen. `document_date` is a plain date,
   never converted through a timezone. See `docs/domain-rules.md` section 7.
 - The database holds every rule it can (deferred balance trigger, unique numbering, one reversal, allocation sums). Each
   needs a test that reaches it by bypassing the service, using `SET CONSTRAINTS ALL IMMEDIATE`.
@@ -48,12 +48,12 @@ stop and show me. Tests use `daftar_test` only.
 - Send email only after commit, as a background task; a provider failure is logged, never raised. Write audit rows in the same transaction as the change. No server-side cache and no queue.
 - A lock or idempotency feature needs a real parallel test. After a lost race, re-read with `populate_existing`.
 - Receipts go to Cloudinary as authenticated assets and are served only through the API. Tests use the in-memory fake.
-  Check current SDK documentation (Cloudinary, Expo) before using an API from memory.
+  Check current SDK documentation (Cloudinary, Next.js) before using an API from memory.
 - Roles: one per user; the charter is in `docs/decisions.md` section 4. Only Admins invite, change roles, deactivate and trigger
   resets, and never see or set a password. Nobody approves a document they created.
 - Public screens are only login, forgot password, reset password and accept invite, in one 50/50 split layout. No landing, SEO or
   legal pages. Every route is `noindex`. The onboarding tour is skippable at every step and its state is saved on the server.
-- Frontend and mobile: types from `backend/openapi.json`; TanStack Query; colours only through tokens; every mutation has a
+- Frontend: types from `backend/openapi.json`; TanStack Query; colours only through tokens; every mutation has a
   pending state, a disabled button and a toast on success and failure; never optimistic for post, void or approve.
   Apply the `daftar-ui` skill.
 

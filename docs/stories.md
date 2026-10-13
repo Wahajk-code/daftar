@@ -157,15 +157,15 @@ separators; UTF-8 with BOM so Excel reads Urdu correctly; every export logged wi
 
 ---
 
-## Epic H — Mobile
+## Epic H — Phone (the installed web app)
 
-**H1** — Camera is the primary action on the home screen. AC: images compressed before upload; form
-prefilled with today's date and the user's default cost centre.
-**H2** — Captures survive a bad connection. AC: queued locally, retried, queue visible, duplicates
-prevented by an idempotency key.
-**H3** — View and approve or reject expenses, purchases and vouchers awaiting approval, from the phone, with a comment. AC: same server rules as web.
-**H4** — Vouchers viewable read-only.
-**H5** — Tokens in secure storage, cleared on logout.
+**H1** — A camera button on a phone starts an expense from a photo of a receipt. AC: the photo is turned upright and shrunk
+before upload; the form opens with today's date.
+**H2** — *Not built.* Captures that survive a bad connection need offline support (a service worker and a queue); the app has
+neither (decision 148).
+**H3** — View and approve or reject items awaiting approval, from the phone, with a comment. AC: same server rules as on a computer.
+**H4** — Vouchers can be read on a phone.
+**H5** — Tokens are never readable by the page (HttpOnly cookies) and are cleared on sign-out.
 
 ---
 
@@ -210,11 +210,11 @@ signature blocks.
 ## Epic L — Domain correctness traps
 
 **L1** fiscal vs calendar year in the voucher number — decided, configurable, documented ·
-**L2** `document_date DATE` distinct from `created_at` · **L3** UTC stored and sent; one configured display zone on web and mobile, never the device's zone ·
-**L4** period locking · **L5** one number formatter across web, mobile and CSV · **L6** no N+1, with
+**L2** `document_date DATE` distinct from `created_at` · **L3** UTC stored and sent; one configured display zone, never the device's zone ·
+**L4** period locking · **L5** one number formatter across screens and CSV · **L6** no N+1, with
 a query-count assertion on list endpoints · **L7** disable on submit plus an idempotency key ·
 **L8** never optimistic UI for money actions · **L9** session expiry preserves the draft and the
-intended URL · **L10** mobile offline banner, queued captures, minimum-version gate ·
+intended URL · **L10** *not built* (offline banner and queue; no offline mode) ·
 **L11** virus scanning is a stated non-goal with a named extension point.
 
 ---
@@ -232,4 +232,4 @@ helper appears under the form only when `DEMO_MODE` is on.
 **N1** — A short guided tour on first sign-in. AC: 4 to 6 steps chosen for the user's role; Skip is always visible and
 Escape closes it at any step; finishing or skipping is saved on the server so it does not return on another device; "Take the
 tour" in the profile menu relaunches it; keyboard accessible with focus managed; correct at 360 px and in both themes;
-never blocks the app. Mobile shows a three-card intro with the same completion flag.
+never blocks the app. It is written for the person (name, role, what is waiting), starts on first sign-in and can be started again only from the Help center.

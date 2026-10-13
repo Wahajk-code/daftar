@@ -99,7 +99,7 @@ screen. Printing a voucher hides the frame and adds signature lines.
 ## Keyboard
 
 Everything is reachable with the keyboard. Focus is always visible. Dialogs and the tour trap focus and return it. Escape closes a
-dialog, the account menu, the mobile drawer and ends the tour. Tab order follows reading order; the voucher editor's own keys are
+dialog, the account menu, the phone drawer and ends the tour. Tab order follows reading order; the voucher editor's own keys are
 described above.
 
 ## The home screen

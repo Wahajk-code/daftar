@@ -8,7 +8,7 @@ The rules the code must follow exactly. `architecture.md` says where each is enf
 - Percentages are integer basis points. 10,000 is 100%.
 - Maximum value is `999,999,999,999.99`; the Python layer enforces it.
 - Currency is PKR. A `currency` column exists on money tables so multi-currency is a migration, not a rewrite.
-- One number format everywhere (web, mobile, print, CSV): `1,234,567.00`, one negative convention.
+- One number format everywhere (screens, print, CSV): `1,234,567.00`, one negative convention.
 
 ## 2. Allocation (indirect expenses)
 An indirect expense is split across cost centres by percentage (basis points) or fixed amounts.
@@ -90,17 +90,15 @@ never the device's.**
 - **Business dates** (`document_date`, period ranges, report ranges) are calendar dates (`DATE`), sent as `YYYY-MM-DD`. They carry no
   time and no zone, and are never converted through a timezone. Converting a date is how a document ends up on the wrong day.
 - **Display zone:** one IANA zone from the `DISPLAY_TIMEZONE` setting, default `Asia/Karachi` (UTC+5, no daylight saving). The API
-  returns it in `GET /me`. Web and mobile both format with that zone, so the same instant reads the same on every device,
+  returns it in `GET /me`. Every screen formats with that zone, so the same instant reads the same on every device,
   whatever the device or browser timezone is. Setting it to `UTC` shows UTC everywhere.
 - **"Today":** the current date in the display zone. It defaults new documents' `document_date` and is the date of a reversal.
-- **Format, identical on web and mobile:** `12 Oct 2026` for dates, `12 Oct 2026, 14:05` for instants (24-hour), full timestamp
+- **Format, the same everywhere:** `12 Oct 2026` for dates, `12 Oct 2026, 14:05` for instants (24-hour), full timestamp
   with the zone abbreviation on hover or long press. Month names are written out so day and month cannot be confused.
 - **Exports:** CSV dates are `YYYY-MM-DD`; instants are ISO 8601 UTC with `Z`. Both are the same for every viewer.
 - **Emails** show instants in the display zone with its abbreviation.
 - **Ranges:** a report from `2026-10-01` to `2026-10-31` means those calendar dates inclusive, in the display zone.
 - `document_date` is the accounting date and may be back-dated; `created_at` is when the row was written. Never conflate them.
-- **Offline captures** on mobile store the user's chosen `document_date` and the device's UTC instant; the server stamps its own
-  `created_at` on arrival.
 
 ## 8. Duplicate detection
 A purchase or expense warns, but never blocks, when it resembles another: same vendor with a similar amount and a

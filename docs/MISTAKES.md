@@ -266,4 +266,16 @@ Caught:     By me, running the smoke script against the live site and reading a 
 Why wrong:  It only appears behind a compressing host, which the local setup never has, so passing every local check proved nothing about it. Deployed behaviour was left to the deploy pass.
 Fix:        The header is no longer forwarded; the runtime sets the length itself.
 
+### M44: The architecture document described security headers and a CORS list that did not exist (submission)
+What:       `architecture.md` listed "strict CORS list, security headers" among the controls. The web app and the API sent no security headers at all (only `nosniff` on receipt downloads).
+Caught:     By me, while writing `security.md` and checking each claim against the code.
+Why wrong:  A plan item was written up as if it were done, and no test or review compared the document with the code.
+Fix:        Headers added to the API and the web app with a test; the API needs no CORS because the browser only talks to the web app; the document now states what exists, and that there is no Content-Security-Policy.
+
+### M45: Free-tier limits were checked only after deploying (deploy)
+What:       The plan said to confirm free-tier limits before relying on them, and the deploy guide chose Google SMTP for email. Render's free web service blocks outbound SMTP, so no email could leave the live API. It showed up only as `Network is unreachable` in the logs after the first invitation.
+Caught:     The owner, from the missing email and the Render log.
+Why wrong:  A host's network rules were left as an assumption, and the failure is invisible in the app because email errors are logged, not shown.
+Fix:        The limit is documented in `deploy.md` and `build-plan.md`; email from the live site needs a paid instance or an HTTPS mail API, and the owner chose to show the emails as screenshots.
+
 <!-- entries are added as they happen -->

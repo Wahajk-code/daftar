@@ -1,7 +1,7 @@
 """Named rate-limit policies, held in memory. A sliding window per key; one lock; one API worker.
 
 Limits throttle, they never lock an account. An attempt is counted before the expensive work and refunded on success.
-Every number is a setting (RATE_LIMIT_OVERRIDES). See docs/architecture.md section 9a."""
+Every number is a setting (RATE_LIMIT_OVERRIDES). See docs/security.md."""
 
 import hashlib
 import math

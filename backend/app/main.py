@@ -12,7 +12,7 @@ from app.core.rate_limit import RateLimiter, build_policies
 from app.db import get_session_factory
 from app.deps import get_storage
 from app.errors import ERROR_RESPONSES, register_error_handlers
-from app.middleware import CorrelationIdMiddleware
+from app.middleware import CorrelationIdMiddleware, SecurityHeadersMiddleware
 from app.routers import audit, auth, documents, health, master, me, reports, users, vendors, vouchers
 from app.seed.restore import restore_demo_receipts
 
@@ -47,8 +47,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         redoc_url=None if live else "/redoc",
         openapi_url=None if live else "/openapi.json",
     )
+    app.add_middleware(SecurityHeadersMiddleware, hsts=settings.environment == "production")
     app.add_middleware(CorrelationIdMiddleware)
-    # In memory, one process: the counters reset on restart (docs/architecture.md section 9a). Tests replace this.
+    # In memory, one process: the counters reset on restart (docs/security.md). Tests replace this.
     app.state.rate_limiter = RateLimiter(
         Clock(), build_policies(settings.rate_limit_overrides), max_keys=settings.rate_limit_max_keys
     )
