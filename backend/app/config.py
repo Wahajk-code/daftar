@@ -82,6 +82,16 @@ class Settings(BaseSettings):
     def _empty_means_unset(cls, value: object) -> object:
         return None if isinstance(value, str) and not value.strip() else value
 
+    @field_validator("cloudinary_url")
+    @classmethod
+    def _cloudinary_url_has_its_scheme(cls, value: SecretStr | None) -> SecretStr | None:
+        if value is not None and not value.get_secret_value().startswith("cloudinary://"):
+            raise ValueError(
+                "CLOUDINARY_URL must be the whole value from Cloudinary, which starts "
+                "cloudinary://API_KEY:API_SECRET@CLOUD_NAME (without a leading CLOUDINARY_URL=)"
+            )
+        return value
+
     @model_validator(mode="after")
     def _storage_is_configured(self) -> "Settings":
         if self.storage_backend == "cloudinary" and self.cloudinary_url is None:

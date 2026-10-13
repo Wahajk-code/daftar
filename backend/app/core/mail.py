@@ -25,6 +25,7 @@ class EmailMessage:
     to: str
     subject: str
     body: str
+    html: str | None = None  # the styled version; `body` stays as the plain-text fallback
 
 
 class Mailer(ABC):
@@ -65,6 +66,8 @@ class SmtpMailer(Mailer):
         mime["Date"] = formatdate(localtime=False)
         mime["Message-ID"] = make_msgid(domain="daftar.local")
         mime.set_content(message.body)
+        if message.html:
+            mime.add_alternative(message.html, subtype="html")
         with smtplib.SMTP(self._host, self._port, timeout=self._timeout) as connection:
             connection.send_message(mime)
 
@@ -73,8 +76,8 @@ RESEND_ENDPOINT = "https://api.resend.com/emails"
 
 
 class ResendMailer(Mailer):
-    """Resend's HTTP API: POST /emails with a bearer key, JSON body with from, to, subject and text. Any answer other
-    than 2xx is an error (urllib raises for 4xx and 5xx)."""
+    """Resend's HTTP API: POST /emails with a bearer key, JSON body with from, to, subject, text and html. Any
+    answer other than 2xx is an error (urllib raises for 4xx and 5xx)."""
 
     def __init__(self, api_key: str, sender: str, timeout_seconds: int, endpoint: str = RESEND_ENDPOINT) -> None:
         self._api_key = api_key
@@ -83,9 +86,10 @@ class ResendMailer(Mailer):
         self._endpoint = endpoint
 
     def send(self, message: EmailMessage) -> None:
-        payload = json.dumps(
-            {"from": self._sender, "to": [message.to], "subject": message.subject, "text": message.body}
-        ).encode()
+        fields = {"from": self._sender, "to": [message.to], "subject": message.subject, "text": message.body}
+        if message.html:
+            fields["html"] = message.html
+        payload = json.dumps(fields).encode()
         request = urllib.request.Request(  # noqa: S310 - the endpoint is a constant https URL, or a local test server
             self._endpoint,
             data=payload,

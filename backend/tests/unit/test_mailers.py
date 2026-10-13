@@ -102,3 +102,40 @@ def test_production_refuses_the_console_transport() -> None:
     with pytest.raises(ValidationError, match="SMTP or Resend"):
         make(mail_backend="console")
     assert make(mail_backend="resend", resend_api_key="re_live").mail_backend == "resend"
+
+
+def test_every_template_has_a_styled_version_that_escapes_what_it_is_given_and_keeps_the_link() -> None:
+    from app.core import mail_templates as templates
+
+    link = "http://localhost:3001/accept-invite?token=abc&x=1"
+    invite = templates.invite(
+        to="a@daftar.pk", role="Accountant", link=link, expires="20 Oct", invited_by="<b>Nadia</b>"
+    )
+    assert invite.html is not None
+    assert invite.body
+    assert "&lt;b&gt;Nadia&lt;/b&gt;" in invite.html
+    assert "<b>Nadia</b>" not in invite.html
+    assert 'href="http://localhost:3001/accept-invite?token=abc&amp;x=1"' in invite.html
+    rejected = templates.decided(
+        to="a@daftar.pk",
+        name="Bilal",
+        label="Expense 42",
+        summary="PKR 1.00",
+        outcome="rejected",
+        decided_by="Ayesha",
+        when="now",
+        comment="Unclear <receipt>",
+        link=link,
+    )
+    assert rejected.html is not None
+    assert "Unclear &lt;receipt&gt;" in rejected.html
+    assert all(
+        m.html and m.html.startswith("<!doctype html>")
+        for m in (
+            templates.password_reset(to="a@daftar.pk", link=link, expires="x", started_by_admin=True),
+            templates.bank_account_changed(
+                to="a@daftar.pk", vendor="V", changed_by="U", when="w", masked_account="****1"
+            ),
+            templates.needs_approval(to="a@daftar.pk", name="N", label="L", summary="S", submitted_by="B", link=link),
+        )
+    )
