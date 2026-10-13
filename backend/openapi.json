@@ -3802,6 +3802,139 @@
         ]
       }
     },
+    "/api/v1/reports/overview": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Report Overview",
+        "description": "Month by month spend and the spread of documents over statuses: the figures behind the home screen's charts.",
+        "operationId": "report_overview",
+        "parameters": [
+          {
+            "name": "months",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 12,
+              "minimum": 1,
+              "description": "How many months to show, ending with the current one.",
+              "default": 6,
+              "title": "Months"
+            },
+            "description": "How many months to show, ending with the current one."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Overview"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request could not be understood",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request is too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request has invalid fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong on our side",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "x-roles": [
+          "accountant",
+          "admin",
+          "approver"
+        ]
+      }
+    },
     "/api/v1/reports/expenses": {
       "get": {
         "tags": [
@@ -5650,6 +5783,46 @@
                 }
               ],
               "title": "Date To"
+            }
+          },
+          {
+            "name": "amount_min",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Amount Min"
+            }
+          },
+          {
+            "name": "amount_max",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Amount Max"
             }
           },
           {
@@ -7709,6 +7882,46 @@
                 }
               ],
               "title": "Date To"
+            }
+          },
+          {
+            "name": "amount_min",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Amount Min"
+            }
+          },
+          {
+            "name": "amount_max",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Amount Max"
             }
           },
           {
@@ -10004,6 +10217,46 @@
                 }
               ],
               "title": "Date To"
+            }
+          },
+          {
+            "name": "amount_min",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Amount Min"
+            }
+          },
+          {
+            "name": "amount_max",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Amount Max"
             }
           },
           {
@@ -18829,6 +19082,81 @@
         ],
         "title": "OffsettingLine"
       },
+      "Overview": {
+        "properties": {
+          "months": {
+            "items": {
+              "$ref": "#/components/schemas/OverviewMonth"
+            },
+            "type": "array",
+            "title": "Months"
+          },
+          "expense_statuses": {
+            "items": {
+              "$ref": "#/components/schemas/StatusCount"
+            },
+            "type": "array",
+            "title": "Expense Statuses"
+          },
+          "purchase_statuses": {
+            "items": {
+              "$ref": "#/components/schemas/StatusCount"
+            },
+            "type": "array",
+            "title": "Purchase Statuses"
+          },
+          "voucher_statuses": {
+            "items": {
+              "$ref": "#/components/schemas/StatusCount"
+            },
+            "type": "array",
+            "title": "Voucher Statuses"
+          }
+        },
+        "type": "object",
+        "required": [
+          "months",
+          "expense_statuses",
+          "purchase_statuses",
+          "voucher_statuses"
+        ],
+        "title": "Overview",
+        "description": "The figures behind the home screen's charts: a run of months, and how documents are spread over statuses."
+      },
+      "OverviewMonth": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "title": "Month"
+          },
+          "expenses": {
+            "type": "string",
+            "title": "Expenses"
+          },
+          "purchases": {
+            "type": "string",
+            "title": "Purchases"
+          },
+          "expense_count": {
+            "type": "integer",
+            "title": "Expense Count"
+          },
+          "purchase_count": {
+            "type": "integer",
+            "title": "Purchase Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "expenses",
+          "purchases",
+          "expense_count",
+          "purchase_count"
+        ],
+        "title": "OverviewMonth",
+        "description": "What was decided in one calendar month: approved and posted documents by their document date."
+      },
       "Page_AccountRead_": {
         "properties": {
           "items": {
@@ -20379,6 +20707,23 @@
           "role"
         ],
         "title": "RoleChange"
+      },
+      "StatusCount": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/DocumentStatus"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "count"
+        ],
+        "title": "StatusCount"
       },
       "StatusRead": {
         "properties": {

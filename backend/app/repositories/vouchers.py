@@ -1,13 +1,14 @@
 """Queries for vouchers and the counter that numbers them."""
 
 from datetime import date
+from decimal import Decimal
 
-from sqlalchemy import Select, func, or_, select, text
+from sqlalchemy import Select, func, select, text
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.core.enums import DocumentStatus, VoucherType
 from app.models.vouchers import Voucher, VoucherLine
-from app.repositories.paging import order_clauses, paginate
+from app.repositories.paging import order_clauses, paginate, search_clause
 
 
 def _voucher_query() -> Select[Voucher]:
@@ -83,6 +84,8 @@ def list_vouchers(
     status: DocumentStatus | None,
     date_from: date | None,
     date_to: date | None,
+    amount_min: Decimal | None,
+    amount_max: Decimal | None,
     q: str | None,
     sort: str | None,
     limit: int,
@@ -97,11 +100,17 @@ def list_vouchers(
         statement = statement.where(Voucher.document_date >= date_from)
     if date_to is not None:
         statement = statement.where(Voucher.document_date <= date_to)
-    if q:
-        pattern = f"%{q.lower()}%"
-        statement = statement.where(
-            or_(func.lower(Voucher.description).like(pattern), func.lower(Voucher.number).like(pattern))
-        )
+    if amount_min is not None or amount_max is not None:
+        # What a voucher comes to is the sum of its debit lines, worked out here as the model works it out on read.
+        lines = select(func.coalesce(func.sum(VoucherLine.debit), 0)).where(VoucherLine.voucher_id == Voucher.id)
+        total = lines.scalar_subquery()
+        if amount_min is not None:
+            statement = statement.where(total >= amount_min)
+        if amount_max is not None:
+            statement = statement.where(total <= amount_max)
+    found = search_clause([Voucher.description, Voucher.number], q)
+    if found is not None:
+        statement = statement.where(found)
     order = order_clauses(
         sort,
         {

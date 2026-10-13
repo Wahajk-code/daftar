@@ -11,7 +11,7 @@ from app.core import csv_export
 from app.core.enums import DocumentStatus, Role, VoucherType
 from app.deps import PrincipalDep, ReportServiceDep, roles
 from app.schemas.page import Page, PageParamsDep
-from app.schemas.reports import ActivityReport, ExpenseReport, PurchaseReport, VoucherRegisterRow
+from app.schemas.reports import ActivityReport, ExpenseReport, Overview, PurchaseReport, VoucherRegisterRow
 from app.services.reports import CsvFile
 
 router = APIRouter(prefix="/reports", tags=["reports"])
@@ -39,6 +39,15 @@ def _download(file: CsvFile) -> StreamingResponse:
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="{file.filename}"', "Cache-Control": "no-store"},
     )
+
+
+@router.get("/overview", operation_id="report_overview", **OFFICE)
+def report_overview(
+    service: ReportServiceDep,
+    months: Annotated[int, Query(ge=1, le=12, description="How many months to show, ending with the current one.")] = 6,
+) -> Overview:
+    """Month by month spend and the spread of documents over statuses: the figures behind the home screen's charts."""
+    return service.overview(months)
 
 
 @router.get("/expenses", operation_id="report_expenses", **OFFICE)

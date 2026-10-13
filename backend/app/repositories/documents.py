@@ -2,8 +2,9 @@
 number of queries (joined one-to-one parents, one extra query per collection), never one query per row."""
 
 from datetime import date
+from decimal import Decimal
 
-from sqlalchemy import Select, func, or_, select
+from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.core.enums import DocumentStatus, DocumentType, ExpenseType
@@ -14,7 +15,9 @@ from app.models.documents import (
     ExpenseAllocation,
     Purchase,
 )
-from app.repositories.paging import order_clauses, paginate
+from app.models.master import Category
+from app.models.vendor import Vendor
+from app.repositories.paging import order_clauses, paginate, search_clause
 
 # Expenses ------------------------------------------------------------------------------------------------------------
 
@@ -60,6 +63,8 @@ def list_expenses(
     category_id: int | None,
     date_from: date | None,
     date_to: date | None,
+    amount_min: Decimal | None,
+    amount_max: Decimal | None,
     q: str | None,
     sort: str | None,
     limit: int,
@@ -78,8 +83,17 @@ def list_expenses(
         statement = statement.where(Expense.document_date >= date_from)
     if date_to is not None:
         statement = statement.where(Expense.document_date <= date_to)
-    if q:
-        statement = statement.where(func.lower(Expense.description).like(f"%{q.lower()}%"))
+    if amount_min is not None:
+        statement = statement.where(Expense.amount >= amount_min)
+    if amount_max is not None:
+        statement = statement.where(Expense.amount <= amount_max)
+    found = search_clause(
+        [Expense.description],
+        q,
+        lambda pattern: Expense.category.has(func.lower(Category.name).like(pattern, escape="\\")),
+    )
+    if found is not None:
+        statement = statement.where(found)
     order = order_clauses(
         sort,
         {
@@ -137,6 +151,8 @@ def list_purchases(
     registered: bool | None,
     date_from: date | None,
     date_to: date | None,
+    amount_min: Decimal | None,
+    amount_max: Decimal | None,
     q: str | None,
     sort: str | None,
     limit: int,
@@ -155,11 +171,17 @@ def list_purchases(
         statement = statement.where(Purchase.document_date >= date_from)
     if date_to is not None:
         statement = statement.where(Purchase.document_date <= date_to)
-    if q:
-        pattern = f"%{q.lower()}%"
-        statement = statement.where(
-            or_(func.lower(Purchase.description).like(pattern), func.lower(Purchase.invoice_number).like(pattern))
-        )
+    if amount_min is not None:
+        statement = statement.where(Purchase.gross_total >= amount_min)
+    if amount_max is not None:
+        statement = statement.where(Purchase.gross_total <= amount_max)
+    found = search_clause(
+        [Purchase.description, Purchase.invoice_number],
+        q,
+        lambda pattern: Purchase.vendor.has(func.lower(Vendor.name).like(pattern, escape="\\")),
+    )
+    if found is not None:
+        statement = statement.where(found)
     order = order_clauses(
         sort,
         {

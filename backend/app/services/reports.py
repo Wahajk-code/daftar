@@ -26,10 +26,13 @@ from app.schemas.reports import (
     ExpenseReport,
     ExpenseReportRow,
     ExpenseReportTotals,
+    Overview,
+    OverviewMonth,
     PurchaseReport,
     PurchaseReportRow,
     PurchaseReportTotals,
     ReportScope,
+    StatusCount,
     VoucherRegisterRow,
 )
 from app.services.audit import AuditService
@@ -130,6 +133,45 @@ class ReportService:
             for person in report_repository.people(self._session)
         ]
         return ActivityReport(date_from=date_from, date_to=date_to, rows=rows)
+
+    def overview(self, months: int) -> Overview:
+        """A run of months ending with the current one (in the display zone), and the spread over statuses."""
+        today = self._clock.today(ZoneInfo(self._settings.display_timezone))
+        year, month = today.year, today.month
+        labels: list[tuple[int, int]] = []
+        for _ in range(months):  # walk back one month at a time from the current one, then put the oldest first
+            labels.append((year, month))
+            year, month = (year - 1, 12) if month == 1 else (year, month - 1)
+        labels.reverse()
+        first_year, first_month = labels[0]
+        expenses, purchases = report_repository.monthly_totals(
+            self._session, DEFAULT_SPEND_STATUSES, date(first_year, first_month, 1)
+        )
+        counted = report_repository.status_counts(self._session)
+
+        def spread(kind: str) -> list[StatusCount]:
+            return [StatusCount(status=status, count=counted[kind].get(status, 0)) for status in DocumentStatus]
+
+        series = []
+        for label_year, label_month in labels:
+            key = (label_year, label_month)
+            expense_count, expense_total = expenses.get(key, (0, ZERO))
+            purchase_count, purchase_total = purchases.get(key, (0, ZERO))
+            series.append(
+                OverviewMonth(
+                    month=f"{label_year:04d}-{label_month:02d}",
+                    expenses=expense_total,
+                    purchases=purchase_total,
+                    expense_count=expense_count,
+                    purchase_count=purchase_count,
+                )
+            )
+        return Overview(
+            months=series,
+            expense_statuses=spread("expenses"),
+            purchase_statuses=spread("purchases"),
+            voucher_statuses=spread("vouchers"),
+        )
 
     # CSV -------------------------------------------------------------------------------------------------------------
 

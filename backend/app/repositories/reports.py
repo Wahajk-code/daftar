@@ -228,3 +228,30 @@ def rejections_received(session: Session, start: datetime | None, end: datetime 
         for author, count in session.execute(statement):
             received[author] = received.get(author, 0) + int(count)
     return received
+
+
+def monthly_totals(
+    session: Session, statuses: Sequence[DocumentStatus], start: date
+) -> tuple[dict[tuple[int, int], tuple[int, Decimal]], dict[tuple[int, int], tuple[int, Decimal]]]:
+    """Expenses and purchases (gross) from `start` on, by calendar month of the document date: how many, and the sum."""
+
+    def by_month(model: Any, amount: Any) -> dict[tuple[int, int], tuple[int, Decimal]]:
+        year = func.extract("year", model.document_date)
+        month = func.extract("month", model.document_date)
+        statement = (
+            select(year, month, func.count(model.id), func.coalesce(func.sum(amount), 0))
+            .where(model.status.in_(list(statuses)), model.document_date >= start)
+            .group_by(year, month)
+        )
+        return {(int(y), int(m)): (int(n), Decimal(total)) for y, m, n, total in session.execute(statement).all()}
+
+    return by_month(Expense, Expense.amount), by_month(Purchase, Purchase.gross_total)
+
+
+def status_counts(session: Session) -> dict[str, dict[DocumentStatus, int]]:
+    """How many expenses, purchases and vouchers are in each status, over all time."""
+    counts: dict[str, dict[DocumentStatus, int]] = {}
+    for name, model in (("expenses", Expense), ("purchases", Purchase), ("vouchers", Voucher)):
+        statement = select(model.status, func.count(model.id)).group_by(model.status)
+        counts[name] = {status: int(n) for status, n in session.execute(statement).all()}
+    return counts

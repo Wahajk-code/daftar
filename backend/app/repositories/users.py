@@ -1,9 +1,9 @@
-from sqlalchemy import func, or_, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.enums import Role
 from app.models.user import User
-from app.repositories.paging import order_clauses, paginate
+from app.repositories.paging import order_clauses, paginate, search_clause
 
 SORTABLE = {"name": User.full_name, "email": User.email, "role": User.role, "created_at": User.created_at}
 
@@ -49,9 +49,9 @@ def list_users(
     offset: int,
 ) -> tuple[list[User], int]:
     statement = select(User)
-    if q:
-        pattern = f"%{q.lower()}%"
-        statement = statement.where(or_(func.lower(User.full_name).like(pattern), User.email.like(pattern)))
+    found = search_clause([User.full_name, User.email], q)
+    if found is not None:
+        statement = statement.where(found)
     if role is not None:
         statement = statement.where(User.role == role)
     if is_active is not None:

@@ -164,6 +164,61 @@ def test_g1_an_empty_report_is_empty_not_an_error(client: TestClient, bookkeeper
     assert report["totals"] == {"expenses": 0, "amount": "0.00", "tax_amount": "0.00"}
 
 
+# The overview behind the home screen's charts -----------------------------------------------------------------------
+
+
+def test_the_overview_gives_a_zero_filled_run_of_months_and_the_spread_over_statuses(
+    client: TestClient, bookkeeper: dict[str, str], spending: dict[str, dict[str, Any]]
+) -> None:
+    overview = client.get("/api/v1/reports/overview?months=3", headers=bookkeeper).json()
+    months = {m["month"]: m for m in overview["months"]}
+    # Oldest first, ending with the current month (the fake clock says 12 October 2026); a month with nothing is zero.
+    assert [m["month"] for m in overview["months"]] == ["2026-08", "2026-09", "2026-10"]
+    assert months["2026-08"] == {
+        "month": "2026-08",
+        "expenses": "0.00",
+        "purchases": "0.00",
+        "expense_count": 0,
+        "purchase_count": 0,
+    }
+    assert (months["2026-09"]["expenses"], months["2026-09"]["expense_count"]) == ("500.00", 1)
+    # Rent, the shared bill and the project expense; the draft is not decided money.
+    assert (months["2026-10"]["expenses"], months["2026-10"]["expense_count"]) == ("1800.00", 3)
+    spread = {row["status"]: row["count"] for row in overview["expense_statuses"]}
+    assert spread == {"draft": 1, "submitted": 0, "approved": 4, "rejected": 0, "posted": 0, "void": 0}
+    assert [row["status"] for row in overview["voucher_statuses"]] == [
+        "draft",
+        "submitted",
+        "approved",
+        "rejected",
+        "posted",
+        "void",
+    ]
+
+
+def test_the_overview_counts_purchases_at_their_gross_amount(
+    client: TestClient, bookkeeper: dict[str, str], approver: dict[str, str], lookups: Lookups
+) -> None:
+    vendor = lookups.vendors["reg_filer"]
+    saved = client.post(
+        "/api/v1/purchases", json=purchase_body(vendor, document_date="2026-10-02"), headers=bookkeeper
+    ).json()
+    approve(client, "purchases", bookkeeper, approver, saved)
+    overview = client.get("/api/v1/reports/overview", headers=bookkeeper).json()
+    assert len(overview["months"]) == 6
+    current = overview["months"][-1]
+    assert (current["month"], current["purchase_count"], current["purchases"]) == ("2026-10", 1, saved["gross_total"])
+
+
+def test_the_overview_is_for_the_office_and_months_are_bounded(
+    client: TestClient, staff: dict[str, str], bookkeeper: dict[str, str]
+) -> None:
+    response = client.get("/api/v1/reports/overview", headers=staff)
+    assert (response.status_code, response.json()["code"]) == (403, "FORBIDDEN")
+    assert client.get("/api/v1/reports/overview?months=0", headers=bookkeeper).status_code == 422
+    assert client.get("/api/v1/reports/overview?months=13", headers=bookkeeper).status_code == 422
+
+
 # Purchases by vendor -------------------------------------------------------------------------------------------------
 
 

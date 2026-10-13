@@ -2,6 +2,7 @@
 
 from collections.abc import Sequence
 from datetime import date
+from decimal import Decimal
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Query, status
@@ -49,6 +50,8 @@ def list_vouchers(
     status: DocumentStatus | None = None,
     date_from: date | None = None,
     date_to: date | None = None,
+    amount_min: Annotated[Decimal | None, Query(ge=0, max_digits=14, decimal_places=2)] = None,
+    amount_max: Annotated[Decimal | None, Query(ge=0, max_digits=14, decimal_places=2)] = None,
     q: Annotated[str | None, Query(max_length=100, description="Matches the number or the narration.")] = None,
 ) -> Page[VoucherRead]:
     rows, total = service.list_vouchers(
@@ -56,6 +59,8 @@ def list_vouchers(
         status=status,
         date_from=date_from,
         date_to=date_to,
+        amount_min=amount_min,
+        amount_max=amount_max,
         q=q.strip().lower() if q else None,
         sort=page.sort,
         limit=page.limit,

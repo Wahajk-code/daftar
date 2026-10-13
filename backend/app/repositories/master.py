@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.enums import AccountType, PostingKey, ProjectKind
@@ -15,7 +15,7 @@ from app.models.master import (
     PostingAccount,
     Project,
 )
-from app.repositories.paging import order_clauses, paginate
+from app.repositories.paging import order_clauses, paginate, search_clause
 
 # Accounts ------------------------------------------------------------------------------------------------------------
 
@@ -52,9 +52,9 @@ def list_accounts(
     offset: int,
 ) -> tuple[list[Account], int]:
     statement = select(Account)
-    if q:
-        pattern = f"%{q.lower()}%"
-        statement = statement.where(or_(func.lower(Account.name).like(pattern), func.lower(Account.code).like(pattern)))
+    found = search_clause([Account.name, Account.code], q)
+    if found is not None:
+        statement = statement.where(found)
     if type_ is not None:
         statement = statement.where(Account.type == type_)
     if parent_id is not None:
@@ -74,8 +74,9 @@ def list_categories(
     session: Session, *, q: str | None, is_active: bool | None, sort: str | None, limit: int, offset: int
 ) -> tuple[list[Category], int]:
     statement = select(Category)
-    if q:
-        statement = statement.where(func.lower(Category.name).like(f"%{q.lower()}%"))
+    found = search_clause([Category.name], q)
+    if found is not None:
+        statement = statement.where(found)
     if is_active is not None:
         statement = statement.where(Category.is_active.is_(is_active))
     order = order_clauses(sort, {"name": func.lower(Category.name)}, "name", Category.id)  # type: ignore[dict-item]
@@ -89,11 +90,9 @@ def list_cost_centers(
     session: Session, *, q: str | None, is_active: bool | None, sort: str | None, limit: int, offset: int
 ) -> tuple[list[CostCenter], int]:
     statement = select(CostCenter)
-    if q:
-        pattern = f"%{q.lower()}%"
-        statement = statement.where(
-            or_(func.lower(CostCenter.name).like(pattern), func.lower(CostCenter.code).like(pattern))
-        )
+    found = search_clause([CostCenter.name, CostCenter.code], q)
+    if found is not None:
+        statement = statement.where(found)
     if is_active is not None:
         statement = statement.where(CostCenter.is_active.is_(is_active))
     order = order_clauses(sort, {"code": CostCenter.code, "name": CostCenter.name}, "code", CostCenter.id)
@@ -111,9 +110,9 @@ def list_projects(
     offset: int,
 ) -> tuple[list[Project], int]:
     statement = select(Project)
-    if q:
-        pattern = f"%{q.lower()}%"
-        statement = statement.where(or_(func.lower(Project.name).like(pattern), func.lower(Project.code).like(pattern)))
+    found = search_clause([Project.name, Project.code], q)
+    if found is not None:
+        statement = statement.where(found)
     if kind is not None:
         statement = statement.where(Project.kind == kind)
     if is_active is not None:

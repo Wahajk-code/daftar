@@ -101,3 +101,27 @@ class ActivityReport(ResponseModel):
     date_from: date | None
     date_to: date | None
     rows: list[ActivityRow]
+
+
+class OverviewMonth(ResponseModel):
+    """What was decided in one calendar month: approved and posted documents by their document date."""
+
+    month: str  # YYYY-MM
+    expenses: Money
+    purchases: Money  # gross, tax included
+    expense_count: int
+    purchase_count: int
+
+
+class StatusCount(ResponseModel):
+    status: DocumentStatus
+    count: int
+
+
+class Overview(ResponseModel):
+    """The figures behind the home screen's charts: a run of months, and how documents are spread over statuses."""
+
+    months: list[OverviewMonth]  # oldest first, a month with nothing in it still appears
+    expense_statuses: list[StatusCount]
+    purchase_statuses: list[StatusCount]
+    voucher_statuses: list[StatusCount]

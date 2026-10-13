@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.models.audit import AuditEvent
 from app.models.user import User
+from app.repositories.paging import search_clause
 
 
 def add(session: Session, event: AuditEvent) -> AuditEvent:
@@ -43,8 +44,9 @@ def search(
         statement = statement.where(AuditEvent.entity_type == entity_type)
     if entity_id is not None:
         statement = statement.where(AuditEvent.entity_id == entity_id)
-    if action:
-        statement = statement.where(func.lower(AuditEvent.action).like(f"%{action.lower()}%"))
+    found = search_clause([AuditEvent.action], action)
+    if found is not None:
+        statement = statement.where(found)
     if start is not None:
         statement = statement.where(AuditEvent.occurred_at >= start)
     if end is not None:

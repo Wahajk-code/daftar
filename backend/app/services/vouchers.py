@@ -11,6 +11,7 @@ same instant cannot both succeed."""
 
 from collections.abc import Sequence
 from datetime import date
+from decimal import Decimal
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -90,6 +91,8 @@ class VoucherService:
         status: DocumentStatus | None,
         date_from: date | None,
         date_to: date | None,
+        amount_min: Decimal | None,
+        amount_max: Decimal | None,
         q: str | None,
         sort: str | None,
         limit: int,
@@ -101,6 +104,8 @@ class VoucherService:
             status=status,
             date_from=date_from,
             date_to=date_to,
+            amount_min=amount_min,
+            amount_max=amount_max,
             q=q,
             sort=sort,
             limit=limit,

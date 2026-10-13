@@ -425,6 +425,15 @@ def test_the_purchase_list_filters_sorts_and_paginates(
     assert names(f"vendor_id={registered.id}") == ["Paper run"]
     assert names("q=memo-1") == ["Cartage"]
     assert names("date_from=2026-09-10&date_to=2026-09-30") == ["Haulage"]
+    gross = {
+        p["description"]: Decimal(p["gross_total"])
+        for p in client.get("/api/v1/purchases", headers=accountant).json()["items"]
+    }
+    top = max(gross.values())
+    assert sorted(names(f"amount_min={top}")) == sorted(n for n, g in gross.items() if g >= top)
+    assert names(f"amount_min={top + 1}") == []
+    assert names("amount_max=0.00") == []
+    assert client.get("/api/v1/purchases?amount_max=-1", headers=accountant).status_code == 422
     assert client.get("/api/v1/purchases?limit=1&offset=2&sort=document_date", headers=accountant).json()["total"] == 3
     assert client.get("/api/v1/purchases?sort=vendor_registered", headers=accountant).status_code == 422
 

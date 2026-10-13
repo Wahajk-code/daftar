@@ -673,6 +673,27 @@ def test_a3_staff_lists_show_only_their_own_and_everyone_else_sees_all(
 # Lists ---------------------------------------------------------------------------------------------------------------
 
 
+def test_search_works_by_words_in_any_order_and_each_word_narrows_the_list(
+    client: TestClient, make: Make, auth: Auth, lookups: Lookups
+) -> None:
+    headers = auth(make(Role.ADMIN))
+    for title in ("Printer toner cartridge", "Paper and ink", "Office tea and ink"):
+        create(client, headers, direct_expense(lookups, description=title))
+
+    def found(query: str) -> list[str]:
+        response = client.get(f"/api/v1/expenses?q={query}", headers=headers)
+        return sorted(e["description"] for e in response.json()["items"])
+
+    assert found("ink") == ["Office tea and ink", "Paper and ink"]
+    assert found("ink pap") == ["Paper and ink"]  # one more word narrows it, and part of a word is enough
+    assert found("pap%20ink") == ["Paper and ink"]
+    assert found("ink%20printer") == []  # every word has to be found
+    assert found("CARTRIDGE%20toner") == ["Printer toner cartridge"]  # any order, any case
+    assert found("%25") == []  # a percent sign is text, not a wildcard
+    everything = ["Office tea and ink", "Paper and ink", "Printer toner cartridge"]
+    assert found("%20%20") == everything  # blank is no search
+
+
 def test_the_expense_list_filters_sorts_and_paginates(
     client: TestClient, make: Make, auth: Auth, lookups: Lookups
 ) -> None:
@@ -694,6 +715,10 @@ def test_the_expense_list_filters_sorts_and_paginates(
     assert ids("expense_type=indirect") == ["Shared electricity bill"]
     assert ids("date_from=2026-09-10&date_to=2026-09-30") == ["Ink"]
     assert ids("q=TONER") == ["Toner"]
+    assert ids("amount_min=150&amount_max=300&sort=amount") == ["Toner", "Ink"]
+    assert ids("amount_min=300&amount_max=300") == ["Ink"]
+    assert ids("amount_max=99.99") == []
+    assert client.get("/api/v1/expenses?amount_min=-1", headers=headers).status_code == 422
     page = client.get("/api/v1/expenses?sort=document_date&limit=2&offset=1", headers=headers).json()
     assert (page["total"], page["limit"], page["offset"], [e["description"] for e in page["items"]]) == (
         4,

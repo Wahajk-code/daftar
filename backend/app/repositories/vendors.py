@@ -1,8 +1,8 @@
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.vendor import Vendor
-from app.repositories.paging import order_clauses, paginate
+from app.repositories.paging import order_clauses, paginate, search_clause
 
 SORTABLE = {"name": func.lower(Vendor.name), "created_at": Vendor.created_at, "updated_at": Vendor.updated_at}
 
@@ -32,9 +32,9 @@ def list_vendors(
     offset: int,
 ) -> tuple[list[Vendor], int]:
     statement = select(Vendor)
-    if q:
-        pattern = f"%{q.lower()}%"
-        statement = statement.where(or_(func.lower(Vendor.name).like(pattern), func.lower(Vendor.ntn).like(pattern)))
+    found = search_clause([Vendor.name, Vendor.ntn], q)
+    if found is not None:
+        statement = statement.where(found)
     if is_active is not None:
         statement = statement.where(Vendor.is_active.is_(is_active))
     if registered is not None:

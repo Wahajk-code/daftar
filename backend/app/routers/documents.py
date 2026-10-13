@@ -2,6 +2,7 @@
 
 from collections.abc import Sequence
 from datetime import date
+from decimal import Decimal
 from typing import Annotated, Any
 
 from fastapi import APIRouter, File, Query, Response, UploadFile, status
@@ -50,6 +51,7 @@ PURCHASE_AUTHORS = roles(Role.ADMIN, Role.ACCOUNTANT)
 REVIEWERS = roles(Role.ADMIN, Role.APPROVER)
 
 Search = Annotated[str | None, Query(max_length=100)]
+Amount = Annotated[Decimal | None, Query(ge=0, max_digits=14, decimal_places=2)]
 
 expenses = APIRouter(prefix="/expenses", tags=["expenses"])
 purchases = APIRouter(prefix="/purchases", tags=["purchases"])
@@ -74,6 +76,8 @@ def list_expenses(
     category_id: int | None = None,
     date_from: date | None = None,
     date_to: date | None = None,
+    amount_min: Amount = None,
+    amount_max: Amount = None,
     q: Search = None,
 ) -> Page[ExpenseRead]:
     rows, total = service.list_expenses(
@@ -84,6 +88,8 @@ def list_expenses(
         category_id=category_id,
         date_from=date_from,
         date_to=date_to,
+        amount_min=amount_min,
+        amount_max=amount_max,
         q=q.strip().lower() if q else None,
         sort=page.sort,
         limit=page.limit,
@@ -250,6 +256,8 @@ def list_purchases(
     registered: bool | None = None,
     date_from: date | None = None,
     date_to: date | None = None,
+    amount_min: Amount = None,
+    amount_max: Amount = None,
     q: Search = None,
 ) -> Page[PurchaseRead]:
     rows, total = service.list_purchases(
@@ -258,6 +266,8 @@ def list_purchases(
         registered=registered,
         date_from=date_from,
         date_to=date_to,
+        amount_min=amount_min,
+        amount_max=amount_max,
         q=q.strip().lower() if q else None,
         sort=page.sort,
         limit=page.limit,

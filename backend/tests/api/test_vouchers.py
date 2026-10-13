@@ -733,6 +733,10 @@ def test_e6_the_voucher_list_filters_and_links_voids_to_their_reversals(
     assert numbers("voucher_type=JV") == [None]
     assert numbers("q=pv-2026-0001") == ["PV-2026-0001"]
     assert numbers("q=keep") == ["PV-2026-0001"]
+    # The voided voucher and the reversal that cancels it come to the same amount.
+    assert numbers("amount_min=15&amount_max=25") == ["PV-2026-0002", "PV-2026-0003"]
+    assert numbers("amount_max=9.99") == []
+    assert client.get("/api/v1/vouchers?amount_min=-1", headers=admin).status_code == 422
     page = client.get("/api/v1/vouchers?limit=2&offset=1&sort=created_at", headers=admin).json()
     assert (page["total"], len(page["items"])) == (4, 2)
     assert client.get("/api/v1/vouchers?sort=void_key", headers=admin).status_code == 422
