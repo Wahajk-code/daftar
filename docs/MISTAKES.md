@@ -164,4 +164,100 @@ Caught:     `test_division_happens_only_in_money_and_allocation`, on the first r
 Why wrong:  The rule is that division lives in `core/money.py` and `core/allocation.py`. The test is blunt on purpose and does not ask whether the numbers are money; a rule that has exceptions for "harmless" cases stops being a rule.
 Fix:        The months are found by stepping back one at a time, with no division.
 
+### M27: The commit swept in a file the owner had said to keep out (pass 6)
+What:       I ran `git add frontend` for the web commit. `frontend/README.md` had been deliberately kept out of commits, and it went in.
+Caught:     By me, reading `git status` after the commits, which no longer listed it as untracked.
+Why wrong:  The owner's exclusion list (START-PROMPT.md, docs/skills.md, frontend/README.md) was known and I added a whole folder instead of the files I meant.
+Fix:        Reported at once and offered to rewrite the three local commits. From now on a commit adds named paths, not a folder that holds an excluded file.
+
+### M28: A restricted screen was hidden in the menu only, and then showed a message (pass 6)
+What:       The sidebar hid screens a role could not use, but typing the address showed a page titled "Your role does not include this screen". My first fix redirected from inside the page, which streamed a 200 page and sent the browser away afterwards.
+Caught:     The owner, from a screenshot of a Staff account on /users. The 200 was caught by me with the smoke script.
+Why wrong:  A person should never see a screen they may not use, or a message about it. A redirect inside a streamed page is too late.
+Fix:        The rule table is checked in the signed-in layout before anything is sent, so the answer is a real 307 to the home screen. Decision 142.
+
+### M29: An approver could read other people's drafts (pass 6)
+What:       Approvers saw every draft: in lists, by address, in history, receipts, reports, counts and exports, until its author sent it.
+Caught:     The owner, asking why the approver could see a staff member's drafts.
+Why wrong:  A draft is the author's work in hand. The access rules were written for who may see a kind of document and never asked which status each role may see, so nothing tested it.
+Fix:        One rule (`core/visibility.py`) applied in every read path, with nine tests, and six older tests that had quietly relied on the leak were corrected. An approver now sees a document only once it is submitted.
+
+### M30: Printing was added everywhere and the paper copy was never looked at (pass 6)
+What:       The Print button was on every screen, and printing a page carried buttons, filters, tabs, pagination, advice banners, floating menus and sort arrows.
+Caught:     The owner, who asked that print be only where relevant, and then that every print action be audited.
+Why wrong:  I treated print as a stylesheet detail instead of a product surface, and never read what actually ends up on paper.
+Fix:        Print only on documents and reports; everything that is not the page's data is marked and left off; reports print landscape. Decision 143.
+
+### M31: Bulk data left the system only as summary reports (pass 6)
+What:       There was no way to take a list out. Only the four summary reports had a CSV.
+Caught:     The owner, asking for properly formatted bulk exports.
+Why wrong:  The lists were the first thing an accountant would want in a spreadsheet; the plan listed exports for reports only and I did not question it.
+Fix:        Expense and purchase list exports (and the register for vouchers), with the filters in use, a currency column and the same safety rules as the reports. Decision 144.
+
+### M32: Totals showed numbers with no currency (pass 6)
+What:       Sums and totals read "1,234.00" with no currency anywhere near them.
+Caught:     The owner.
+Why wrong:  An amount without its unit is incomplete, and the documents already carried a currency field I did not use on screen.
+Fix:        The currency leads every sum and total; chart axes and tables say PKR. Decision 145.
+
+### M33: Forms let you press Save before they were complete, and did not say what was missing (pass 6)
+What:       Required fields looked the same empty or filled, buttons were enabled and the server's refusal was the first feedback.
+Caught:     The owner.
+Why wrong:  The interface rules ask for visible, live validation; I marked fields with an asterisk and stopped.
+Fix:        An empty required field says so beside its label with an outline; buttons wait; a "Still needed" line names what is missing. Decision 147.
+
+### M34: Receipts could not be previewed, and a rejection was buried in the history (pass 6)
+What:       A receipt opened as a raw file in a new tab and files chosen before saving showed only a name. A reviewer's rejection comment lived only in the history list.
+Caught:     The owner, twice.
+Why wrong:  Both are things a person has to act on or check, and I put them where the data was convenient instead of where the person works.
+Fix:        A receipt lightbox and thumbnails for queued files; a highlighted notice at the top of a rejected document with the reviewer's full comment. Decision 146.
+
+### M35: Browser default drop-downs, and a search that was only a substring (pass 6)
+What:       Select boxes used the browser's own open list, which looks different on every machine and ignores the theme. Search matched one literal substring, so a second word returned nothing.
+Caught:     The owner, for both.
+Why wrong:  I styled the closed box and left the open list to the browser; and I did not think about how people search.
+Fix:        The app draws its own listbox (keyboard complete, with word search inside long lists), and every search is by words in any order that narrow as more are added. Decision 140.
+
+### M36: Toasts were wrong in five ways, one at a time (pass 6)
+What:       The text was not centred, the colours were the wrong way round, the width was fixed, the text wrapped and broke mid-word, and a toast was hidden behind an open modal whatever its z-index.
+Caught:     The owner, in five messages.
+Why wrong:  I styled it once and never opened it over a modal or with a short and a long message. A fixed z-index cannot beat the browser's top layer.
+Fix:        White card, dark centred text on a clean centre line, width that fits the text, no wrapping, and the toast area lives in the top layer, shown again whenever a toast arrives.
+
+### M37: Visual details the owner had to point out one by one (pass 6)
+What:       Settings buttons were not aligned with their boxes and the cards were oversized; table action buttons had no border and no column heading; numbered pills were the same fully rounded shape as buttons and some were filled; the folded sidebar's scrollbar pushed the icons off the logo's centre line; cards had cramped bottoms; big amounts overlapped text; mobile buttons wasted space; icons were small.
+Caught:     The owner, mostly by screenshots.
+Why wrong:  I checked that pages loaded (HTTP 200) and that types and lint passed, and called that verification. None of it measures alignment, spacing or overlap.
+Fix:        Each corrected. The lesson is in the pass report: those checks prove the code runs, not that the screen looks right, and the owner reviews the look.
+
+### M38: The tour was personalised too thinly and did not end by pointing to help (pass 6)
+What:       Each role got one role step; the ending was about the theme.
+Caught:     The owner.
+Why wrong:  "Personalised for each account" was met with the minimum.
+Fix:        Each role has the steps that matter to its work, uses the person's name and live counts, and ends on the Help center.
+
+### M39: Notifications did not expire when opened (pass 6)
+What:       The bell kept showing something the person had already opened, until the work was dealt with, and each item showed too little to act from.
+Caught:     The owner.
+Why wrong:  A notification is "new" only until it is seen; I modelled it as a permanent to-do list.
+Fix:        An opened notification retires (remembered per person, tied to the document and its status), and each shows its kind, status, amount, author and date. Decision 141.
+
+### M40: The deploy audit found what four passes had not (pass 6)
+What:       A production database could never be seeded (the guard refused production, so a demonstration site could not be filled), the API published its interactive documentation, the Docker image ignored the port a host assigns, and the plan's "pooled" Neon connection would have been refused because the API sets connection options.
+Caught:     By me, while writing the deploy steps.
+Why wrong:  Each pass was verified only on this machine; deploy-readiness was left for the deploy pass instead of being checked as the code was written.
+Fix:        An explicit ALLOW_DEMO_SEED switch, documentation pages off in production, the image follows PORT and a single worker, and the steps say to use Neon's direct connection. `docs/deploy.md`.
+
+### M41: Scripts and commands that built files from other scripts failed again (pass 6)
+What:       A multi-file edit written as one shell command with nested quoting failed with "unexpected EOF" before anything ran, and a command I was then asked not to run had already half applied its edits on the first attempt.
+Caught:     By me, from the error and from re-reading the files.
+Why wrong:  This is M14 and M23 again, and a command that edits many files should be safe to run twice or fail before it starts.
+Fix:        Multi-file edits are written as a script file that asserts each replacement, and run once.
+
+### M42: A test that contradicted an owner decision was left failing for a whole stretch (pass 6)
+What:       The status-matrix test still said only an Admin may void a voucher, after the owner had decided an Accountant may void too and the code was changed. It failed from that change until the final full run.
+Caught:     The final full backend gate, which the owner had told me not to run in between.
+Why wrong:  I changed the rule in the table and its dedicated tests but not the exhaustive matrix test that encodes the same rule. Skipping the full gate for speed let a stale test hide.
+Fix:        The matrix expects the bookkeeping roles. Rule changes now name every test that encodes them, and the full gate runs before any commit.
+
 <!-- entries are added as they happen -->
