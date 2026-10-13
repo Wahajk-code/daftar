@@ -110,4 +110,40 @@ Caught:     By me, reading the line numbers in the next type-check output, befor
 Why wrong:  A text replacement does not know which method it is in, and the two methods share most of their lines.
 Fix:        The stray line was removed from `post` and the edit was made in `_move` with enough surrounding text to be unique.
 
+### M18: Moved the test clock past my own access token, a third time (pass 5)
+What:       Two new tests advanced the fake clock by hours and then called the API with a token made before the move. The token had expired, the API answered 401, and the test failed on a missing key rather than on anything about the feature.
+Caught:     Both failed on their first run; the 401 showed once I printed the response.
+Why wrong:  The same slip had already happened in Pass 4 (a test that moved the clock, then reused an expired token). I noted the fix then and did not turn it into a habit.
+Fix:        Both tests make a fresh token after moving the clock. Any test that moves the clock now builds its headers afterwards.
+
+### M19: A money check used a floating point number (pass 6)
+What:       `amountProblem` in the amount field decided "more than zero" with `Number(text) === 0`, a floating point comparison of an amount, in a project whose first rule is that money is never a float.
+Caught:     By me, re-reading the file straight after writing it.
+Why wrong:  `lib/money.ts` exists to keep amounts as text and whole paisa. I reached for the quick comparison out of habit.
+Fix:        The check now uses the paisa helpers. Amounts in the web app are only ever text and BigInt.
+
+### M20: A guarded edit was silently skipped (pass 6)
+What:       My script wrapped `requireMe` in React's `cache` only `if "cache" not in text`. The file already contained the word (as `cache: "no-store"` in a fetch), so the edit was skipped and the script still printed "ok".
+Caught:     By me, reading the file in the next output, when the gate page still called the API twice.
+Why wrong:  A substring test is not a test for the thing I meant, and a script that reports success when it skipped its work hides the mistake.
+Fix:        The edit was applied with an exact match that fails loudly. Scripts that change files now assert that each replacement happened.
+
+### M21: Four effects set state directly, which React's lint rule refuses (pass 6)
+What:       Four components (the cooldown timer, the account menu, the mobile drawer and the voucher editor's focus) called a state setter inside an effect body.
+Caught:     `pnpm lint`, which runs React's `set-state-in-effect` rule, on the first full run of each.
+Why wrong:  An effect that sets state causes a second render and is usually a sign the state belongs somewhere else: on the server (theme and density now come from cookies the server already read), in an event handler (the drawer closes when a link is chosen), or in a ref (focus after drawing).
+Fix:        Each was restructured instead of silenced.
+
+### M22: An error was shown with the browser's alert box (pass 6)
+What:       When saving succeeded but sending for approval failed, the expense form reported it with `alert()`.
+Caught:     By me, re-reading the form after writing it. Every other failure in the app is a toast.
+Why wrong:  The interface rules say every mutation has a toast on success and failure; an alert is modal, unstyled and ignores the theme.
+Fix:        It is a toast now, with the reason.
+
+### M23: Generating a script from inside a script failed twice, and then again (pass 6)
+What:       Twice I wrote a Python script that itself contained Python or TypeScript with nested triple quotes and escaped newlines. The first had unterminated strings from the nested quoting; the second turned an escaped newline into a real one inside a string literal.
+Caught:     Python's own SyntaxError, before anything ran (so nothing was half-applied).
+Why wrong:  This is M14 again: I knew files with prose or quotes go through the Write tool and wrote the generator anyway.
+Fix:        The files were written directly with the Write tool. The rule I follow now: no script that writes a script.
+
 <!-- entries are added as they happen -->

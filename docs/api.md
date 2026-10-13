@@ -21,6 +21,12 @@ Every path is under `/api/v1` except the probes. Errors share one shape (`docs/a
 | GET | `/api/v1/attachments/{attachment_id}/content` | `get_attachment_content` | accountant, admin, approver, staff | The image itself, only for someone who may see the document it belongs to. It has no public address. |
 | POST | `/api/v1/attachments/{attachment_id}/remove` | `remove_attachment` | accountant, admin, staff | Take an attachment off a draft. The record stays; the stored file is deleted. |
 
+## audit
+
+| Method | Path | Operation | Who | What it does |
+|---|---|---|---|---|
+| GET | `/api/v1/audit` | `list_audit_events` | admin | Newest first. Each entry says who did what to which record and, where it applies, the values before and after. |
+
 ## auth
 
 | Method | Path | Operation | Who | What it does |
@@ -113,7 +119,7 @@ Every path is under `/api/v1` except the probes. Errors share one shape (`docs/a
 | Method | Path | Operation | Who | What it does |
 |---|---|---|---|---|
 | GET | `/api/v1/posting-accounts` | `list_posting_accounts` | accountant, admin, approver | List Posting Accounts |
-| PUT | `/api/v1/posting-accounts/{key}` | `set_posting_account` | admin | Set Posting Account |
+| PUT | `/api/v1/posting-accounts/{key}` | `set_posting_account` | accountant, admin | Set Posting Account |
 
 ## projects
 
@@ -149,6 +155,8 @@ Every path is under `/api/v1` except the probes. Errors share one shape (`docs/a
 
 | Method | Path | Operation | Who | What it does |
 |---|---|---|---|---|
+| GET | `/api/v1/reports/activity` | `report_activity` | accountant, admin, approver | What each person did in the period: documents made, sent for approval, sent back, decided, posted and voided. |
+| GET | `/api/v1/reports/activity/csv` | `export_report_activity` | accountant, admin, approver | Export Activity |
 | GET | `/api/v1/reports/expenses` | `report_expenses` | accountant, admin, approver | Expenses by type and cost centre. |
 | GET | `/api/v1/reports/expenses/csv` | `export_report_expenses` | accountant, admin, approver | The same report as a CSV file. Limited per user and recorded in the audit log. |
 | GET | `/api/v1/reports/purchases` | `report_purchases` | accountant, admin, approver | Purchases by vendor, split into registered and unregistered vendors. |
@@ -156,15 +164,22 @@ Every path is under `/api/v1` except the probes. Errors share one shape (`docs/a
 | GET | `/api/v1/reports/vouchers` | `report_voucher_register` | accountant, admin, approver | The voucher register in number order, one page at a time. |
 | GET | `/api/v1/reports/vouchers/csv` | `export_report_voucher_register` | accountant, admin, approver | Export Voucher Register |
 
+## settings
+
+| Method | Path | Operation | Who | What it does |
+|---|---|---|---|---|
+| GET | `/api/v1/settings/accounting` | `get_accounting_settings` | accountant, admin, approver | Get Accounting Settings |
+| PUT | `/api/v1/settings/accounting` | `set_accounting_settings` | accountant, admin | Choose the month the voucher numbering year starts in. It applies to vouchers posted from now on; numbers already |
+
 ## tax rules
 
 | Method | Path | Operation | Who | What it does |
 |---|---|---|---|---|
 | GET | `/api/v1/tax-rules` | `list_tax_rules` | accountant, admin, approver | List Tax Rules |
-| POST | `/api/v1/tax-rules` | `create_tax_rule` | admin | Create Tax Rule |
+| POST | `/api/v1/tax-rules` | `create_tax_rule` | accountant, admin | Create Tax Rule |
 | GET | `/api/v1/tax-rules/resolve` | `resolve_tax_rule` | accountant, admin | The rule in force on a date for a kind of supplier and payment. A specific category beats `any`. |
 | GET | `/api/v1/tax-rules/{rule_id}` | `get_tax_rule` | accountant, admin, approver | Get Tax Rule |
-| PATCH | `/api/v1/tax-rules/{rule_id}` | `update_tax_rule` | admin | Update Tax Rule |
+| PATCH | `/api/v1/tax-rules/{rule_id}` | `update_tax_rule` | accountant, admin | Update Tax Rule |
 
 ## users
 
@@ -204,4 +219,4 @@ Every path is under `/api/v1` except the probes. Errors share one shape (`docs/a
 | POST | `/api/v1/vouchers/{voucher_id}/reject` | `reject_voucher` | admin, approver | Reject Voucher |
 | POST | `/api/v1/vouchers/{voucher_id}/reopen` | `reopen_voucher` | accountant, admin | Reopen Voucher |
 | POST | `/api/v1/vouchers/{voucher_id}/submit` | `submit_voucher` | accountant, admin | Refused with the reason when the voucher is not balanced, has fewer than two lines or has no narration. |
-| POST | `/api/v1/vouchers/{voucher_id}/void` | `void_voucher` | admin | Cancel a posted voucher with a reason. Creates the linked reversing voucher in the same transaction. |
+| POST | `/api/v1/vouchers/{voucher_id}/void` | `void_voucher` | accountant, admin | Cancel a posted voucher with a reason. Creates the linked reversing voucher in the same transaction. |

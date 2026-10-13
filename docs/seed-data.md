@@ -66,7 +66,6 @@ two and five is deliberate — it proves the two flags drive different rates.
 - exactly one voided voucher, with its reversal visible and linked
 - two documents sitting in Submitted, so the Approver login has something waiting
 - one pair of near-duplicate purchases, so the duplicate-detection banner fires
-- one expense just under the approval limit (49,750 against 50,000), so the round-amount flag fires
 
 ## Periods
 

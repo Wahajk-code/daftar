@@ -328,8 +328,8 @@ Everything runs through `docker compose`. Claude Code writes these files in Pass
 - **Invites and resets:** one `auth_tokens` table (purpose, hashed token, expiry, used-at). An invite is created by an Admin
   with a role and an email; accepting it creates the account. A reset is requested by the user or triggered by an Admin;
   both send the same email. Email is sent after commit as a background task: Mailpit locally, Resend when deployed.
-- **Onboarding tour:** `users.tour_completed_at` (null means show the tour). `GET /me` returns it; `POST /me/tour` records
-  completion or a skip. The tour is role-aware, 4 to 6 steps, skippable at every step, and can be relaunched from the
+- **Onboarding tour:** `users.tour_completed_at` (null means show the tour). `GET /me` returns it; `POST /me/tour/complete`
+  records completion or a skip, and `POST /me/tour/restart` offers the tour again. The tour is role-aware, 4 to 6 steps, skippable at every step, and can be relaunched from the
   profile menu. Mobile shows a three-card intro driven by the same flag.
 
 ## 13. Deployment (free tiers; confirm current limits before relying on them)

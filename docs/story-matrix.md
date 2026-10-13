@@ -42,6 +42,7 @@ Find the tests for a story with: `Select-String -Path backend\tests\*.py -Patter
 | G2 | Purchases by vendor, registered versus not | [x] | [ ] | n/a |
 | G3 | Voucher register, voids linked to reversals | [x] | [ ] | [ ] |
 | G4 | CSV export, injection-safe, UTF-8 with BOM | [x] | [ ] | n/a |
+| G5 | Activity by person: what each worker created, sent, had rejected, decided, posted and voided | [x] | [ ] | n/a |
 | H1 | Camera-first capture, compressed, prefilled | n/a | n/a | [ ] |
 | H2 | Capture survives a bad connection; no duplicates | n/a | n/a | [ ] |
 | H3 | View and approve or reject items from the phone | n/a | n/a | [ ] |
