@@ -43,6 +43,7 @@ services:
       STORAGE_BACKEND: ${STORAGE_BACKEND:-memory}
       CLOUDINARY_URL: ${CLOUDINARY_URL:-}
       BFF_SHARED_SECRET: ${BFF_SHARED_SECRET:-dev-bff-shared-secret-for-local-use-only}
+      WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:3001}
       MAIL_BACKEND: ${MAIL_BACKEND:-console}
       MAIL_FROM: ${MAIL_FROM:-Daftar <no-reply@daftar.pk>}
       SMTP_HOST: ${SMTP_HOST:-mailpit}
