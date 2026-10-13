@@ -1,0 +1,47 @@
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.stage {
+  display: grid;
+  place-items: center;
+  min-height: 240px;
+  border-radius: var(--radius-md);
+  background: var(--bg-sunken);
+  overflow: hidden;
+}
+
+.image {
+  display: block;
+  max-width: 100%;
+  max-height: 68dvh;
+  object-fit: contain;
+  /* Receipts are documents: the theme never inverts or tints them. */
+  filter: none;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.count {
+  min-width: 70px;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.open {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}

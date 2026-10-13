@@ -1,13 +1,26 @@
 "use client";
 
 import { formatDate, formatInstant, formatInstantLong } from "@/lib/dates";
-import { formatMoney } from "@/lib/money";
+import { CURRENCY, formatMoney } from "@/lib/money";
 import { useZone } from "@/components/shell/MeContext";
 
 /** An amount: thousands separators, two places, right aligned, figures that line up. */
-export function Money({ value, strong, className }: { value: string | null | undefined; strong?: boolean; className?: string }) {
+export function Money({
+  value,
+  strong,
+  className,
+  currency,
+}: {
+  value: string | null | undefined;
+  strong?: boolean;
+  className?: string;
+  /** Show the currency in front (a sum or a total): true for the app's currency, or a code. */
+  currency?: string | true;
+}) {
+  const code = currency === true ? CURRENCY : currency;
   return (
     <span className={`num ${className ?? ""}`} style={strong ? { fontWeight: 600 } : undefined}>
+      {code && formatMoney(value) !== "" ? <span className="cur">{code}</span> : null}
       {formatMoney(value)}
     </span>
   );

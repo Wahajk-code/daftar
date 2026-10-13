@@ -1,8 +1,7 @@
 "use client";
 
-import { IconFileUpload, IconX } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { api, upload } from "@/api/client";
 import { ApiError, messageFor } from "@/api/errors";
 import { DOCUMENT_KEYS, useAction, useCategories, useCostCenters, useProjects } from "@/api/queries";
@@ -12,12 +11,14 @@ import { useToast } from "@/components/ui/Toast";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { MoneyField, SelectField, TextAreaField, TextField, amountProblem } from "@/components/ui/Field";
 import { FormGrid, Panel } from "@/components/ui/Layout";
+import { Requirements } from "@/components/ui/Requirements";
 import { Banner, ErrorState, LoadingBlock } from "@/components/ui/States";
 import { PAYMENT_METHODS } from "@/lib/documents";
 import { todayInZone } from "@/lib/dates";
 import { stripSeparators } from "@/lib/money";
 import { AllocationEditor, allocationPayload, newLine, type AllocationLine, type AllocationMethod } from "./AllocationEditor";
 import { ReceiptPanel } from "./Panels";
+import { QueuedReceipts } from "./QueuedReceipts";
 import styles from "./DocumentForm.module.css";
 
 type Kind = "direct" | "indirect";
@@ -39,7 +40,7 @@ function initialLines(expense: Expense | undefined): AllocationLine[] {
  * Create a draft expense, or change one that is still a draft. Direct expenses go to one cost centre, project or product;
  * indirect ones are split across cost centres. A new expense can be saved with its receipts in one go.
  */
-export function ExpenseForm({ initial, onClose }: { initial?: Expense; onClose?: () => void }) {
+export function ExpenseForm({ initial, onClose, initialFiles }: { initial?: Expense; onClose?: () => void; initialFiles?: File[] }) {
   const router = useRouter();
   const toast = useToast();
   const zone = useZone();
@@ -59,8 +60,7 @@ export function ExpenseForm({ initial, onClose }: { initial?: Expense; onClose?:
   const [projectId, setProjectId] = useState(initial?.project_id ? String(initial.project_id) : "");
   const [splitMethod, setSplitMethod] = useState<AllocationMethod>(initial?.allocation_method ?? "percentage");
   const [lines, setLines] = useState<AllocationLine[]>(() => initialLines(initial));
-  const [queued, setQueued] = useState<File[]>([]);
-  const files = useRef<HTMLInputElement>(null);
+  const [queued, setQueued] = useState<File[]>(initialFiles ?? []);
 
   const save = useAction<{ send: boolean }, { saved: Expense; sendError: unknown }>({
     mutationFn: async ({ send }) => {
@@ -116,7 +116,21 @@ export function ExpenseForm({ initial, onClose }: { initial?: Expense; onClose?:
   const problem = (field: string) => error?.fieldMessage(field);
   const amountError = amountProblem(amount) ?? problem("amount");
   const taxError = amountProblem(tax, { allowZero: true }) ?? problem("tax_amount");
-  const canSave = categoryId !== "" && amount.trim() !== "" && !amountProblem(amount) && !amountProblem(tax, { allowZero: true });
+  // What is needed to save a draft, then what more is needed to send it. Both follow the form as it is filled in.
+  const needDraft = [
+    ...(date === "" ? ["Date"] : []),
+    ...(categoryId === "" ? ["Category"] : []),
+    ...(amount.trim() === "" || amountProblem(amount) ? ["Amount"] : []),
+    ...(amountProblem(tax, { allowZero: true }) ? ["Tax amount"] : []),
+  ];
+  const needSend = [
+    ...(description.trim() === "" ? ["What it was for"] : []),
+    ...(kind === "direct" && target === "cost_center" && centreId === "" ? ["Cost centre"] : []),
+    ...(kind === "direct" && target === "project" && projectId === "" ? ["Project or product"] : []),
+    ...(kind === "indirect" && lines.some((line) => line.costCenterId === "" || line.value.trim() === "") ? ["Every cost centre line filled in"] : []),
+  ];
+  const canSave = needDraft.length === 0;
+  const canSend = canSave && needSend.length === 0;
 
   return (
     <form
@@ -173,6 +187,7 @@ export function ExpenseForm({ initial, onClose }: { initial?: Expense; onClose?:
                 error={problem("description")}
                 hint="Needed before it can be sent for approval."
                 className={styles.wide}
+                required
               />
             </FormGrid>
           </Panel>
@@ -197,6 +212,7 @@ export function ExpenseForm({ initial, onClose }: { initial?: Expense; onClose?:
                     options={(centres.data ?? []).map((centre) => ({ value: centre.id, label: `${centre.code} ${centre.name}` }))}
                     placeholder="Choose a cost centre"
                     error={problem("cost_center_id")}
+                    required
                   />
                 ) : (
                   <SelectField
@@ -206,6 +222,7 @@ export function ExpenseForm({ initial, onClose }: { initial?: Expense; onClose?:
                     options={(projects.data ?? []).map((project) => ({ value: project.id, label: `${project.code} ${project.name}` }))}
                     placeholder="Choose a project or product"
                     error={problem("project_id")}
+                    required
                   />
                 )}
               </FormGrid>
@@ -228,42 +245,19 @@ export function ExpenseForm({ initial, onClose }: { initial?: Expense; onClose?:
             {initial ? (
               <ReceiptPanel kind="expenses" id={initial.id} editable />
             ) : (
-              <div className={styles.queue}>
-                {queued.length === 0 ? <p className="muted">Add the receipt now, or after saving.</p> : null}
-                <ul>
-                  {queued.map((file, index) => (
-                    <li key={`${file.name}-${index}`}>
-                      <span className="ident">{file.name}</span>
-                      <Button small variant="quiet" icon={<IconX size={16} stroke={1.75} aria-hidden />} onClick={() => setQueued(queued.filter((_, at) => at !== index))} aria-label={`Remove ${file.name}`} />
-                    </li>
-                  ))}
-                </ul>
-                <input
-                  ref={files}
-                  type="file"
-                  hidden
-                  multiple
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={(event) => {
-                    setQueued([...queued, ...Array.from(event.target.files ?? [])]);
-                    event.target.value = "";
-                  }}
-                />
-                <Button icon={<IconFileUpload size={18} stroke={1.75} aria-hidden />} onClick={() => files.current?.click()}>
-                  Choose receipts
-                </Button>
-              </div>
+              <QueuedReceipts files={queued} onChange={setQueued} empty="Add the receipt now, or after saving." chooseLabel="Choose receipts" />
             )}
           </Panel>
         </div>
       </div>
 
       <div className={styles.footer}>
+        <Requirements items={canSave ? needSend : needDraft} lead={canSave ? "To send for approval" : "Still needed"} />
         {onClose ? <Button onClick={onClose}>Cancel</Button> : <ButtonLink href={initial ? `/expenses/${initial.id}` : "/expenses"}>Cancel</ButtonLink>}
         <Button type="submit" pending={save.isPending && save.variables?.send === false} disabled={!canSave || save.isPending}>
           Save draft
         </Button>
-        <Button variant="primary" pending={save.isPending && save.variables?.send === true} disabled={!canSave || save.isPending} onClick={() => save.mutate({ send: true })}>
+        <Button variant="primary" pending={save.isPending && save.variables?.send === true} disabled={!canSend || save.isPending} onClick={() => save.mutate({ send: true })}>
           Save and send for approval
         </Button>
       </div>

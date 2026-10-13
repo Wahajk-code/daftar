@@ -7,7 +7,7 @@ import type { Me, Role } from "@/api/types";
 import { Button } from "@/components/ui/Button";
 import { useWorkQueues } from "@/lib/queues";
 import { useMe } from "./MeContext";
-import { ROLE_LINE } from "./roles";
+import { ROLE_LINE, ROLE_NAME } from "./roles";
 import { useCreate } from "./CreateModal";
 import styles from "./Tour.module.css";
 
@@ -29,11 +29,25 @@ function plural(count: number, one: string, many: string): string {
 }
 
 /** The role's own step in the sidebar. */
-const NAV_STEP: Record<Role, Plain> = {
-  staff: { title: "Your expenses", body: "Every expense you wrote, and where it stands. If one is sent back, the reason is in its history.", target: '[data-tour="nav-expenses"]', sidebar: true },
-  approver: { title: "Approvals", body: "Documents other people sent for approval collect here. Open one, check the receipt, then approve or reject it with a comment.", target: '[data-tour="nav-approvals"]', sidebar: true },
-  accountant: { title: "Vouchers", body: "Generate a payment voucher from an approved expense or purchase, check its lines, send it, and post it once it is approved.", target: '[data-tour="nav-vouchers"]', sidebar: true },
-  admin: { title: "People", body: "Invite people by email and choose their role, change a role, or switch an account off. You never see or set anyone's password.", target: '[data-tour="nav-users"]', sidebar: true },
+/** The places in the sidebar that matter most to each role, in the order their work usually goes. */
+const NAV_STEPS: Record<Role, Plain[]> = {
+  staff: [
+    { title: "Your expenses", body: "Every expense you wrote, and where it stands. If one is sent back, the reason is in its history and at the top of the expense.", target: '[data-tour="nav-expenses"]', sidebar: true },
+  ],
+  approver: [
+    { title: "Approvals", body: "Documents other people sent for approval collect here. Open one, check the receipt, then approve or reject it with a comment. Drafts stay hidden from you until their author sends them.", target: '[data-tour="nav-approvals"]', sidebar: true },
+    { title: "Reports", body: "See where the money went, by cost centre and by vendor, and download it as a spreadsheet.", target: '[data-tour="nav-reports"]', sidebar: true },
+  ],
+  accountant: [
+    { title: "Purchases", body: "Enter vendor invoices and memos. The tax is worked out for you as you type.", target: '[data-tour="nav-purchases"]', sidebar: true },
+    { title: "Vouchers", body: "Generate a payment voucher from an approved expense or purchase, check its lines, send it, and post it once it is approved.", target: '[data-tour="nav-vouchers"]', sidebar: true },
+    { title: "Accounting settings", body: "Choose where generated vouchers post and when the numbering year starts.", target: '[data-tour="nav-settings"]', sidebar: true },
+  ],
+  admin: [
+    { title: "People", body: "Invite people by email and choose their role, change a role, or switch an account off. You never see or set anyone's password.", target: '[data-tour="nav-users"]', sidebar: true },
+    { title: "Approvals", body: "You can decide what is waiting too, when the approvers are away.", target: '[data-tour="nav-approvals"]', sidebar: true },
+    { title: "Audit log", body: "Who changed what, and when. Nothing here can be edited or removed.", target: '[data-tour="nav-audit"]', sidebar: true },
+  ],
 };
 
 /**
@@ -124,12 +138,17 @@ export function Tour() {
       target: '[data-tour="bell"]',
     };
     const look: Plain = {
-      title: "Theme and help",
-      body: "Switch between the light and dark theme here. The question mark opens the Help center, where you can take this tour again.",
+      title: "Light or dark",
+      body: "Switch between the light and dark theme here, whichever is easier on your eyes.",
       target: '[data-tour="theme"]',
     };
+    const finish: Plain = {
+      title: `That is the tour, ${FIRST_NAME(me)}`,
+      body: `Whenever you need a reminder, open the Help center with the question mark. It has a guide written for your role (${ROLE_NAME[me.role]}), how a document moves, and where to take this tour again.`,
+      target: '[data-tour="help"]',
+    };
 
-    const plain = [opening, sidebar, NAV_STEP[me.role], ...(make ? [make] : []), bell, look].filter((step) => !(narrow && step.sidebar));
+    const plain = [opening, sidebar, ...NAV_STEPS[me.role], ...(make ? [make] : []), bell, look, finish].filter((step) => !(narrow && step.sidebar));
     return plain.map((step, index) => ({
       id: `step-${index}`,
       target: step.target ?? "body",

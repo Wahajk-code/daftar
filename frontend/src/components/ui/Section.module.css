@@ -46,7 +46,7 @@
   min-width: 28px;
   padding: 0 10px;
   border: 1.5px solid var(--rule-strong);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-xs);
   color: var(--text-2);
   font-family: var(--font-data);
   font-size: var(--text-sm);

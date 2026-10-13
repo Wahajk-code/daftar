@@ -2,6 +2,7 @@
 
 import { IconRoute } from "@tabler/icons-react";
 import Link from "next/link";
+import { InstallCard } from "@/components/shell/InstallCard";
 import { useMe } from "@/components/shell/MeContext";
 import { navFor } from "@/components/shell/nav";
 import { ROLE_LINE, ROLE_NAME, ROLE_TASKS } from "@/components/shell/roles";
@@ -20,7 +21,7 @@ export function Help() {
 
   return (
     <>
-      <PageHeader print={false} title="Help center" description={`A guide for ${ROLE_NAME[me.role].toLowerCase()}s: what you do here and where to find it.`} />
+      <PageHeader title="Help center" description={`A guide for ${ROLE_NAME[me.role].toLowerCase()}s: what you do here and where to find it.`} />
 
       <div className={styles.grid}>
         <Panel className={styles.tour}>
@@ -101,6 +102,8 @@ export function Help() {
             </section>
           ))}
         </Panel>
+
+        <InstallCard />
 
         <Panel title="Good to know" className={styles.wide}>
           <ul className={styles.tips}>

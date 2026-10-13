@@ -35,9 +35,13 @@
   flex-direction: column;
 }
 
-.thumb a {
+.picture {
   display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
   background: var(--bg-sunken);
+  cursor: zoom-in;
 }
 
 .thumb img {

@@ -150,15 +150,18 @@ export function Banner({
   title,
   children,
   actions,
+  noPrint,
 }: {
   tone?: Tone;
   title?: string;
   children?: ReactNode;
   actions?: ReactNode;
+  /** Left off the paper copy: advice for the person at the screen, not part of the record. */
+  noPrint?: boolean;
 }) {
   const Icon = BANNER_ICON[tone];
   return (
-    <div className={`${styles.banner} ${styles[tone]}`} role={tone === "negative" ? "alert" : "status"}>
+    <div className={`${styles.banner} ${styles[tone]}`} role={tone === "negative" ? "alert" : "status"} data-noprint={noPrint ? "" : undefined}>
       <Icon size={20} stroke={1.5} aria-hidden className={styles.bannerIcon} />
       <div className={styles.bannerBody}>
         {title ? <p className={styles.bannerTitle}>{title}</p> : null}

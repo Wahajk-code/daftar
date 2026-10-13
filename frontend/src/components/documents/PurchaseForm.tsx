@@ -1,9 +1,9 @@
 "use client";
 
-import { IconFileUpload, IconPlus, IconTrash, IconX } from "@tabler/icons-react";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { api, upload } from "@/api/client";
 import { ApiError, messageFor } from "@/api/errors";
 import { DOCUMENT_KEYS, useAction, useVendors } from "@/api/queries";
@@ -13,6 +13,7 @@ import { Button, ButtonLink } from "@/components/ui/Button";
 import { MoneyField, SelectField, TextAreaField, TextField, amountProblem } from "@/components/ui/Field";
 import { Money } from "@/components/ui/Format";
 import { FormGrid, Panel } from "@/components/ui/Layout";
+import { Requirements } from "@/components/ui/Requirements";
 import { Banner, ErrorState, LoadingBlock } from "@/components/ui/States";
 import { Tag } from "@/components/ui/Stamp";
 import { useToast } from "@/components/ui/Toast";
@@ -20,6 +21,7 @@ import { todayInZone } from "@/lib/dates";
 import { bpToPercent, formatBasisPoints, isAmount, percentToBp, stripSeparators, sumAmounts, toPaisa } from "@/lib/money";
 import { useDebounced } from "@/lib/use-debounced";
 import { ReceiptPanel } from "./Panels";
+import { QueuedReceipts } from "./QueuedReceipts";
 import form from "./DocumentForm.module.css";
 import styles from "./PurchaseForm.module.css";
 
@@ -72,7 +74,6 @@ export function PurchaseForm({ initial, onClose }: { initial?: Purchase; onClose
       : [blankLine()],
   );
   const [queued, setQueued] = useState<File[]>([]);
-  const files = useRef<HTMLInputElement>(null);
 
   const vendor = vendors.data?.find((row) => row.id === Number(vendorId));
   const payload = useMemo(() => payloadLines(lines), [lines]);
@@ -120,8 +121,15 @@ export function PurchaseForm({ initial, onClose }: { initial?: Purchase; onClose
   const error = save.error instanceof ApiError ? save.error : null;
   const problem = (field: string) => error?.fieldMessage(field);
   const previewError = preview.error instanceof ApiError && settled !== "" ? preview.error : null;
-  const canSave = vendorId !== "" && payload !== null;
   const needsInvoice = vendor?.is_sales_tax_registered === true;
+  // Everything the draft needs, live: the vendor, the date, the invoice number a registered vendor requires, and complete lines.
+  const needs = [
+    ...(vendorId === "" ? ["Vendor"] : []),
+    ...(date === "" ? ["Date"] : []),
+    ...(needsInvoice && invoice.trim() === "" ? ["Invoice number"] : []),
+    ...(payload === null ? ["Every line: item, quantity and rate"] : []),
+  ];
+  const canSave = needs.length === 0;
 
   function change(key: string, patch: Partial<Line>) {
     setLines(lines.map((line) => (line.key === key ? { ...line, ...patch } : line)));
@@ -253,10 +261,10 @@ export function PurchaseForm({ initial, onClose }: { initial?: Purchase; onClose
                   <tfoot>
                     <tr>
                       <th scope="row" colSpan={5}>Totals</th>
-                      <td className="num"><Money value={priced.totals.subtotal} /></td>
-                      <td className="num"><Money value={priced.totals.sales_tax_total} /></td>
-                      <td className="num"><Money value={sumAmounts([priced.totals.sales_tax_withheld, priced.totals.income_tax_withheld])} /></td>
-                      <td className="num"><Money value={priced.totals.payable} strong /></td>
+                      <td className="num"><Money currency value={priced.totals.subtotal} /></td>
+                      <td className="num"><Money currency value={priced.totals.sales_tax_total} /></td>
+                      <td className="num"><Money currency value={sumAmounts([priced.totals.sales_tax_withheld, priced.totals.income_tax_withheld])} /></td>
+                      <td className="num"><Money currency value={priced.totals.payable} strong /></td>
                       <td />
                     </tr>
                   </tfoot>
@@ -279,12 +287,12 @@ export function PurchaseForm({ initial, onClose }: { initial?: Purchase; onClose
           {priced ? (
             <Panel title="What is owed">
               <dl className={styles.totals}>
-                <div><dt>Subtotal</dt><dd><Money value={priced.totals.subtotal} /></dd></div>
-                <div><dt>Sales tax charged</dt><dd><Money value={priced.totals.sales_tax_total} /></dd></div>
-                <div><dt>Gross value</dt><dd><Money value={priced.totals.gross_total} /></dd></div>
-                <div><dt>Sales tax withheld</dt><dd><Money value={priced.totals.sales_tax_withheld} /></dd></div>
-                <div><dt>Income tax withheld</dt><dd><Money value={priced.totals.income_tax_withheld} /></dd></div>
-                <div className={styles.payable}><dt>Payable to the vendor</dt><dd><Money value={priced.totals.payable} strong /></dd></div>
+                <div><dt>Subtotal</dt><dd><Money currency value={priced.totals.subtotal} /></dd></div>
+                <div><dt>Sales tax charged</dt><dd><Money currency value={priced.totals.sales_tax_total} /></dd></div>
+                <div><dt>Gross value</dt><dd><Money currency value={priced.totals.gross_total} /></dd></div>
+                <div><dt>Sales tax withheld</dt><dd><Money currency value={priced.totals.sales_tax_withheld} /></dd></div>
+                <div><dt>Income tax withheld</dt><dd><Money currency value={priced.totals.income_tax_withheld} /></dd></div>
+                <div className={styles.payable}><dt>Payable to the vendor</dt><dd><Money currency value={priced.totals.payable} strong /></dd></div>
               </dl>
               <p className="faint">The withholding rates in force on the date of the purchase are read from the Tax rates screen and kept on the purchase.</p>
             </Panel>
@@ -296,27 +304,14 @@ export function PurchaseForm({ initial, onClose }: { initial?: Purchase; onClose
             {initial ? (
               <ReceiptPanel kind="purchases" id={initial.id} editable />
             ) : (
-              <div className={form.queue}>
-                {queued.length === 0 ? <p className="muted">Add the invoice or memo now, or after saving.</p> : null}
-                <ul>
-                  {queued.map((file, index) => (
-                    <li key={`${file.name}-${index}`}>
-                      <span className="ident">{file.name}</span>
-                      <Button small variant="quiet" icon={<IconX size={16} stroke={1.75} aria-hidden />} onClick={() => setQueued(queued.filter((_, at) => at !== index))} aria-label={`Remove ${file.name}`} />
-                    </li>
-                  ))}
-                </ul>
-                <input ref={files} type="file" hidden multiple accept="image/jpeg,image/png,image/webp" onChange={(event) => { setQueued([...queued, ...Array.from(event.target.files ?? [])]); event.target.value = ""; }} />
-                <Button icon={<IconFileUpload size={18} stroke={1.75} aria-hidden />} onClick={() => files.current?.click()}>
-                  Choose files
-                </Button>
-              </div>
+              <QueuedReceipts files={queued} onChange={setQueued} empty="Add the invoice or memo now, or after saving." chooseLabel="Choose files" />
             )}
           </Panel>
         </div>
       </div>
 
       <div className={form.footer}>
+        <Requirements items={needs} />
         {onClose ? <Button onClick={onClose}>Cancel</Button> : <ButtonLink href={initial ? `/purchases/${initial.id}` : "/purchases"}>Cancel</ButtonLink>}
         <Button type="submit" pending={save.isPending && save.variables?.send === false} disabled={!canSave || save.isPending}>
           Save draft

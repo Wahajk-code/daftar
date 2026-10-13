@@ -1,0 +1,19 @@
+.requirements {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-right: auto;
+  min-width: 0;
+  font-size: var(--text-sm);
+  color: var(--text-2);
+}
+
+.requirements svg {
+  flex: none;
+  color: var(--caution);
+}
+
+.requirements strong {
+  font-weight: 700;
+  color: var(--text-1);
+}

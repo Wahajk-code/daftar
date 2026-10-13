@@ -186,6 +186,13 @@
 :global(html[data-sidebar="collapsed"]) .nav {
   padding-left: var(--space-2);
   padding-right: var(--space-2);
+  /* On the icon rail the scrollbar takes no room inside the strip, so the logo and every icon share one centre line. The rail
+     still scrolls with the wheel, touch and keyboard. */
+  scrollbar-width: none;
+}
+
+:global(html[data-sidebar="collapsed"]) .nav::-webkit-scrollbar {
+  display: none;
 }
 
 :global(html[data-sidebar="collapsed"]) .signOut {

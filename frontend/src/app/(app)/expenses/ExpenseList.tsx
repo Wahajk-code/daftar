@@ -5,6 +5,7 @@ import type { Expense } from "@/api/types";
 import { useMe } from "@/components/shell/MeContext";
 import { NewDocumentButton } from "@/components/shell/CreateModal";
 import { DataTable, Pagination, type Column } from "@/components/ui/DataTable";
+import { ExportButton } from "@/components/ui/ExportButton";
 import { DateText, Money, TwoLine } from "@/components/ui/Format";
 import { PageHeader, Panel } from "@/components/ui/Layout";
 import { ListFilters, type FilterDef } from "@/components/ui/ListFilters";
@@ -81,7 +82,26 @@ export function ExpenseList() {
       <PageHeader
         title="Expenses"
         description={me.role === "staff" ? "Your expenses and where each one stands." : "Every expense, whoever wrote it."}
-        actions={<NewDocumentButton kind="expense">New expense</NewDocumentButton>}
+        actions={
+          <>
+            {me.role !== "staff" ? (
+              <ExportButton
+                path="/reports/export/expenses"
+                query={{
+                  status: query.status,
+                  expense_type: query.expense_type,
+                  category_id: query.category_id,
+                  date_from: query.date_from,
+                  date_to: query.date_to,
+                  amount_min: query.amount_min,
+                  amount_max: query.amount_max,
+                  q: query.q,
+                }}
+              />
+            ) : null}
+            <NewDocumentButton kind="expense">New expense</NewDocumentButton>
+          </>
+        }
       />
       <Panel flush>
         <ListFilters defs={filters} />

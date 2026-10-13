@@ -11,6 +11,8 @@ import type { Attachment, DuplicateWarning, HistoryItem } from "@/api/types";
 import { Button } from "@/components/ui/Button";
 import { DateText, Money } from "@/components/ui/Format";
 import { Banner, ErrorState, LoadingBlock } from "@/components/ui/States";
+import { prepareReceipt } from "@/lib/images";
+import { ReceiptLightbox } from "./ReceiptLightbox";
 import { Stamp } from "@/components/ui/Stamp";
 import { Timeline } from "@/components/ui/Timeline";
 import { href, type Kind } from "@/lib/documents";
@@ -35,7 +37,7 @@ export function DuplicatePanel({ kind, id }: { kind: "expenses" | "purchases"; i
   const found = useQuery({ queryKey: ["duplicates", kind, id], queryFn: () => api<DuplicateWarning[]>(`/${kind}/${id}/duplicates`) });
   if (!found.data || found.data.length === 0) return null;
   return (
-    <Banner tone="caution" title="This may be a duplicate">
+    <Banner tone="caution" title="This may be a duplicate" noPrint>
       <ul className={styles.duplicates}>
         {found.data.map((warning) => {
           const target = warning.document_type === "expense" ? "expenses" : warning.document_type === "purchase" ? "purchases" : "vouchers";
@@ -55,7 +57,7 @@ export function DuplicatePanel({ kind, id }: { kind: "expenses" | "purchases"; i
   );
 }
 
-const ACCEPT = "image/jpeg,image/png,image/webp";
+const ACCEPT = "image/*";
 
 function sizeText(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -71,12 +73,14 @@ export function ReceiptPanel({ kind, id, editable }: { kind: "expenses" | "purch
   const files = useQuery({ queryKey: ["record", kind, id, "attachments"], queryFn: () => api<Attachment[]>(`/${kind}/${id}/attachments`) });
   const input = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState<Record<string, number>>({});
+  const [viewing, setViewing] = useState<number | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
 
   const send = useAction<File[], unknown>({
     mutationFn: async (chosen) => {
       setFailure(null);
-      for (const file of chosen) {
+      for (const original of chosen) {
+        const file = await prepareReceipt(original);
         setProgress((current) => ({ ...current, [file.name]: 0 }));
         try {
           await upload(`/${kind}/${id}/attachments`, file, (fraction) => setProgress((current) => ({ ...current, [file.name]: fraction })));
@@ -106,17 +110,24 @@ export function ReceiptPanel({ kind, id, editable }: { kind: "expenses" | "purch
   if (files.error) return <ErrorState error={files.error} onRetry={() => files.refetch()} />;
 
   const uploading = Object.keys(progress);
+  const items = files.data.map((file) => ({
+    src: `/api/attachments/${file.id}/content`,
+    name: file.original_name,
+    meta: sizeText(file.size_bytes),
+    href: `/api/attachments/${file.id}/content`,
+  }));
   return (
     <div className={styles.receipts}>
+      <ReceiptLightbox items={items} index={viewing} onIndex={setViewing} onClose={() => setViewing(null)} />
       {files.data.length === 0 && uploading.length === 0 ? <p className="muted">No receipt is attached.</p> : null}
       <ul className={styles.gallery}>
         {files.data.map((file) => (
           <li key={file.id} className={styles.thumb}>
-            <a href={`/api/attachments/${file.id}/content`} target="_blank" rel="noopener noreferrer" aria-label={`Open ${file.original_name}`}>
+            <button type="button" className={styles.picture} onClick={() => setViewing(files.data.indexOf(file))} aria-label={`Preview ${file.original_name}`}>
               {/* The receipt as it is: never inverted or tinted by the theme. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`/api/attachments/${file.id}/content`} alt={`Receipt ${file.original_name}`} loading="lazy" />
-            </a>
+            </button>
             <div className={styles.thumbMeta}>
               <span className="ident">{file.original_name}</span>
               <span className="faint">{sizeText(file.size_bytes)}</span>

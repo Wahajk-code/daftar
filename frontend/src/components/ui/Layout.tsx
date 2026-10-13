@@ -11,14 +11,14 @@ export function PageHeader({
   actions,
   back,
   meta,
-  print = true,
+  print = false,
 }: {
   title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
   back?: { href: string; label: string };
   meta?: ReactNode;
-  /** Draws the Print button beside the actions. Off for screens that are not worth printing. */
+  /** Draws the Print button beside the actions. On only where a paper copy is meant: a document, a report. */
   print?: boolean;
 }) {
   return (
@@ -78,7 +78,11 @@ export function Panel({
       {title || actions ? (
         <div className={styles.panelHead}>
           {title ? <h2 id={id ? `${id}-title` : undefined}>{title}</h2> : <span />}
-          {actions ? <div className={styles.panelActions}>{actions}</div> : null}
+          {actions ? (
+            <div className={styles.panelActions} data-noprint>
+              {actions}
+            </div>
+          ) : null}
         </div>
       ) : null}
       <div className={flush ? styles.panelFlush : styles.panelBody}>{children}</div>

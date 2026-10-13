@@ -1,0 +1,51 @@
+/* The one thing an author has to act on: a card with a strong red edge and a tinted ground, the comment set large and whole. */
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-5) var(--space-6);
+  background: var(--negative-wash);
+  border-left: 6px solid var(--negative);
+  border-radius: var(--radius-lg);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.icon {
+  flex: none;
+  color: var(--negative);
+}
+
+.title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--negative);
+}
+
+.when {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+}
+
+/* The reviewer's words are never cut: long comments wrap and show in full. */
+.comment {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  font-size: var(--text-md);
+  line-height: 1.6;
+  font-weight: 500;
+  color: var(--text-1);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.next {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+}

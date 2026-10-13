@@ -21,6 +21,11 @@ interface Shell {
   className?: string;
 }
 
+/** A required field is missing while it is empty. Only fields the screen controls (it passes a value) can be judged. */
+function isEmpty(value: unknown): boolean {
+  return value !== undefined && String(value ?? "").trim() === "";
+}
+
 function join(...names: Array<string | undefined | false>) {
   return names.filter(Boolean).join(" ");
 }
@@ -33,16 +38,18 @@ function FieldShell({
   required,
   hideLabel,
   className,
+  missing,
   children,
-}: Shell & { children: (props: { id: string; "aria-describedby"?: string; "aria-invalid"?: true; "aria-required"?: true }) => ReactNode }) {
+}: Shell & { missing?: boolean; children: (props: { id: string; "aria-describedby"?: string; "aria-invalid"?: true; "aria-required"?: true }) => ReactNode }) {
   const id = useId();
   const messageId = `${id}-message`;
   const describedBy = error || hint ? messageId : undefined;
   return (
-    <div className={join(styles.field, className)}>
+    <div className={join(styles.field, className)} data-missing={missing ? "" : undefined}>
       <label htmlFor={id} className={join(styles.label, hideLabel && "sr-only")}>
         {label}
         {required ? <span className={styles.required} aria-hidden> *</span> : null}
+        {missing ? <span className={styles.missing}>Required</span> : null}
       </label>
       {children({
         id,
@@ -66,7 +73,7 @@ function FieldShell({
 export const TextField = forwardRef<HTMLInputElement, Shell & Omit<InputHTMLAttributes<HTMLInputElement>, "className">>(
   function TextField({ label, hint, error, required, hideLabel, className, ...input }, ref) {
     return (
-      <FieldShell {...{ label, hint, error, required, hideLabel, className }}>
+      <FieldShell {...{ label, hint, error, required, hideLabel, className }} missing={required && isEmpty(input.value)}>
         {(aria) => <input ref={ref} className={`${styles.control} user-text`} {...aria} {...input} />}
       </FieldShell>
     );
@@ -76,7 +83,7 @@ export const TextField = forwardRef<HTMLInputElement, Shell & Omit<InputHTMLAttr
 export const TextAreaField = forwardRef<HTMLTextAreaElement, Shell & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "className">>(
   function TextAreaField({ label, hint, error, required, hideLabel, className, ...input }, ref) {
     return (
-      <FieldShell {...{ label, hint, error, required, hideLabel, className }}>
+      <FieldShell {...{ label, hint, error, required, hideLabel, className }} missing={required && isEmpty(input.value)}>
         {(aria) => <textarea ref={ref} rows={3} className={`${styles.control} ${styles.area} user-text`} {...aria} {...input} />}
       </FieldShell>
     );
@@ -100,7 +107,7 @@ export const SelectField = forwardRef<
   Shell & { options: Option[]; placeholder?: string; value: string | number; onChange?: (event: SelectChange) => void; disabled?: boolean }
 >(function SelectField({ label, hint, error, required, hideLabel, className, options, placeholder, value, onChange, disabled }, ref) {
   return (
-    <FieldShell {...{ label, hint, error, required, hideLabel, className }}>
+    <FieldShell {...{ label, hint, error, required, hideLabel, className }} missing={required && isEmpty(value)}>
       {(aria) => (
         <Select ref={ref} {...aria} value={String(value)} options={options} placeholder={placeholder} disabled={disabled} onChange={(next) => onChange?.({ target: { value: next } })} />
       )}
@@ -128,7 +135,7 @@ export function MoneyField({
     onValue: (text: string) => void;
   }) {
   return (
-    <FieldShell {...{ label, hint, error, required, hideLabel, className }}>
+    <FieldShell {...{ label, hint, error, required, hideLabel, className }} missing={required && isEmpty(value)}>
       {(aria) => (
         <input
           className={join(styles.control, styles.money, "num")}

@@ -108,3 +108,23 @@
     min-height: var(--target-min);
   }
 }
+
+/* A required field that is still empty says so beside its label and takes an amber outline, live, as the form is filled. */
+.missing {
+  margin-left: var(--space-2);
+  padding: 0 8px;
+  border: 1.5px solid var(--caution);
+  border-radius: var(--radius-pill);
+  color: var(--caution);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.field[data-missing] .control {
+  border-color: var(--caution);
+}
+
+.field[data-missing] button[role="combobox"] {
+  border-color: var(--caution);
+}

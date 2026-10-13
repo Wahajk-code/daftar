@@ -54,7 +54,7 @@ export function DocumentActions({ kind, doc, children }: { kind: Kind; doc: Acti
   const pendingAction = move.isPending ? move.variables?.action : undefined;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }} data-noprint>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)" }}>
         {can("submit") ? (
           <Button variant="primary" icon={<IconSend size={18} stroke={1.75} aria-hidden />} pending={pendingAction === "submit"} onClick={() => run("submit").catch(() => undefined)}>

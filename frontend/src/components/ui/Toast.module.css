@@ -1,12 +1,17 @@
 .region {
   position: fixed;
-  right: var(--space-4);
-  bottom: var(--space-4);
+  inset: auto var(--space-4) var(--space-4) auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: visible;
   z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   gap: var(--space-2);
-  width: min(380px, calc(100vw - 2 * var(--space-4)));
+  max-width: calc(100vw - 2 * var(--space-4));
   pointer-events: none;
 }
 
@@ -15,10 +20,12 @@
 .toast {
   pointer-events: auto;
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) 28px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-3);
+  gap: var(--space-2);
+  width: fit-content;
+  max-width: calc(100vw - 2 * var(--space-4));
+  padding: var(--space-3);
   background: var(--k-toast-bg);
   color: var(--k-toast-text);
   border-radius: var(--radius-md);
@@ -41,9 +48,12 @@
 .body {
   min-width: 0;
   font-size: var(--text-sm);
-  font-weight: 500;
-  line-height: 1.4;
+  font-weight: 800;
+  line-height: 1.35;
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .reference {
@@ -58,8 +68,8 @@
   flex: none;
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   background: none;
   border: 0;
   color: inherit;

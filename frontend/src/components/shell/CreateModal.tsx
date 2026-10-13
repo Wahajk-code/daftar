@@ -2,9 +2,10 @@
 
 import { IconPlus } from "@tabler/icons-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { createContext, useCallback, useContext, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
 import type { Role } from "@/api/types";
 import { ExpenseForm } from "@/components/documents/ExpenseForm";
+import { prepareReceipt } from "@/lib/images";
 import { InviteForm } from "./InviteForm";
 import { PurchaseForm } from "@/components/documents/PurchaseForm";
 import { VoucherForm } from "@/components/documents/VoucherForm";
@@ -33,6 +34,8 @@ interface CreateApi {
   open: (kind: CreateKind) => void;
   /** What this person may start. */
   allowed: CreateKind[];
+  /** Opens the phone's camera (or a file chooser on a computer), then the expense form with the photo already attached. */
+  capture: () => void;
 }
 
 const CreateContext = createContext<CreateApi | null>(null);
@@ -70,15 +73,41 @@ export function CreateProvider({ role, children }: { role: Role; children: React
     [params, pathname],
   );
 
+  const [photos, setPhotos] = useState<File[]>([]);
+  const camera = useRef<HTMLInputElement>(null);
+
   const open = useCallback((value: CreateKind) => router.push(withParam(value), { scroll: false }), [router, withParam]);
-  const close = useCallback(() => router.replace(withParam(null), { scroll: false }), [router, withParam]);
+  const close = useCallback(() => {
+    setPhotos([]);
+    router.replace(withParam(null), { scroll: false });
+  }, [router, withParam]);
+  const capture = useCallback(() => camera.current?.click(), []);
+
+  async function photographed(files: FileList | null) {
+    const picked = Array.from(files ?? []);
+    if (picked.length === 0) return;
+    setPhotos(await Promise.all(picked.map(prepareReceipt)));
+    open("expense");
+  }
 
   return (
-    <CreateContext.Provider value={{ open, allowed }}>
+    <CreateContext.Provider value={{ open, allowed, capture }}>
       {children}
+      <input
+        ref={camera}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        hidden
+        tabIndex={-1}
+        onChange={(event) => {
+          void photographed(event.target.files);
+          event.target.value = "";
+        }}
+      />
       <Dialog open={kind !== null} onClose={close} size={kind === "invite" ? "sm" : "xl"} title={kind ? COPY[kind].title : ""} description={kind ? COPY[kind].description : undefined}>
         <div className={styles.modalForm}>
-          {kind === "expense" ? <ExpenseForm onClose={close} /> : null}
+          {kind === "expense" ? <ExpenseForm onClose={close} initialFiles={photos} /> : null}
           {kind === "purchase" ? <PurchaseForm onClose={close} /> : null}
           {kind === "voucher" ? <VoucherForm onClose={close} /> : null}
           {kind === "invite" ? <InviteForm onClose={close} /> : null}

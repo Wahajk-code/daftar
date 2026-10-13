@@ -8,6 +8,7 @@ import { DOCUMENT_KEYS, codeMap, useAction, useAllCostCenters, useAllProjects, u
 import type { Expense, Voucher } from "@/api/types";
 import { DocumentActions } from "@/components/documents/DocumentActions";
 import { DuplicatePanel, HistoryPanel, ReceiptPanel } from "@/components/documents/Panels";
+import { RejectionNotice } from "@/components/documents/RejectionNotice";
 import { useMe } from "@/components/shell/MeContext";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { DateText, Identifier, Instant, Money } from "@/components/ui/Format";
@@ -44,6 +45,7 @@ export function ExpenseDetail({ id }: { id: number }) {
   return (
     <>
       <PageHeader
+        print
         back={{ href: "/expenses", label: "Expenses" }}
         title={<span className="user-text">{doc.description || doc.category_name}</span>}
         meta={
@@ -64,6 +66,7 @@ export function ExpenseDetail({ id }: { id: number }) {
 
       <div className={styles.layout}>
         <div className={styles.main}>
+          <RejectionNotice kind="expenses" id={id} status={doc.status} isAuthor={isAuthor} />
           <DuplicatePanel kind="expenses" id={id} />
           <DocumentActions kind="expenses" doc={doc}>
             {canGenerate ? (
@@ -78,7 +81,7 @@ export function ExpenseDetail({ id }: { id: number }) {
               <div>
                 <dt>Amount</dt>
                 <dd className={styles.big}>
-                  <Money value={doc.amount} strong /> <span className="faint">{doc.currency}</span>
+                  <Money value={doc.amount} strong currency={doc.currency} />
                 </dd>
               </div>
               <div>
@@ -135,7 +138,7 @@ export function ExpenseDetail({ id }: { id: number }) {
                 <tfoot>
                   <tr>
                     <th scope="row" colSpan={2}>Total</th>
-                    <td className="num"><Money value={doc.amount} strong /></td>
+                    <td className="num"><Money currency value={doc.amount} strong /></td>
                   </tr>
                 </tfoot>
               </table>

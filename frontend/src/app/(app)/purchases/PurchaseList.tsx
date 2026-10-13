@@ -4,6 +4,7 @@ import { usePage, useVendors } from "@/api/queries";
 import type { Purchase } from "@/api/types";
 import { NewDocumentButton } from "@/components/shell/CreateModal";
 import { DataTable, Pagination, type Column } from "@/components/ui/DataTable";
+import { ExportButton } from "@/components/ui/ExportButton";
 import { DateText, Identifier, Money, TwoLine } from "@/components/ui/Format";
 import { PageHeader, Panel } from "@/components/ui/Layout";
 import { ListFilters, type FilterDef } from "@/components/ui/ListFilters";
@@ -69,7 +70,24 @@ export function PurchaseList() {
       <PageHeader
         title="Purchases"
         description="Invoices and memos from vendors, with the tax worked out."
-        actions={<NewDocumentButton kind="purchase">New purchase</NewDocumentButton>}
+        actions={
+          <>
+            <ExportButton
+              path="/reports/export/purchases"
+              query={{
+                status: query.status,
+                vendor_id: query.vendor_id,
+                registered: query.registered,
+                date_from: query.date_from,
+                date_to: query.date_to,
+                amount_min: query.amount_min,
+                amount_max: query.amount_max,
+                q: query.q,
+              }}
+            />
+            <NewDocumentButton kind="purchase">New purchase</NewDocumentButton>
+          </>
+        }
       />
       <Panel flush>
         <ListFilters defs={filters} />

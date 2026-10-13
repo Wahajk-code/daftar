@@ -12,6 +12,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { CheckboxField, SelectField, TextAreaField, TextField, type Option } from "@/components/ui/Field";
 import { PageHeader, Panel } from "@/components/ui/Layout";
 import { ListFilters, type FilterDef } from "@/components/ui/ListFilters";
+import { Requirements } from "@/components/ui/Requirements";
 import { Banner } from "@/components/ui/States";
 import { Tag } from "@/components/ui/Stamp";
 import { PAGE_SIZE, useUrlState } from "@/lib/url-state";
@@ -169,6 +170,13 @@ export function MasterCrud<T extends Row>({ config }: { config: MasterConfig<T> 
   ];
 
   const error = save.error instanceof ApiError ? save.error : null;
+  // The required fields that are showing and still empty, live: the button waits for them and the form names them.
+  const missing = editing
+    ? config.fields
+        .filter((field) => field.required && (editing.mode === "create" || !field.createOnly) && (!field.when || field.when(values)))
+        .filter((field) => (values[field.key] ?? "").trim() === "")
+        .map((field) => field.label)
+    : [];
 
   return (
     <>
@@ -211,10 +219,11 @@ export function MasterCrud<T extends Row>({ config }: { config: MasterConfig<T> 
           ) : null}
           {editing ? <FormFields fields={config.fields} values={values} set={(key, value) => setValues((current) => ({ ...current, [key]: value }))} error={error} mode={editing.mode} /> : null}
           <div className={styles.actions}>
+            <Requirements items={missing} />
             <Button onClick={() => setEditing(null)} disabled={save.isPending}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary" pending={save.isPending}>
+            <Button type="submit" variant="primary" pending={save.isPending} disabled={missing.length > 0}>
               Save {config.noun}
             </Button>
           </div>

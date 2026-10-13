@@ -17,7 +17,7 @@ import { Stamp } from "@/components/ui/Stamp";
 import { Typewriter } from "@/components/ui/Typewriter";
 import { KIND_LABEL, href } from "@/lib/documents";
 import { formatDate, startOfMonth, todayInZone } from "@/lib/dates";
-import { ZERO_PAISA, formatMoney, fromPaisa, sumAmounts, toPaisa } from "@/lib/money";
+import { ZERO_PAISA, formatWithCurrency, fromPaisa, sumAmounts, toPaisa } from "@/lib/money";
 import { useWorkQueues, type QueueItem, type WorkQueue } from "@/lib/queues";
 import styles from "./Home.module.css";
 
@@ -113,9 +113,9 @@ function MonthSection() {
   return (
     <Section id="month" title="This month" description="Approved and posted documents dated this month.">
       <CardGrid min={230}>
-        <StatCard dark hero label="Spent this month" value={spent === undefined ? "" : formatMoney(spent)} hint="Expenses and purchases together" loading={overview.isPending} />
-        <StatCard label="Expenses" href="/reports?report=expenses" value={current?.expense_count ?? ""} hint={current ? formatMoney(current.expenses) : undefined} loading={overview.isPending} />
-        <StatCard label="Purchases" href="/reports?report=purchases" value={current?.purchase_count ?? ""} hint={current ? formatMoney(current.purchases) : undefined} loading={overview.isPending} />
+        <StatCard dark hero label="Spent this month" value={spent === undefined ? "" : formatWithCurrency(spent)} hint="Expenses and purchases together" loading={overview.isPending} />
+        <StatCard label="Expenses" href="/reports?report=expenses" value={current?.expense_count ?? ""} hint={current ? formatWithCurrency(current.expenses) : undefined} loading={overview.isPending} />
+        <StatCard label="Purchases" href="/reports?report=purchases" value={current?.purchase_count ?? ""} hint={current ? formatWithCurrency(current.purchases) : undefined} loading={overview.isPending} />
         <StatCard label="Vouchers posted" href="/vouchers?status=posted" value={posted.data?.total ?? ""} hint="Numbered and in the books" loading={posted.isPending} />
       </CardGrid>
     </Section>
@@ -246,7 +246,6 @@ export function Home() {
   return (
     <>
       <PageHeader
-        print={false}
         title={<Typewriter text={`Welcome back, ${first}`} />}
         description={`Today is ${formatDate(todayInZone(zone))}. ${waiting > 0 ? "Here is what needs you first." : "Here is how the month is going."}`}
       />

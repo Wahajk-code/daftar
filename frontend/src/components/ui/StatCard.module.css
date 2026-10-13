@@ -3,7 +3,8 @@
   flex-direction: column;
   gap: var(--space-2);
   min-width: 0;
-  padding: var(--space-5);
+  container-type: inline-size;
+  padding: var(--space-5) var(--space-5) var(--space-6);
   background: var(--k-card-bg);
   color: var(--text-1);
   border-radius: var(--radius-lg);
@@ -61,15 +62,20 @@
 
 /* Large single figures use proportional digits; only columns of numbers use tabular ones. */
 .value {
-  font-size: var(--text-2xl);
+  /* The figure scales with its card, so a long amount never runs into the edge or the text under it. */
+  font-size: clamp(18px, 8cqw, 26px);
   font-weight: 800;
   letter-spacing: -0.03em;
-  line-height: 1.1;
+  line-height: 1.2;
+  min-height: 1.2em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-family: var(--font-ui);
 }
 
 .hero {
-  font-size: var(--text-3xl);
+  font-size: clamp(20px, 9cqw, 32px);
 }
 
 .hint {

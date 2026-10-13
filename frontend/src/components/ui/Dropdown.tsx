@@ -67,7 +67,7 @@ export function Dropdown({
         {trigger}
       </button>
       {open ? (
-        <div id={panelId} role="region" aria-label={label} className={`${styles.panel} ${align === "end" ? styles.end : styles.start}`} style={width ? { width } : undefined}>
+        <div id={panelId} role="region" aria-label={label} data-noprint className={`${styles.panel} ${align === "end" ? styles.end : styles.start}`} style={width ? { width } : undefined}>
           {children(() => setOpen(false))}
         </div>
       ) : null}

@@ -7,6 +7,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import type { Me } from "@/api/types";
 import { navigate } from "@/lib/navigate";
 import { applySidebar } from "@/lib/preferences";
+import { CaptureButton } from "./CaptureButton";
 import { CreateProvider } from "./CreateModal";
 import { Header } from "./Header";
 import { Logo } from "./Logo";
@@ -119,6 +120,7 @@ export function AppShell({ me, initialCollapsed, children }: { me: Me; initialCo
             </main>
           </div>
           <Tour />
+          <CaptureButton />
         </div>
       </CreateProvider>
     </MeProvider>

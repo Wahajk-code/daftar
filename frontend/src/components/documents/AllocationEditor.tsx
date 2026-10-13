@@ -161,12 +161,12 @@ export function AllocationEditor({
         {data ? (
           <>
             <span>
-              Allocated <Money value={data.allocated} /> of <Money value={cleanAmount} />
+              Allocated <Money currency value={data.allocated} /> of <Money currency value={cleanAmount} />
             </span>
             <span>
               {data.complete ? "The split is exact." : (
                 <>
-                  Still to allocate <Money value={data.remaining} />
+                  Still to allocate <Money currency value={data.remaining} />
                   {data.remaining_basis_points ? ` (${data.remaining_basis_points / 100}%)` : ""}
                 </>
               )}

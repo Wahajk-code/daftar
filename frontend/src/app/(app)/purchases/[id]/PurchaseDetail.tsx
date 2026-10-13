@@ -9,6 +9,7 @@ import { DOCUMENT_KEYS, useAction, useCategories, useRecord } from "@/api/querie
 import type { Purchase, Voucher } from "@/api/types";
 import { DocumentActions } from "@/components/documents/DocumentActions";
 import { DuplicatePanel, HistoryPanel, ReceiptPanel } from "@/components/documents/Panels";
+import { RejectionNotice } from "@/components/documents/RejectionNotice";
 import { useMe } from "@/components/shell/MeContext";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -76,6 +77,7 @@ export function PurchaseDetail({ id }: { id: number }) {
   return (
     <>
       <PageHeader
+        print
         back={{ href: "/purchases", label: "Purchases" }}
         title={<span className="user-text">{doc.vendor_name}</span>}
         meta={
@@ -95,6 +97,7 @@ export function PurchaseDetail({ id }: { id: number }) {
       />
       <div className={view.layout}>
         <div className={view.main}>
+          <RejectionNotice kind="purchases" id={id} status={doc.status} isAuthor={doc.created_by === me.id} />
           <DuplicatePanel kind="purchases" id={id} />
           <DocumentActions kind="purchases" doc={doc}>
             {canGenerate ? (
@@ -139,11 +142,11 @@ export function PurchaseDetail({ id }: { id: number }) {
                 <tfoot>
                   <tr>
                     <th scope="row" colSpan={4}>Totals</th>
-                    <td className="num"><Money value={doc.subtotal} /></td>
-                    <td className="num"><Money value={doc.sales_tax_total} /></td>
-                    <td className="num"><Money value={doc.sales_tax_withheld} /></td>
-                    <td className="num"><Money value={doc.income_tax_withheld} /></td>
-                    <td className="num"><Money value={doc.payable} strong /></td>
+                    <td className="num"><Money currency value={doc.subtotal} /></td>
+                    <td className="num"><Money currency value={doc.sales_tax_total} /></td>
+                    <td className="num"><Money currency value={doc.sales_tax_withheld} /></td>
+                    <td className="num"><Money currency value={doc.income_tax_withheld} /></td>
+                    <td className="num"><Money currency value={doc.payable} strong /></td>
                   </tr>
                 </tfoot>
               </table>
@@ -154,7 +157,7 @@ export function PurchaseDetail({ id }: { id: number }) {
             <dl className={view.details}>
               <div><dt>Dated</dt><dd><DateText value={doc.document_date} /></dd></div>
               <div><dt>Gross value</dt><dd><Money value={doc.gross_total} /></dd></div>
-              <div><dt>Payable to the vendor</dt><dd className={view.big}><Money value={doc.payable} strong /></dd></div>
+              <div><dt>Payable to the vendor</dt><dd className={view.big}><Money value={doc.payable} strong currency={doc.currency} /></dd></div>
               <div><dt>Vendor at the time</dt><dd>{doc.vendor_registered ? "Registered" : "Not registered"}, {doc.vendor_filer ? "filer" : "non-filer"}</dd></div>
               <div><dt>For</dt><dd className="user-text">{doc.description || null}</dd></div>
             </dl>

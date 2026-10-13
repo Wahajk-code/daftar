@@ -31,19 +31,99 @@
 }
 
 .switch {
-  min-height: 30px;
-  padding: 0 var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 var(--space-3) 0 var(--space-2);
   background: var(--bg-sunken);
   border: 0;
   border-radius: var(--radius-pill);
   font-size: var(--text-xs);
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-2);
+  transition: background var(--duration-fast), transform var(--duration-fast) var(--ease-out);
 }
 
 .switch:hover {
   background: var(--accent-wash);
   color: var(--text-1);
+}
+
+.switch:active {
+  transform: scale(0.96);
+}
+
+/* The icon is the one for the view you would turn to, and it turns over with the card. */
+.switchIcon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  transition: transform 520ms var(--ease-out);
+}
+
+.switchIcon svg {
+  grid-area: 1 / 1;
+  transition: opacity var(--duration-base);
+}
+
+.turned {
+  transform: rotateY(180deg);
+}
+
+.iconTable {
+  opacity: 1;
+}
+
+.iconChart {
+  opacity: 0;
+}
+
+.turned .iconTable {
+  opacity: 0;
+}
+
+.turned .iconChart {
+  opacity: 1;
+  transform: scaleX(-1);
+}
+
+/* The card: chart on the front, table on the back, turned over on a hinge down the middle. */
+.scene {
+  perspective: 1400px;
+}
+
+.card {
+  display: grid;
+  transform-style: preserve-3d;
+  transition: transform 640ms var(--ease-out);
+}
+
+.flipped {
+  transform: rotateY(180deg);
+}
+
+.face {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.back {
+  transform: rotateY(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .switchIcon {
+    transition: none;
+  }
 }
 
 .legend {

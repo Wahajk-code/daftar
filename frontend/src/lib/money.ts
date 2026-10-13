@@ -117,3 +117,12 @@ export function percentOf(part: bigint, whole: bigint): number {
   if (whole <= ZERO_PAISA || part <= ZERO_PAISA) return 0;
   return Number((part * BigInt(10000)) / whole) / 100;
 }
+
+/** The currency every amount in the app is in. Documents carry it too (`currency`), and it is PKR throughout. */
+export const CURRENCY = "PKR";
+
+/** Amount text for a sum or a total, with the currency in front: "PKR 1,234.00". */
+export function formatWithCurrency(text: string | null | undefined, currency: string = CURRENCY): string {
+  const amount = formatMoney(text);
+  return amount === "" ? "" : `${currency} ${amount}`;
+}

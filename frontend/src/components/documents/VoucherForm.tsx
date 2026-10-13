@@ -310,9 +310,9 @@ export function VoucherForm({ initial, onClose }: { initial?: Voucher; onClose?:
       <div className={styles.footer}>
         <div className={`${styles.strip} ${balanced ? styles.ok : styles.off}`} role="status" aria-live="polite">
           <dl>
-            <div><dt>Debit</dt><dd><Money value={debitTotal} strong /></dd></div>
-            <div><dt>Credit</dt><dd><Money value={creditTotal} strong /></dd></div>
-            <div><dt>Difference</dt><dd><Money value={difference.replace("-", "")} strong /></dd></div>
+            <div><dt>Debit</dt><dd><Money currency value={debitTotal} strong /></dd></div>
+            <div><dt>Credit</dt><dd><Money currency value={creditTotal} strong /></dd></div>
+            <div><dt>Difference</dt><dd><Money currency value={difference.replace("-", "")} strong /></dd></div>
           </dl>
           <p className={styles.state}>{balanced ? (lines.length >= 2 ? "Balanced" : "Add lines") : `${(toPaisa(difference) ?? ZERO_PAISA) > ZERO_PAISA ? "Debits are higher" : "Credits are higher"}`}</p>
           <Button icon={<IconScale size={18} stroke={1.75} aria-hidden />} onClick={addBalancing} disabled={balanced}>

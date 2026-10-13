@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { Inter, Inter_Tight, Noto_Naskh_Arabic } from "next/font/google";
 import { SIDEBAR_COOKIE, THEME_COOKIE } from "@/lib/server/config";
+import tokens from "../../design/tokens.json";
 import { Providers } from "./providers";
 import "@/styles/tokens.css";
 import "@/styles/base.css";
@@ -28,12 +29,16 @@ export const metadata: Metadata = {
   title: { default: "Daftar", template: "%s | Daftar" },
   description: "Expenses, purchases and vouchers.",
   robots: { index: false, follow: false },
+  applicationName: "Daftar",
+  appleWebApp: { capable: true, title: "Daftar", statusBarStyle: "default" },
+  icons: { apple: "/pwa-icons/192" },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   colorScheme: "light dark",
+  themeColor: tokens.primitives.gray["900"],
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

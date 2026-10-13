@@ -50,9 +50,10 @@
 
 /* The figure a document is about: the largest, heaviest thing on the card. */
 .big {
-  font-size: var(--text-2xl);
+  font-size: var(--text-xl);
   font-weight: 700;
   letter-spacing: -0.03em;
+  line-height: 1.2;
 }
 
 .split {

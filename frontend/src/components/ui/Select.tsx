@@ -205,6 +205,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
           tabIndex={-1}
           aria-label={aria["aria-label"]}
           className={styles.list}
+          data-noprint
           style={{ left: place.left, width: place.width, top: place.top, bottom: place.bottom, maxHeight: place.maxHeight }}
           onMouseDown={(event) => event.target instanceof HTMLInputElement || event.preventDefault()}
           onKeyDown={onKeyDown}

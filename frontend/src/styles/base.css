@@ -121,6 +121,15 @@ table,
   white-space: nowrap;
 }
 
+/* The currency in front of a sum: smaller and lighter than the figure it belongs to. */
+.cur {
+  margin-right: 5px;
+  font-size: 0.78em;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-3);
+}
+
 /* Identifiers: voucher numbers, invoice numbers, codes. Same face as the data, with figures that line up. */
 .ident {
   font-family: var(--font-data);
@@ -206,6 +215,16 @@ table,
   display: none;
 }
 
+/* A report's tables are wide: its pages are printed on a landscape sheet. */
+@page report {
+  size: A4 landscape;
+  margin: 12mm;
+}
+
+.print-landscape {
+  page: report;
+}
+
 /* On paper: only the page's own data. No buttons, filters, tabs, pagination, menus, arrows or history; no shadows, colour
    washes or motion; links read as plain text; tables repeat their heading on each page and never split a row. */
 @media print {
@@ -222,7 +241,9 @@ table,
 
   [data-noprint],
   dialog,
-  .skip {
+  .skip,
+  #react-joyride-portal,
+  [data-react-joyride] {
     display: none !important;
   }
 
@@ -246,15 +267,37 @@ table,
     text-decoration: none !important;
   }
 
+  /* A card may run over a page break (a long table); a row never splits, and a heading never sits alone at the foot. */
   [data-print-card] {
     background: white !important;
     border: 1px solid #bbb;
     border-radius: 6px !important;
-    break-inside: avoid;
+    break-inside: auto;
+    overflow: visible !important;
+  }
+
+  [data-print-card] h2,
+  [data-print-card] h3 {
+    break-after: avoid;
+  }
+
+  /* Tables print in full width with no scroll box, no sort arrows, and a size that fits a page. */
+  [data-print-table] {
+    overflow: visible !important;
+    padding: 0 !important;
   }
 
   table {
     width: 100%;
+    font-size: 9.5pt;
+  }
+
+  th svg {
+    display: none !important;
+  }
+
+  tfoot {
+    display: table-row-group;
   }
 
   thead {

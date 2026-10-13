@@ -5,6 +5,7 @@ import { usePage } from "@/api/queries";
 import type { Voucher } from "@/api/types";
 import { NewDocumentButton } from "@/components/shell/CreateModal";
 import { DataTable, Pagination, type Column } from "@/components/ui/DataTable";
+import { ExportButton } from "@/components/ui/ExportButton";
 import { DateText, Money, TwoLine } from "@/components/ui/Format";
 import { PageHeader, Panel } from "@/components/ui/Layout";
 import { ListFilters, type FilterDef } from "@/components/ui/ListFilters";
@@ -77,7 +78,21 @@ export function VoucherList() {
       <PageHeader
         title="Vouchers"
         description="Every voucher balances: debits equal credits, always."
-        actions={<NewDocumentButton kind="voucher">New voucher</NewDocumentButton>}
+        actions={
+          <>
+            <ExportButton
+              path="/reports/vouchers/csv"
+              label="Export register CSV"
+              query={{
+                statuses: query.status ? [query.status] : undefined,
+                voucher_type: query.voucher_type,
+                date_from: query.date_from,
+                date_to: query.date_to,
+              }}
+            />
+            <NewDocumentButton kind="voucher">New voucher</NewDocumentButton>
+          </>
+        }
       />
       <Panel flush>
         <ListFilters defs={filters} />

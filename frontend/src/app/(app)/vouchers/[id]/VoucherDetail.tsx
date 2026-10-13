@@ -8,6 +8,7 @@ import { DOCUMENT_KEYS, codeMap, useAction, useAllCostCenters, useAllProjects, u
 import type { Voucher, VoidResult } from "@/api/types";
 import { DocumentActions } from "@/components/documents/DocumentActions";
 import { HistoryPanel } from "@/components/documents/Panels";
+import { RejectionNotice } from "@/components/documents/RejectionNotice";
 import { useMe } from "@/components/shell/MeContext";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/Dialog";
@@ -55,6 +56,7 @@ export function VoucherDetail({ id }: { id: number }) {
   return (
     <>
       <PageHeader
+        print
         back={{ href: "/vouchers", label: "Vouchers" }}
         title={<Identifier value={doc.number ?? `${doc.voucher_type} draft ${doc.id}`} voided={doc.status === "void"} />}
         meta={
@@ -77,6 +79,7 @@ export function VoucherDetail({ id }: { id: number }) {
 
       <div className={view.layout}>
         <div className={view.main}>
+          <RejectionNotice kind="vouchers" id={id} status={doc.status} isAuthor={doc.created_by === me.id} />
           {doc.status === "void" ? (
             <Banner tone="negative" title={`Voided: ${doc.void_reason ?? ""}`}>
               {doc.voided_at ? <>Voided <Instant value={doc.voided_at} />. </> : null}
@@ -141,8 +144,8 @@ export function VoucherDetail({ id }: { id: number }) {
                 <tfoot>
                   <tr>
                     <th scope="row" colSpan={5}>Totals</th>
-                    <td className="num"><Money value={doc.total_debit} strong /></td>
-                    <td className="num"><Money value={doc.total_credit} strong /></td>
+                    <td className="num"><Money currency value={doc.total_debit} strong /></td>
+                    <td className="num"><Money currency value={doc.total_credit} strong /></td>
                   </tr>
                 </tfoot>
               </table>

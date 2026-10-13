@@ -75,8 +75,8 @@ export function Reports() {
 
   return (
     <>
-      <PageHeader title="Reports" description={current.about} actions={<Button icon={<IconDownload size={18} stroke={1.75} aria-hidden />} pending={exportCsv.isPending} onClick={() => exportCsv.mutate()}>Download CSV</Button>} />
-      <Panel flush>
+      <PageHeader print title="Reports" description={current.about} actions={<Button icon={<IconDownload size={18} stroke={1.75} aria-hidden />} pending={exportCsv.isPending} onClick={() => exportCsv.mutate()}>Download CSV</Button>} />
+      <Panel flush className="print-landscape">
         <div className={styles.tabs} data-noprint role="tablist" aria-label="Report">
           {REPORTS.map((report) => (
             <button key={report.value} type="button" role="tab" aria-selected={name === report.value} onClick={() => url.set({ report: report.value === "expenses" ? null : report.value, statuses: null, offset: null, voucher_type: null, registered: null })}>
@@ -130,7 +130,7 @@ function ExpensesReport({ range, statuses }: { range: Range; statuses: string[] 
           <tr>
             <th scope="row" colSpan={2}>All expenses, each counted once</th>
             <td className="num">{report.data.totals.expenses}</td>
-            <td className="num"><Money value={report.data.totals.amount} strong /></td>
+            <td className="num"><Money currency value={report.data.totals.amount} strong /></td>
           </tr>
         ) : undefined
       }
@@ -168,32 +168,32 @@ function PurchasesReport({ range, statuses, registered }: { range: Range; status
             <tr>
               <th scope="row" colSpan={2}>Registered vendors</th>
               <td className="num">{totals.registered.purchases}</td>
-              <td className="num"><Money value={totals.registered.subtotal} /></td>
-              <td className="num"><Money value={totals.registered.sales_tax} /></td>
-              <td className="num"><Money value={totals.registered.gross} /></td>
-              <td className="num"><Money value={totals.registered.sales_tax_withheld} /></td>
-              <td className="num"><Money value={totals.registered.income_tax_withheld} /></td>
-              <td className="num"><Money value={totals.registered.payable} /></td>
+              <td className="num"><Money currency value={totals.registered.subtotal} /></td>
+              <td className="num"><Money currency value={totals.registered.sales_tax} /></td>
+              <td className="num"><Money currency value={totals.registered.gross} /></td>
+              <td className="num"><Money currency value={totals.registered.sales_tax_withheld} /></td>
+              <td className="num"><Money currency value={totals.registered.income_tax_withheld} /></td>
+              <td className="num"><Money currency value={totals.registered.payable} /></td>
             </tr>
             <tr>
               <th scope="row" colSpan={2}>Not registered</th>
               <td className="num">{totals.unregistered.purchases}</td>
-              <td className="num"><Money value={totals.unregistered.subtotal} /></td>
-              <td className="num"><Money value={totals.unregistered.sales_tax} /></td>
-              <td className="num"><Money value={totals.unregistered.gross} /></td>
-              <td className="num"><Money value={totals.unregistered.sales_tax_withheld} /></td>
-              <td className="num"><Money value={totals.unregistered.income_tax_withheld} /></td>
-              <td className="num"><Money value={totals.unregistered.payable} /></td>
+              <td className="num"><Money currency value={totals.unregistered.subtotal} /></td>
+              <td className="num"><Money currency value={totals.unregistered.sales_tax} /></td>
+              <td className="num"><Money currency value={totals.unregistered.gross} /></td>
+              <td className="num"><Money currency value={totals.unregistered.sales_tax_withheld} /></td>
+              <td className="num"><Money currency value={totals.unregistered.income_tax_withheld} /></td>
+              <td className="num"><Money currency value={totals.unregistered.payable} /></td>
             </tr>
             <tr>
               <th scope="row" colSpan={2}>All purchases</th>
               <td className="num">{totals.totals.purchases}</td>
-              <td className="num"><Money value={totals.totals.subtotal} strong /></td>
-              <td className="num"><Money value={totals.totals.sales_tax} strong /></td>
-              <td className="num"><Money value={totals.totals.gross} strong /></td>
-              <td className="num"><Money value={totals.totals.sales_tax_withheld} strong /></td>
-              <td className="num"><Money value={totals.totals.income_tax_withheld} strong /></td>
-              <td className="num"><Money value={totals.totals.payable} strong /></td>
+              <td className="num"><Money currency value={totals.totals.subtotal} strong /></td>
+              <td className="num"><Money currency value={totals.totals.sales_tax} strong /></td>
+              <td className="num"><Money currency value={totals.totals.gross} strong /></td>
+              <td className="num"><Money currency value={totals.totals.sales_tax_withheld} strong /></td>
+              <td className="num"><Money currency value={totals.totals.income_tax_withheld} strong /></td>
+              <td className="num"><Money currency value={totals.totals.payable} strong /></td>
             </tr>
           </>
         ) : undefined

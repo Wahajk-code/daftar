@@ -86,11 +86,11 @@
 }
 
 .panelBody {
-  padding: var(--space-4) var(--space-5) var(--space-5);
+  padding: var(--space-4) var(--space-5) var(--space-6);
 }
 
 .panelFlush {
-  padding: var(--space-3) 0 0;
+  padding: var(--space-3) 0 var(--space-4);
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   overflow: hidden;
 }
@@ -152,5 +152,24 @@
 
   .panelBody {
     padding: var(--space-3);
+  }
+}
+
+/* On a phone the header's buttons share the width evenly, two to a row, instead of leaving a ragged edge. */
+@media (max-width: 600px) {
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    width: 100%;
+    gap: var(--space-2);
+  }
+
+  .actions > * {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .headerRow {
+    gap: var(--space-3);
   }
 }

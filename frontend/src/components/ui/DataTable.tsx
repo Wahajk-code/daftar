@@ -77,7 +77,7 @@ export function DataTable<T>({
 
   return (
     <div className={styles.wrap}>
-      <div className={styles.scroll}>
+      <div className={styles.scroll} data-print-table>
         <table className={styles.table}>
           <caption className="sr-only">{caption}</caption>
           <thead>

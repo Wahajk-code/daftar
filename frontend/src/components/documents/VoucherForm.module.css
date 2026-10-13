@@ -199,6 +199,7 @@
   }
 
   .buttons > * {
-    flex: 1 1 100%;
+    flex: 1 1 calc(50% - var(--space-2));
+    min-width: 0;
   }
 }

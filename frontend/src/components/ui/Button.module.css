@@ -95,3 +95,14 @@
     transform: rotate(360deg);
   }
 }
+
+/* Less side padding on a phone, so a button is no wider than its label needs. */
+@media (max-width: 600px) {
+  .button {
+    padding: 0 var(--space-4);
+  }
+
+  .small {
+    padding: 0 var(--space-3);
+  }
+}

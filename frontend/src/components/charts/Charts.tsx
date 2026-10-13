@@ -1,8 +1,9 @@
 "use client";
 
+import { IconChartBar, IconTable } from "@tabler/icons-react";
 import { useState, type ReactNode } from "react";
 import type { DocumentStatus, OverviewMonth, StatusCount } from "@/api/types";
-import { compactMoney, formatMoney, fromPaisa, niceCeiling, percentOf, toPaisa, ZERO_PAISA } from "@/lib/money";
+import { compactMoney, formatMoney, formatWithCurrency, fromPaisa, niceCeiling, percentOf, toPaisa, ZERO_PAISA } from "@/lib/money";
 import { statusLabel } from "@/components/ui/Stamp";
 import styles from "./Charts.module.css";
 
@@ -13,7 +14,11 @@ export function monthName(month: string): string {
   return MONTHS[Number(month.slice(5, 7)) - 1] ?? month;
 }
 
-/** A view switch: the picture, or the same numbers as a table, so nothing is only in a colour or a height. */
+/**
+ * A view switch: the picture, or the same numbers as a table, so nothing is only in a colour or a height. The two sit on the
+ * faces of a card, and pressing the button turns the card over like a playing card. The face that is turned away is inert, so
+ * the keyboard and screen readers only reach the one in view.
+ */
 function Frame({ title, subtitle, legend, chart, table }: { title: string; subtitle?: string; legend?: ReactNode; chart: ReactNode; table: ReactNode }) {
   const [asTable, setAsTable] = useState(false);
   return (
@@ -24,11 +29,24 @@ function Frame({ title, subtitle, legend, chart, table }: { title: string; subti
           {subtitle ? <span className={styles.subtitle}>{subtitle}</span> : null}
         </span>
         <button type="button" className={styles.switch} aria-pressed={asTable} onClick={() => setAsTable((current) => !current)}>
+          <span className={`${styles.switchIcon} ${asTable ? styles.turned : ""}`} aria-hidden>
+            <IconTable size={16} stroke={2} className={styles.iconTable} />
+            <IconChartBar size={16} stroke={2} className={styles.iconChart} />
+          </span>
           {asTable ? "Chart" : "Table"}
         </button>
       </figcaption>
-      {legend && !asTable ? <div className={styles.legend}>{legend}</div> : null}
-      {asTable ? table : chart}
+      <div className={styles.scene}>
+        <div className={`${styles.card} ${asTable ? styles.flipped : ""}`}>
+          <div className={styles.face} inert={asTable} aria-hidden={asTable}>
+            {legend ? <div className={styles.legend}>{legend}</div> : null}
+            {chart}
+          </div>
+          <div className={`${styles.face} ${styles.back}`} inert={!asTable} aria-hidden={!asTable}>
+            {table}
+          </div>
+        </div>
+      </div>
     </figure>
   );
 }
@@ -91,11 +109,11 @@ export function SpendColumns({ months }: { months: OverviewMonth[] }) {
                       {monthName(month.month)} {month.month.slice(0, 4)}
                     </strong>
                     <span>
-                      <i style={{ background: "var(--chart-1)" }} /> Expenses {formatMoney(month.expenses)}
+                      <i style={{ background: "var(--chart-1)" }} /> Expenses {formatWithCurrency(month.expenses)}
                       <small> ({month.expense_count})</small>
                     </span>
                     <span>
-                      <i style={{ background: "var(--chart-2)" }} /> Purchases {formatMoney(month.purchases)}
+                      <i style={{ background: "var(--chart-2)" }} /> Purchases {formatWithCurrency(month.purchases)}
                       <small> ({month.purchase_count})</small>
                     </span>
                   </span>
@@ -115,8 +133,8 @@ export function SpendColumns({ months }: { months: OverviewMonth[] }) {
       <thead>
         <tr>
           <th scope="col">Month</th>
-          <th scope="col" className="num">Expenses</th>
-          <th scope="col" className="num">Purchases</th>
+          <th scope="col" className="num">Expenses (PKR)</th>
+          <th scope="col" className="num">Purchases (PKR)</th>
         </tr>
       </thead>
       <tbody>
@@ -136,7 +154,7 @@ export function SpendColumns({ months }: { months: OverviewMonth[] }) {
   return (
     <Frame
       title="Spend by month"
-      subtitle="Approved and posted, by document date"
+      subtitle="Approved and posted, by document date. Amounts in PKR"
       legend={
         <>
           <Key color="var(--chart-1)" label="Expenses" />
@@ -252,7 +270,7 @@ export function RankedBars({ title, subtitle, rows, empty }: { title: string; su
             <span className={styles.rankTrack} aria-hidden>
               <span className={styles.rankBar} style={{ width: `${percentOf(paisa[index], largest)}%` }} />
             </span>
-            <span className={`${styles.rankValue} num`}>{formatMoney(fromPaisa(paisa[index]))}</span>
+            <span className={`${styles.rankValue} num`}>{formatWithCurrency(fromPaisa(paisa[index]))}</span>
           </li>
         ))}
       </ul>
@@ -264,7 +282,7 @@ export function RankedBars({ title, subtitle, rows, empty }: { title: string; su
       <thead>
         <tr>
           <th scope="col">Name</th>
-          <th scope="col" className="num">Amount</th>
+          <th scope="col" className="num">Amount (PKR)</th>
         </tr>
       </thead>
       <tbody>

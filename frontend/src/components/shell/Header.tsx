@@ -2,6 +2,7 @@
 
 import {
   IconBell,
+  IconCamera,
   IconHelpCircle,
   IconLayoutSidebarLeftCollapse,
   IconLayoutSidebarLeftExpand,
@@ -60,6 +61,25 @@ function NewMenu() {
     >
       {(close) => (
         <ul className={styles.menu}>
+          {create.allowed.includes("expense") ? (
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  close();
+                  create.capture();
+                }}
+              >
+                <span className={styles.menuIcon}>
+                  <IconCamera size={22} stroke={1.5} aria-hidden />
+                </span>
+                <span className={styles.menuText}>
+                  <span className={styles.menuTitle}>Photo of a receipt</span>
+                  <span className={styles.menuHint}>Take a picture and start an expense</span>
+                </span>
+              </button>
+            </li>
+          ) : null}
           {items.map((item) => (
             <li key={item.kind}>
               <button

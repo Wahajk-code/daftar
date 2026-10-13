@@ -1,7 +1,7 @@
 "use client";
 
 import { IconCheck, IconX, IconAlertTriangle } from "@tabler/icons-react";
-import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import styles from "./Toast.module.css";
 
 type Tone = "success" | "error";
@@ -29,6 +29,16 @@ export function useToast(): ToastApi {
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([]);
   const counter = useRef(0);
+  const region = useRef<HTMLDivElement>(null);
+
+  // The toasts live in the browser's top layer, which sits above everything, modals included. Showing the layer again when a
+  // toast arrives puts it above whatever was opened after it.
+  useEffect(() => {
+    const element = region.current;
+    if (!element?.showPopover) return;
+    if (element.matches(":popover-open")) element.hidePopover();
+    if (items.length > 0) element.showPopover();
+  }, [items]);
 
   const dismiss = useCallback((id: number) => setItems((current) => current.filter((item) => item.id !== id)), []);
   const push = useCallback(
@@ -47,16 +57,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={api}>
       {children}
-      <div className={styles.region} role="region" aria-label="Notifications">
+      <div ref={region} popover="manual" data-noprint className={styles.region} role="region" aria-label="Notifications">
         {items.map((item) => (
           <div key={item.id} className={`${styles.toast} ${styles[item.tone]}`} role={item.tone === "error" ? "alert" : "status"}>
-            {item.tone === "success" ? <IconCheck size={20} stroke={1.75} aria-hidden /> : <IconAlertTriangle size={20} stroke={1.75} aria-hidden />}
+            {item.tone === "success" ? <IconCheck size={16} stroke={2} aria-hidden /> : <IconAlertTriangle size={16} stroke={2} aria-hidden />}
             <div className={styles.body}>
               <p>{item.text}</p>
               {item.reference ? <p className={styles.reference}>Reference {item.reference}</p> : null}
             </div>
             <button type="button" className={styles.close} onClick={() => dismiss(item.id)} aria-label="Dismiss notification">
-              <IconX size={18} stroke={1.75} aria-hidden />
+              <IconX size={14} stroke={2} aria-hidden />
             </button>
           </div>
         ))}
