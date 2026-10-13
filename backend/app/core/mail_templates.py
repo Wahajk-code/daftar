@@ -48,3 +48,37 @@ def bank_account_changed(*, to: str, vendor: str, changed_by: str, when: str, ma
             "way to redirect a payment."
         ),
     )
+
+
+def needs_approval(*, to: str, name: str, label: str, summary: str, submitted_by: str, link: str) -> EmailMessage:
+    return EmailMessage(
+        kind="needs_approval",
+        to=to,
+        subject=f"Needs your approval: {label}",
+        body=(
+            f"Hello {name},\n\n{submitted_by} submitted {label} for approval.\n{summary}\n\nReview it here:\n{link}\n"
+        ),
+    )
+
+
+def decided(
+    *,
+    to: str,
+    name: str,
+    label: str,
+    summary: str,
+    outcome: str,
+    decided_by: str,
+    when: str,
+    comment: str | None,
+    link: str,
+) -> EmailMessage:
+    note = f"\nTheir comment: {comment}\n" if comment else ""
+    return EmailMessage(
+        kind="decided",
+        to=to,
+        subject=f"{label} was {outcome}",
+        body=(
+            f"Hello {name},\n\n{decided_by} {outcome} {label} on {when}.\n{summary}\n{note}\nOpen it here:\n{link}\n"
+        ),
+    )

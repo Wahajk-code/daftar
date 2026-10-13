@@ -7,6 +7,7 @@ from typing import Annotated, Literal, Self
 from pydantic import BaseModel, BeforeValidator, Field, PlainSerializer, StringConstraints, model_validator
 
 from app.core import money
+from app.core.duplicates import DuplicateKind
 from app.core.enums import (
     AllocationMethod,
     DocumentStatus,
@@ -282,3 +283,15 @@ class HistoryItem(ResponseModel):
     actor_name: str
     comment: str | None
     created_at: UtcInstant
+
+
+class DuplicateWarningRead(ResponseModel):
+    """A document that resembles this one. Advice only: nothing is blocked."""
+
+    kind: DuplicateKind
+    document_type: DocumentType
+    document_id: int
+    status: DocumentStatus
+    document_date: date
+    amount: Money
+    reason: str

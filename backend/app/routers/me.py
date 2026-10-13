@@ -19,6 +19,28 @@ def get_me(principal: PrincipalDep, service: UserServiceDep, settings: SettingsD
     return MeRead(**user.model_dump(), display_timezone=settings.display_timezone)
 
 
+ALL_ROLES = roles(Role.ADMIN, Role.ACCOUNTANT, Role.APPROVER, Role.STAFF)
+
+
+def _me(service: UserServiceDep, principal: PrincipalDep, settings: SettingsDep) -> MeRead:
+    user = UserRead.model_validate(service.get(principal.id))
+    return MeRead(**user.model_dump(), display_timezone=settings.display_timezone)
+
+
+@router.post("/tour/complete", operation_id="complete_my_tour", **ALL_ROLES)
+def complete_my_tour(principal: PrincipalDep, service: UserServiceDep, settings: SettingsDep) -> MeRead:
+    """Mark the onboarding tour finished or skipped. It is remembered on every device; repeating it is harmless."""
+    service.complete_tour(principal)
+    return _me(service, principal, settings)
+
+
+@router.post("/tour/restart", operation_id="restart_my_tour", **ALL_ROLES)
+def restart_my_tour(principal: PrincipalDep, service: UserServiceDep, settings: SettingsDep) -> MeRead:
+    """Show the onboarding tour again the next time the app opens."""
+    service.restart_tour(principal)
+    return _me(service, principal, settings)
+
+
 @router.post(
     "/password",
     operation_id="change_my_password",

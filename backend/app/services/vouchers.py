@@ -46,6 +46,7 @@ from app.core.ledger import (
     purchase_lines,
     reverse,
 )
+from app.core.mail import Outbox
 from app.core.money import ZERO, to_paisa
 from app.core.numbering import format_number, voucher_year
 from app.core.principal import Principal
@@ -59,17 +60,19 @@ from app.repositories import master as master_repository
 from app.repositories import vouchers as voucher_repository
 from app.services.audit import AuditService
 from app.services.master import changed, snapshot
+from app.services.notifications import MoveNotifier, summary_line
 from app.services.workflow import Workflow, available_actions
 
 FIELDS = ("voucher_type", "document_date", "description", "number", "status", "expense_id", "purchase_id")
 
 
 class VoucherService:
-    def __init__(self, session: Session, clock: Clock, settings: Settings) -> None:
+    def __init__(self, session: Session, clock: Clock, settings: Settings, outbox: Outbox) -> None:
         self._session = session
         self._clock = clock
         self._settings = settings
         self._workflow = Workflow(session, clock)
+        self._notifier = MoveNotifier(session, settings, outbox)
         self._audit = AuditService(session, clock)
 
     # Reading ---------------------------------------------------------------------------------------------------------
@@ -392,6 +395,7 @@ class VoucherService:
         # engine would then see a version the client never held.
         closed = master_repository.closed_period_containing(self._session, voucher.document_date)
         balanced = balance(self._specs(voucher)).balanced
+        audience = self._notifier.audience(target, voucher.created_by)
         voucher.updated_at = self._clock.now()
         self._workflow.move(
             voucher,
@@ -404,6 +408,16 @@ class VoucherService:
             balanced=balanced,
             period_open=closed is None,
             is_reversal=voucher.is_reversal,
+        )
+        self._notifier.announce(
+            audience,
+            document_type=DocumentType.VOUCHER,
+            document_id=voucher.id,
+            summary=summary_line(sum((line.debit for line in voucher.lines), ZERO), voucher.description),
+            actor=actor,
+            target=target,
+            comment=comment,
+            when=voucher.updated_at,
         )
         self._session.commit()
         return self._reload(voucher.id)

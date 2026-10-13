@@ -1,0 +1,44 @@
+# The same gates as on a developer machine, run the same way: through Docker Compose. Nothing here needs a secret.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (lint, format, types, full suite)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      # ruff check, ruff format --check, mypy, then pytest against a real Postgres 16 started by Compose. The suite
+      # includes the two checks that keep the contract honest: the access matrix, and the committed
+      # backend/openapi.json being identical to what the app generates.
+      - name: Run the backend gate
+        run: docker compose --profile test run --rm backend-test
+      - name: Show the database log if the gate failed
+        if: failure()
+        run: docker compose logs postgres
+
+  frontend:
+    name: Frontend (lint, types, tests, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint and types
+        run: docker compose --profile test run --rm frontend-test
+      # Runs the "test" script once the web app has one; until then there is nothing to run.
+      - name: Tests
+        run: docker compose --profile test run --rm frontend-test pnpm run --if-present test
+      - name: Build
+        run: docker compose --profile test run --rm frontend-test pnpm build

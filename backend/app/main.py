@@ -7,7 +7,7 @@ from app.core.logging import configure_logging
 from app.core.rate_limit import RateLimiter, build_policies
 from app.errors import ERROR_RESPONSES, register_error_handlers
 from app.middleware import CorrelationIdMiddleware
-from app.routers import auth, documents, health, master, me, users, vendors, vouchers
+from app.routers import auth, documents, health, master, me, reports, users, vendors, vouchers
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -30,6 +30,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     api.include_router(users.users)
     api.include_router(users.invites)
     api.include_router(vendors.router)
+    api.include_router(reports.router)
     for router in (documents.expenses, documents.purchases, documents.attachments, vouchers.router):
         api.include_router(router)
     for router in (

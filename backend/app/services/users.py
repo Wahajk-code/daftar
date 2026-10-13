@@ -43,6 +43,28 @@ class UserService:
             raise NotFoundError("There is no such user.")
         return user
 
+    def complete_tour(self, actor: Principal) -> User:
+        """Remember on the server that this person has finished or skipped the onboarding tour, so it follows them to
+        every device. Doing it twice changes nothing."""
+        user = self.get(actor.id)
+        if user.tour_completed_at is None:
+            now = self._clock.now()
+            user.tour_completed_at = now
+            user.updated_at = now
+            self._audit.record(actor_id=actor.id, action="user.tour_completed", entity_type="user", entity_id=user.id)
+            self._session.commit()
+        return user
+
+    def restart_tour(self, actor: Principal) -> User:
+        """Offer the tour again, for someone who wants to see it once more."""
+        user = self.get(actor.id)
+        if user.tour_completed_at is not None:
+            user.tour_completed_at = None
+            user.updated_at = self._clock.now()
+            self._audit.record(actor_id=actor.id, action="user.tour_restarted", entity_type="user", entity_id=user.id)
+            self._session.commit()
+        return user
+
     def change_role(self, actor: Principal, user_id: int, role: Role) -> User:
         target = self._lock_for_change(actor, user_id, still_admin=role is Role.ADMIN)
         if target.role is role:

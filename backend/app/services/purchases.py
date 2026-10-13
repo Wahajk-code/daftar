@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.config import Settings
 from app.core.clock import Clock
+from app.core.duplicates import DuplicateWarning
 from app.core.enums import DocumentStatus, DocumentType, PurchaseKind, TaxType
 from app.core.errors import (
     ErrorCode,
@@ -25,6 +26,7 @@ from app.core.errors import (
     ValidationFailedError,
     VersionConflictError,
 )
+from app.core.mail import Outbox
 from app.core.money import MAX_AMOUNT
 from app.core.principal import Principal
 from app.core.tax import LineAmounts, LineError, compute_line, total_lines
@@ -35,7 +37,9 @@ from app.repositories import documents as document_repository
 from app.repositories import tax_rules as rule_repository
 from app.repositories import vendors as vendor_repository
 from app.services.audit import AuditService
+from app.services.duplicates import DuplicateFinder
 from app.services.master import changed, snapshot
+from app.services.notifications import MoveNotifier, summary_line
 from app.services.tax_rules import relevant_flags
 from app.services.workflow import Workflow, available_actions
 
@@ -69,11 +73,12 @@ class Pricing:
 
 
 class PurchaseService:
-    def __init__(self, session: Session, clock: Clock, settings: Settings) -> None:
+    def __init__(self, session: Session, clock: Clock, settings: Settings, outbox: Outbox) -> None:
         self._session = session
         self._clock = clock
         self._settings = settings
         self._workflow = Workflow(session, clock)
+        self._notifier = MoveNotifier(session, settings, outbox)
         self._audit = AuditService(session, clock)
 
     # Reading ---------------------------------------------------------------------------------------------------------
@@ -83,6 +88,10 @@ class PurchaseService:
         if purchase is None:
             raise NotFoundError("There is no such purchase.")
         return purchase
+
+    def duplicates(self, purchase_id: int) -> list[DuplicateWarning]:
+        """Other purchases and expenses that look like this one."""
+        return DuplicateFinder(self._session).for_purchase(self.get(purchase_id))
 
     def list_purchases(
         self,
@@ -240,6 +249,7 @@ class PurchaseService:
         comment: str | None = None,
         problems: list[FieldError] | None = None,
     ) -> Purchase:
+        audience = self._notifier.audience(target, purchase.created_by)
         purchase.updated_at = self._clock.now()
         self._workflow.move(
             purchase,
@@ -249,6 +259,16 @@ class PurchaseService:
             expected_version=expected_version,
             comment=comment,
             problems=problems or [],
+        )
+        self._notifier.announce(
+            audience,
+            document_type=DocumentType.PURCHASE,
+            document_id=purchase.id,
+            summary=summary_line(purchase.gross_total, purchase.description),
+            actor=actor,
+            target=target,
+            comment=comment,
+            when=purchase.updated_at,
         )
         self._session.commit()
         return self._reload(purchase.id)

@@ -12,6 +12,7 @@ from app.deps import (
     AttachmentServiceDep,
     ExpenseServiceDep,
     IfMatchDep,
+    OutboxDep,
     PrincipalDep,
     PurchaseServiceDep,
     SettingsDep,
@@ -23,6 +24,7 @@ from app.schemas.documents import (
     AllocationPreviewRequest,
     AllocationRead,
     AttachmentRead,
+    DuplicateWarningRead,
     ExpenseCreate,
     ExpenseRead,
     ExpenseUpdate,
@@ -119,6 +121,14 @@ def get_expense(expense_id: int, actor: PrincipalDep, service: ExpenseServiceDep
     return _expense(service.get(actor, expense_id), actor, service)
 
 
+@expenses.get("/{expense_id}/duplicates", operation_id="get_expense_duplicates", **ALL_ROLES)
+def get_expense_duplicates(
+    expense_id: int, actor: PrincipalDep, service: ExpenseServiceDep
+) -> list[DuplicateWarningRead]:
+    """Documents this one resembles. A warning only: saving and approving are never blocked."""
+    return [DuplicateWarningRead.model_validate(w) for w in service.duplicates(actor, expense_id)]
+
+
 @expenses.post("", operation_id="create_expense", status_code=status.HTTP_201_CREATED, **EXPENSE_AUTHORS)
 def create_expense(body: ExpenseCreate, actor: PrincipalDep, service: ExpenseServiceDep) -> ExpenseRead:
     return _expense(service.create(actor, body.model_dump()), actor, service)
@@ -133,9 +143,11 @@ def update_expense(
 
 @expenses.post("/{expense_id}/submit", operation_id="submit_expense", **EXPENSE_AUTHORS)
 def submit_expense(
-    expense_id: int, version: IfMatchDep, actor: PrincipalDep, service: ExpenseServiceDep
+    expense_id: int, version: IfMatchDep, actor: PrincipalDep, outbox: OutboxDep, service: ExpenseServiceDep
 ) -> ExpenseRead:
-    return _expense(service.submit(actor, expense_id, version), actor, service)
+    result = service.submit(actor, expense_id, version)
+    outbox.dispatch()
+    return _expense(result, actor, service)
 
 
 @expenses.post("/{expense_id}/approve", operation_id="approve_expense", **REVIEWERS)
@@ -143,19 +155,29 @@ def approve_expense(
     expense_id: int,
     version: IfMatchDep,
     actor: PrincipalDep,
+    outbox: OutboxDep,
     service: ExpenseServiceDep,
     body: TransitionRequest | None = None,
 ) -> ExpenseRead:
     comment = body.comment if body else None
-    return _expense(service.approve(actor, expense_id, version, comment), actor, service)
+    result = service.approve(actor, expense_id, version, comment)
+    outbox.dispatch()
+    return _expense(result, actor, service)
 
 
 @expenses.post("/{expense_id}/reject", operation_id="reject_expense", **REVIEWERS)
 def reject_expense(
-    expense_id: int, body: TransitionRequest, version: IfMatchDep, actor: PrincipalDep, service: ExpenseServiceDep
+    expense_id: int,
+    body: TransitionRequest,
+    version: IfMatchDep,
+    actor: PrincipalDep,
+    outbox: OutboxDep,
+    service: ExpenseServiceDep,
 ) -> ExpenseRead:
     """A comment is required: the author sees it in the history."""
-    return _expense(service.reject(actor, expense_id, version, body.comment), actor, service)
+    result = service.reject(actor, expense_id, version, body.comment)
+    outbox.dispatch()
+    return _expense(result, actor, service)
 
 
 @expenses.post("/{expense_id}/reopen", operation_id="reopen_expense", **EXPENSE_AUTHORS)
@@ -292,6 +314,12 @@ def get_purchase(purchase_id: int, actor: PrincipalDep, service: PurchaseService
     return _purchase(service.get(purchase_id), actor, service)
 
 
+@purchases.get("/{purchase_id}/duplicates", operation_id="get_purchase_duplicates", **OFFICE)
+def get_purchase_duplicates(purchase_id: int, service: PurchaseServiceDep) -> list[DuplicateWarningRead]:
+    """Documents this one resembles. A warning only: saving and approving are never blocked."""
+    return [DuplicateWarningRead.model_validate(w) for w in service.duplicates(purchase_id)]
+
+
 @purchases.post("", operation_id="create_purchase", status_code=status.HTTP_201_CREATED, **PURCHASE_AUTHORS)
 def create_purchase(body: PurchaseCreate, actor: PrincipalDep, service: PurchaseServiceDep) -> PurchaseRead:
     return _purchase(service.create(actor, body.model_dump()), actor, service)
@@ -306,9 +334,11 @@ def update_purchase(
 
 @purchases.post("/{purchase_id}/submit", operation_id="submit_purchase", **PURCHASE_AUTHORS)
 def submit_purchase(
-    purchase_id: int, version: IfMatchDep, actor: PrincipalDep, service: PurchaseServiceDep
+    purchase_id: int, version: IfMatchDep, actor: PrincipalDep, outbox: OutboxDep, service: PurchaseServiceDep
 ) -> PurchaseRead:
-    return _purchase(service.submit(actor, purchase_id, version), actor, service)
+    result = service.submit(actor, purchase_id, version)
+    outbox.dispatch()
+    return _purchase(result, actor, service)
 
 
 @purchases.post("/{purchase_id}/approve", operation_id="approve_purchase", **REVIEWERS)
@@ -316,17 +346,27 @@ def approve_purchase(
     purchase_id: int,
     version: IfMatchDep,
     actor: PrincipalDep,
+    outbox: OutboxDep,
     service: PurchaseServiceDep,
     body: TransitionRequest | None = None,
 ) -> PurchaseRead:
-    return _purchase(service.approve(actor, purchase_id, version, body.comment if body else None), actor, service)
+    result = service.approve(actor, purchase_id, version, body.comment if body else None)
+    outbox.dispatch()
+    return _purchase(result, actor, service)
 
 
 @purchases.post("/{purchase_id}/reject", operation_id="reject_purchase", **REVIEWERS)
 def reject_purchase(
-    purchase_id: int, body: TransitionRequest, version: IfMatchDep, actor: PrincipalDep, service: PurchaseServiceDep
+    purchase_id: int,
+    body: TransitionRequest,
+    version: IfMatchDep,
+    actor: PrincipalDep,
+    outbox: OutboxDep,
+    service: PurchaseServiceDep,
 ) -> PurchaseRead:
-    return _purchase(service.reject(actor, purchase_id, version, body.comment), actor, service)
+    result = service.reject(actor, purchase_id, version, body.comment)
+    outbox.dispatch()
+    return _purchase(result, actor, service)
 
 
 @purchases.post("/{purchase_id}/reopen", operation_id="reopen_purchase", **PURCHASE_AUTHORS)

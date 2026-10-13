@@ -8,7 +8,7 @@ from fastapi import APIRouter, Query, status
 
 from app.core.enums import DocumentStatus, Role, VoucherType
 from app.core.principal import Principal
-from app.deps import IdempotencyKeyDep, IfMatchDep, PrincipalDep, VoucherServiceDep, roles
+from app.deps import IdempotencyKeyDep, IfMatchDep, OutboxDep, PrincipalDep, VoucherServiceDep, roles
 from app.schemas.documents import HistoryItem, TransitionRequest
 from app.schemas.page import Page, PageParamsDep
 from app.schemas.vouchers import (
@@ -97,10 +97,12 @@ def update_voucher(
 
 @router.post("/{voucher_id}/submit", operation_id="submit_voucher", **BOOKKEEPERS)
 def submit_voucher(
-    voucher_id: int, version: IfMatchDep, actor: PrincipalDep, service: VoucherServiceDep
+    voucher_id: int, version: IfMatchDep, actor: PrincipalDep, outbox: OutboxDep, service: VoucherServiceDep
 ) -> VoucherRead:
     """Refused with the reason when the voucher is not balanced, has fewer than two lines or has no narration."""
-    return _read(service.submit(actor, voucher_id, version), actor, service)
+    result = service.submit(actor, voucher_id, version)
+    outbox.dispatch()
+    return _read(result, actor, service)
 
 
 @router.post("/{voucher_id}/approve", operation_id="approve_voucher", **REVIEWERS)
@@ -108,17 +110,27 @@ def approve_voucher(
     voucher_id: int,
     version: IfMatchDep,
     actor: PrincipalDep,
+    outbox: OutboxDep,
     service: VoucherServiceDep,
     body: TransitionRequest | None = None,
 ) -> VoucherRead:
-    return _read(service.approve(actor, voucher_id, version, body.comment if body else None), actor, service)
+    result = service.approve(actor, voucher_id, version, body.comment if body else None)
+    outbox.dispatch()
+    return _read(result, actor, service)
 
 
 @router.post("/{voucher_id}/reject", operation_id="reject_voucher", **REVIEWERS)
 def reject_voucher(
-    voucher_id: int, body: TransitionRequest, version: IfMatchDep, actor: PrincipalDep, service: VoucherServiceDep
+    voucher_id: int,
+    body: TransitionRequest,
+    version: IfMatchDep,
+    actor: PrincipalDep,
+    outbox: OutboxDep,
+    service: VoucherServiceDep,
 ) -> VoucherRead:
-    return _read(service.reject(actor, voucher_id, version, body.comment), actor, service)
+    result = service.reject(actor, voucher_id, version, body.comment)
+    outbox.dispatch()
+    return _read(result, actor, service)
 
 
 @router.post("/{voucher_id}/reopen", operation_id="reopen_voucher", **BOOKKEEPERS)

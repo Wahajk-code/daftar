@@ -12,7 +12,7 @@ from app.config import Settings, get_settings
 from app.core.clock import Clock
 from app.core.enums import Role
 from app.core.errors import ErrorCode, FieldError, ForbiddenError, UnauthenticatedError, ValidationFailedError
-from app.core.mail import ConsoleMailer, Mailer, Outbox
+from app.core.mail import Mailer, Outbox, build_mailer
 from app.core.principal import Principal
 from app.core.rate_limit import RateLimiter
 from app.core.security import Passwords, read_access_token, same_secret
@@ -27,6 +27,7 @@ from app.services.invites import InviteService
 from app.services.lookups import CategoryService, CostCenterService, ProjectService
 from app.services.periods import PeriodService, PostingAccountService
 from app.services.purchases import PurchaseService
+from app.services.reports import ReportService
 from app.services.tax_rules import TaxRuleService
 from app.services.users import UserService
 from app.services.vendors import VendorService
@@ -46,7 +47,7 @@ def get_clock() -> Clock:
 
 @lru_cache
 def get_mailer() -> Mailer:
-    return ConsoleMailer()
+    return build_mailer(get_settings())
 
 
 @lru_cache
@@ -246,12 +247,16 @@ def get_storage() -> Storage:
 StorageDep = Annotated[Storage, Depends(get_storage)]
 
 
-def get_expense_service(session: SessionDep, clock: ClockDep, settings: SettingsDep) -> ExpenseService:
-    return ExpenseService(session, clock, settings)
+def get_expense_service(
+    session: SessionDep, clock: ClockDep, settings: SettingsDep, outbox: OutboxDep
+) -> ExpenseService:
+    return ExpenseService(session, clock, settings, outbox)
 
 
-def get_purchase_service(session: SessionDep, clock: ClockDep, settings: SettingsDep) -> PurchaseService:
-    return PurchaseService(session, clock, settings)
+def get_purchase_service(
+    session: SessionDep, clock: ClockDep, settings: SettingsDep, outbox: OutboxDep
+) -> PurchaseService:
+    return PurchaseService(session, clock, settings, outbox)
 
 
 def get_attachment_service(
@@ -260,13 +265,21 @@ def get_attachment_service(
     return AttachmentService(session, clock, settings, storage, limiter)
 
 
+def get_report_service(
+    session: SessionDep, clock: ClockDep, settings: SettingsDep, limiter: LimiterDep
+) -> ReportService:
+    return ReportService(session, clock, settings, limiter)
+
+
 ExpenseServiceDep = Annotated[ExpenseService, Depends(get_expense_service)]
 PurchaseServiceDep = Annotated[PurchaseService, Depends(get_purchase_service)]
 AttachmentServiceDep = Annotated[AttachmentService, Depends(get_attachment_service)]
 
 
-def get_voucher_service(session: SessionDep, clock: ClockDep, settings: SettingsDep) -> VoucherService:
-    return VoucherService(session, clock, settings)
+def get_voucher_service(
+    session: SessionDep, clock: ClockDep, settings: SettingsDep, outbox: OutboxDep
+) -> VoucherService:
+    return VoucherService(session, clock, settings, outbox)
 
 
 IDEMPOTENCY_KEY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{8,100}$")
@@ -288,6 +301,7 @@ def idempotency_key(
 
 
 IdempotencyKeyDep = Annotated[str, Depends(idempotency_key)]
+ReportServiceDep = Annotated[ReportService, Depends(get_report_service)]
 VoucherServiceDep = Annotated[VoucherService, Depends(get_voucher_service)]
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
 VendorServiceDep = Annotated[VendorService, Depends(get_vendor_service)]

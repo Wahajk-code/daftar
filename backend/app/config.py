@@ -52,6 +52,14 @@ class Settings(BaseSettings):
     max_image_pixels: int = 40_000_000
     max_attachments_per_document: int = 10
 
+    # Email: "console" logs the message (development only), "smtp" talks to Mailpit, "resend" calls Resend's API.
+    mail_backend: Literal["console", "smtp", "resend"] = "console"
+    mail_from: str = "Daftar <no-reply@daftar.pk>"
+    smtp_host: str = "mailpit"
+    smtp_port: int = 1025
+    resend_api_key: SecretStr | None = None
+    mail_timeout_seconds: int = 10
+
     db_pool_size: int = 5
     db_max_overflow: int = 5
     db_pool_timeout_seconds: int = 10
@@ -68,7 +76,7 @@ class Settings(BaseSettings):
             raise ValueError(f"{value!r} is not an IANA time zone") from exc
         return value
 
-    @field_validator("cloudinary_url", mode="before")
+    @field_validator("cloudinary_url", "resend_api_key", mode="before")
     @classmethod
     def _empty_means_unset(cls, value: object) -> object:
         return None if isinstance(value, str) and not value.strip() else value
@@ -80,11 +88,19 @@ class Settings(BaseSettings):
         return self
 
     @model_validator(mode="after")
+    def _mail_is_configured(self) -> "Settings":
+        if self.mail_backend == "resend" and self.resend_api_key is None:
+            raise ValueError("RESEND_API_KEY is required when MAIL_BACKEND is resend")
+        return self
+
+    @model_validator(mode="after")
     def _refuse_unsafe_production(self) -> "Settings":
         if self.environment != "production":
             return self
         if self.storage_backend != "cloudinary":
             raise ValueError("receipts must be stored in Cloudinary in production")
+        if self.mail_backend == "console":
+            raise ValueError("email must go through SMTP or Resend in production, not the console")
         if self.debug:
             raise ValueError("DEBUG must be off in production")
         key = self.secret_key.get_secret_value()

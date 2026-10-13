@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.config import Settings
 from app.core.allocation import Share, allocate_by_percentage
 from app.core.clock import Clock
+from app.core.duplicates import DuplicateWarning
 from app.core.enums import AllocationMethod, DocumentStatus, DocumentType, ExpenseType, Role
 from app.core.errors import (
     ErrorCode,
@@ -24,6 +25,7 @@ from app.core.errors import (
     ValidationFailedError,
     VersionConflictError,
 )
+from app.core.mail import Outbox
 from app.core.money import ZERO, percent_of
 from app.core.principal import Principal
 from app.models.base import JsonDict
@@ -31,7 +33,9 @@ from app.models.documents import DocumentEvent, Expense, ExpenseAllocation
 from app.models.master import Category, CostCenter, Project
 from app.repositories import documents as document_repository
 from app.services.audit import AuditService
+from app.services.duplicates import DuplicateFinder
 from app.services.master import changed, snapshot
+from app.services.notifications import MoveNotifier, summary_line
 from app.services.workflow import Workflow, available_actions
 
 FIELDS = (
@@ -56,11 +60,12 @@ def mismatch(message: str) -> GuardFailedError:
 
 
 class ExpenseService:
-    def __init__(self, session: Session, clock: Clock, settings: Settings) -> None:
+    def __init__(self, session: Session, clock: Clock, settings: Settings, outbox: Outbox) -> None:
         self._session = session
         self._clock = clock
         self._settings = settings
         self._workflow = Workflow(session, clock)
+        self._notifier = MoveNotifier(session, settings, outbox)
         self._audit = AuditService(session, clock)
 
     # Reading ---------------------------------------------------------------------------------------------------------
@@ -99,6 +104,12 @@ class ExpenseService:
             limit=limit,
             offset=offset,
         )
+
+    def duplicates(self, actor: Principal, expense_id: int) -> list[DuplicateWarning]:
+        """Other expenses that look like this one. Staff are shown only their own."""
+        expense = self.get(actor, expense_id)
+        only_author = actor.id if actor.role is Role.STAFF else None
+        return DuplicateFinder(self._session).for_expense(expense, only_author=only_author)
 
     def history(self, actor: Principal, expense_id: int) -> list[DocumentEvent]:
         self.get(actor, expense_id)
@@ -268,6 +279,7 @@ class ExpenseService:
         comment: str | None = None,
         problems: list[FieldError] | None = None,
     ) -> Expense:
+        audience = self._notifier.audience(target, expense.created_by)
         expense.updated_at = self._clock.now()
         self._workflow.move(
             expense,
@@ -277,6 +289,16 @@ class ExpenseService:
             expected_version=expected_version,
             comment=comment,
             problems=problems or [],
+        )
+        self._notifier.announce(
+            audience,
+            document_type=DocumentType.EXPENSE,
+            document_id=expense.id,
+            summary=summary_line(expense.amount, expense.description),
+            actor=actor,
+            target=target,
+            comment=comment,
+            when=expense.updated_at,
         )
         self._session.commit()
         return self._reload(expense.id)
