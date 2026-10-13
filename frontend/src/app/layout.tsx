@@ -45,9 +45,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const jar = await cookies();
   const theme = jar.get(THEME_COOKIE)?.value;
   const sidebar = jar.get(SIDEBAR_COOKIE)?.value === "collapsed" ? "collapsed" : "expanded";
-  // "System" is the absence of a choice: the stylesheet follows the operating system. Light and Dark are set here, on the
-  // server, so the first paint is already right and nothing flashes.
-  const dataTheme = theme === "light" || theme === "dark" ? theme : undefined;
+  // The theme is set here, on the server, so the first paint is already right and nothing flashes.
+  // Light is the default for everyone. Dark is used only after someone switches to it (the header toggle remembers it).
+  const dataTheme = theme === "dark" ? "dark" : "light";
 
   return (
     <html
