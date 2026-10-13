@@ -535,6 +535,13 @@ def _(w: World) -> Thunk:
     return lambda: w.post(f"/api/v1/periods/{period['id']}/reopen", Role.ADMIN)
 
 
+@scenario("set_accounting_settings")
+def _(w: World) -> Thunk:
+    return lambda: w.client.put(
+        "/api/v1/settings/accounting", json={"fiscal_year_start_month": 7}, headers=w.h[Role.ACCOUNTANT]
+    )
+
+
 @scenario("set_posting_account")
 def _(w: World) -> Thunk:
     body = {"account_id": w.ledger.bank.id}

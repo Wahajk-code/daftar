@@ -1,11 +1,11 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from app.core.enums import VoucherType, YearMode
+from app.core.enums import VoucherType
 from app.core.ledger import (
     LedgerError,
     LineSpec,
@@ -33,8 +33,8 @@ def test_e3_numbers_read_type_year_and_four_digit_sequence() -> None:
     ("day", "year"),
     [(date(2026, 1, 1), 2026), (date(2026, 6, 30), 2026), (date(2026, 7, 1), 2026), (date(2026, 12, 31), 2026)],
 )
-def test_e3_calendar_mode_is_the_dates_own_year(day: date, year: int) -> None:
-    assert voucher_year(day, YearMode.CALENDAR) == year
+def test_e3_month_one_is_the_calendar_year_the_dates_own(day: date, year: int) -> None:
+    assert voucher_year(day, 1) == year
 
 
 @pytest.mark.parametrize(
@@ -47,8 +47,41 @@ def test_e3_calendar_mode_is_the_dates_own_year(day: date, year: int) -> None:
         (date(2026, 12, 31), 2027),
     ],
 )
-def test_e3_fiscal_mode_runs_july_to_june_and_is_named_by_the_year_it_ends(day: date, year: int) -> None:
-    assert voucher_year(day, YearMode.FISCAL) == year
+def test_e3_a_july_start_runs_july_to_june_and_is_named_by_the_year_it_ends(day: date, year: int) -> None:
+    assert voucher_year(day, 7) == year
+
+
+@pytest.mark.parametrize(
+    ("start", "day", "year"),
+    [
+        (4, date(2026, 3, 31), 2026),  # an April to March year ends in March 2026
+        (4, date(2026, 4, 1), 2027),
+        (10, date(2026, 9, 30), 2026),  # October to September
+        (10, date(2026, 10, 1), 2027),
+        (12, date(2026, 12, 1), 2027),  # a December start: the last month already belongs to the next year
+        (12, date(2026, 11, 30), 2026),
+        (2, date(2026, 1, 31), 2026),
+        (2, date(2026, 2, 1), 2027),
+    ],
+)
+def test_e3_any_start_month_names_the_year_by_the_year_it_ends(start: int, day: date, year: int) -> None:
+    assert voucher_year(day, start) == year
+
+
+@given(
+    day=st.dates(min_value=date(2000, 1, 1), max_value=date(2099, 12, 31)), start=st.integers(min_value=2, max_value=12)
+)
+def test_e3_a_numbering_year_is_one_year_long_and_follows_the_calendar(day: date, start: int) -> None:
+    """The label never jumps back, and a date is at most one year ahead of the calendar."""
+    assert voucher_year(day, start) - day.year in (0, 1)
+    next_day = day + timedelta(days=1)
+    assert voucher_year(next_day, start) - voucher_year(day, start) in (0, 1)
+
+
+@pytest.mark.parametrize("start", [0, 13, -1])
+def test_e3_a_start_month_must_be_a_real_month(start: int) -> None:
+    with pytest.raises(ValueError, match="1 to 12"):
+        voucher_year(date(2026, 1, 1), start)
 
 
 # Balance and reversal (E2, E6) ---------------------------------------------------------------------------------------

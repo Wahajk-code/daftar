@@ -21,6 +21,7 @@ EXPECTED_TABLES = {
     "document_events",
     "expense_allocations",
     "expenses",
+    "accounting_settings",
     "number_counters",
     "posting_accounts",
     "projects",

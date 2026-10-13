@@ -632,7 +632,7 @@ def test_b5_only_admins_edit_rates_and_the_office_reads_them(client: TestClient,
         "effective_to": "2020-12-31",
         "source": "x",
     }
-    for role in (Role.ACCOUNTANT, Role.APPROVER, Role.STAFF):
+    for role in (Role.APPROVER, Role.STAFF):
         assert client.post("/api/v1/tax-rules", json=body, headers=auth(make(role))).status_code == 403
         assert (
             client.patch("/api/v1/tax-rules/1", json={"rate_bp": 1}, headers=versioned(auth(make(role)), 1)).status_code
@@ -805,8 +805,39 @@ def test_a_posting_key_needs_the_right_kind_of_active_postable_account(
     )
 
 
-def test_only_admins_set_posting_accounts(client: TestClient, make: Make, auth: Auth) -> None:
-    for role in (Role.ACCOUNTANT, Role.APPROVER, Role.STAFF):
+def test_b5_an_accountant_sets_the_rates_and_corrects_them(
+    client: TestClient, accountant_headers: dict[str, str]
+) -> None:
+    body = {
+        "tax_type": "income_tax_withholding",
+        "supplier_filer": True,
+        "category": "any",
+        "rate_bp": 1000,
+        "effective_from": "2025-07-01",
+        "source": "Set by the accountant in charge",
+    }
+    created = client.post("/api/v1/tax-rules", json=body, headers=accountant_headers)
+    assert created.status_code == 201, created.text
+    rule = created.json()
+    corrected = client.patch(
+        f"/api/v1/tax-rules/{rule['id']}",
+        json={"rate_bp": 1100, "source": "Corrected against the latest Finance Act"},
+        headers=versioned(accountant_headers, rule["version"]),
+    )
+    assert corrected.status_code == 200
+    assert corrected.json()["rate_bp"] == 1100
+
+
+def test_a_bookkeeper_sets_posting_accounts_and_nobody_else_does(
+    client: TestClient, make: Make, auth: Auth, accountant_headers: dict[str, str]
+) -> None:
+    bank = client.post(
+        "/api/v1/accounts", json={"code": "1250", "name": "Bank - Another", "type": "asset"}, headers=accountant_headers
+    ).json()
+    done = client.put("/api/v1/posting-accounts/bank", json={"account_id": bank["id"]}, headers=accountant_headers)
+    assert done.status_code == 200, done.text
+    assert done.json()["account_id"] == bank["id"]
+    for role in (Role.APPROVER, Role.STAFF):
         assert (
             client.put("/api/v1/posting-accounts/cash", json={"account_id": 1}, headers=auth(make(role))).status_code
             == 403

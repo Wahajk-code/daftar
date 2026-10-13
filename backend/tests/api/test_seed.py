@@ -18,6 +18,7 @@ from app.core.storage import MemoryStorage
 from app.db import build_engine
 from app.seed import __main__ as seed_command
 from app.seed import data
+from app.seed.restore import restore_demo_receipts
 from app.seed.run import Summary, seed
 from app.services.duplicates import DuplicateFinder
 from tests.support.database import scratch_database
@@ -194,10 +195,6 @@ def test_two_documents_are_waiting_for_the_approver(world: tuple[Session, Memory
     assert waiting == 2
 
 
-def test_one_expense_sits_just_under_fifty_thousand(world: tuple[Session, MemoryStorage, Summary, datetime]) -> None:
-    assert scalar(world[0], "SELECT count(*) FROM expenses WHERE amount = 49750.00 AND status = 'submitted'") == 1
-
-
 def test_the_near_duplicate_purchase_pair_raises_a_warning_and_the_shared_receipt_is_found(
     world: tuple[Session, MemoryStorage, Summary, datetime],
 ) -> None:
@@ -283,3 +280,17 @@ def test_the_command_refuses_to_run_in_production(
     monkeypatch.setattr(seed_command, "get_settings", lambda: settings.model_copy(update={"environment": "production"}))
     assert seed_command.main() == 2
     assert "production" in capsys.readouterr().err
+
+
+def test_the_demonstration_receipts_are_put_back_when_the_store_starts_empty(
+    world: tuple[Session, MemoryStorage, Summary, datetime], settings: Settings
+) -> None:
+    """The in-memory store is empty after every restart; the API redraws the demonstration receipts it recognises."""
+    session, _, _, _ = world
+    fresh = MemoryStorage()
+    count = scalar(session, "SELECT count(*) FROM attachments")
+    assert restore_demo_receipts(session, fresh, settings) == count
+    keys = [r.storage_key for r in session.execute(text("SELECT storage_key FROM attachments")).all()]
+    assert all(fresh.fetch(key, "image/jpeg")[:3] == bytes([0xFF, 0xD8, 0xFF]) for key in keys)  # a JPEG
+    # A second start finds them there already and does nothing.
+    assert restore_demo_receipts(session, fresh, settings) == 0

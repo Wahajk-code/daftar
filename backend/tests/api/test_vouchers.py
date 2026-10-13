@@ -6,13 +6,11 @@ from datetime import date
 from typing import Any
 
 import pytest
-from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.config import Settings, get_settings
-from app.core.enums import Role, YearMode
+from app.core.enums import Role
 from app.models.user import User
 from app.repositories import vouchers as voucher_repository
 from tests.support.clock import FakeClock
@@ -375,18 +373,57 @@ def test_e3_the_year_follows_the_document_date_not_the_clock(
     )
 
 
-def test_e3_a_setting_switches_to_the_fiscal_year(
-    client: TestClient,
-    app: FastAPI,
-    settings: Settings,
-    bookkeeper: dict[str, str],
-    approver: dict[str, str],
-    ledger: Ledger,
+def test_e3_the_accountant_chooses_the_month_the_numbering_year_starts_in(
+    client: TestClient, bookkeeper: dict[str, str], approver: dict[str, str], ledger: Ledger
 ) -> None:
-    app.dependency_overrides[get_settings] = lambda: settings.model_copy(update={"voucher_year_mode": YearMode.FISCAL})
+    initial = client.get("/api/v1/settings/accounting", headers=bookkeeper).json()
+    assert initial["fiscal_year_start_month"] == 1  # a new install numbers by calendar year
+    assert initial["numbering_year_today"] == 2026
+    changed = client.put("/api/v1/settings/accounting", json={"fiscal_year_start_month": 7}, headers=bookkeeper)
+    assert changed.status_code == 200
+    assert changed.json()["fiscal_year_start_month"] == 7
+    assert changed.json()["numbering_year_today"] == 2027  # 12 October 2026 falls in the year that ends in June 2027
     june = posted(client, bookkeeper, approver, voucher_body(ledger, document_date="2026-06-30"))
     july = posted(client, bookkeeper, approver, voucher_body(ledger, document_date="2026-07-01"))
     assert (june["number"], july["number"]) == ("PV-2026-0001", "PV-2027-0001")
+
+
+def test_e3_a_different_choice_never_renumbers_what_was_already_posted(
+    client: TestClient, bookkeeper: dict[str, str], approver: dict[str, str], ledger: Ledger
+) -> None:
+    before = posted(client, bookkeeper, approver, voucher_body(ledger, document_date="2026-10-01"))
+    client.put("/api/v1/settings/accounting", json={"fiscal_year_start_month": 4}, headers=bookkeeper)
+    after = posted(client, bookkeeper, approver, voucher_body(ledger, document_date="2026-10-02"))
+    assert before["number"] == "PV-2026-0001"
+    assert after["number"] == "PV-2027-0001"  # a new year label starts its own count: no number is ever reused
+    assert client.get(f"/api/v1/vouchers/{before['id']}", headers=bookkeeper).json()["number"] == "PV-2026-0001"
+
+
+def test_e3_the_year_setting_is_for_bookkeepers_to_change_and_the_office_to_read(
+    client: TestClient, make: Make, auth: Auth, bookkeeper: dict[str, str], approver: dict[str, str]
+) -> None:
+    assert client.get("/api/v1/settings/accounting", headers=approver).status_code == 200
+    assert (
+        client.put("/api/v1/settings/accounting", json={"fiscal_year_start_month": 7}, headers=approver).status_code
+        == 403
+    )
+    staff = auth(make(Role.STAFF))
+    assert client.get("/api/v1/settings/accounting", headers=staff).status_code == 403
+    for month in (0, 13, "July"):
+        refused = client.put("/api/v1/settings/accounting", json={"fiscal_year_start_month": month}, headers=bookkeeper)
+        assert refused.status_code == 422
+    assert client.get("/api/v1/settings/accounting", headers=bookkeeper).json()["fiscal_year_start_month"] == 1
+
+
+def test_e3_a_change_to_the_year_setting_is_audited_and_repeating_it_is_not(
+    client: TestClient, bookkeeper: dict[str, str], db_session: Session
+) -> None:
+    for _ in range(2):
+        client.put("/api/v1/settings/accounting", json={"fiscal_year_start_month": 7}, headers=bookkeeper)
+    rows = db_session.execute(
+        text("SELECT before, after FROM audit_events WHERE action = 'accounting_settings.updated'")
+    ).all()
+    assert [(r.before, r.after) for r in rows] == [({"fiscal_year_start_month": 1}, {"fiscal_year_start_month": 7})]
 
 
 def test_e3_a_failed_transaction_gives_its_number_back_but_a_sequence_would_not(db_session: Session) -> None:
@@ -562,7 +599,7 @@ def test_e6_the_reversal_is_dated_today_in_the_display_zone(
     assert reversal["number"] == "PV-2026-0002"
 
 
-def test_e6_a_reason_is_required_and_only_admins_void(
+def test_e6_a_reason_is_required_and_an_approver_cannot_void(
     client: TestClient, bookkeeper: dict[str, str], approver: dict[str, str], admin: dict[str, str], ledger: Ledger
 ) -> None:
     original = posted(client, bookkeeper, approver, voucher_body(ledger))
@@ -581,9 +618,36 @@ def test_e6_a_reason_is_required_and_only_admins_void(
         ).status_code
         == 422
     )
-    for headers in (bookkeeper, approver):
-        assert void_it(client, headers, original).status_code == 403
+    assert void_it(client, approver, original).status_code == 403
     assert client.get(f"/api/v1/vouchers/{original['id']}", headers=admin).json()["status"] == "posted"
+
+
+def test_e6_an_accountant_can_void_and_the_void_is_traced_to_them(
+    client: TestClient,
+    make: Callable[..., User],
+    auth: Callable[[User], dict[str, str]],
+    approver: dict[str, str],
+    ledger: Ledger,
+    db_session: Session,
+) -> None:
+    """The accountant who made a mistake can undo it, and the record keeps who did, why, and the reversal beside it."""
+    accountant = make(Role.ACCOUNTANT, full_name="Usman Tariq")
+    headers = auth(accountant)
+    original = posted(client, headers, approver, voucher_body(ledger))
+    response = void_it(client, headers, original)
+    assert response.status_code == 200, response.text
+    pair = response.json()
+    assert pair["voucher"]["status"] == "void"
+    assert pair["reversal"]["reversal_of_number"] == original["number"]
+    row = db_session.execute(
+        text("SELECT voided_by, void_reason FROM vouchers WHERE id = :v"), {"v": original["id"]}
+    ).one()
+    assert row.voided_by == accountant.id
+    audit = db_session.execute(
+        text("SELECT actor_id FROM audit_events WHERE action = 'voucher.reversal_created' AND entity_id = :v"),
+        {"v": pair["reversal"]["id"]},
+    ).scalar_one()
+    assert audit == accountant.id
 
 
 def test_e6_only_a_posted_voucher_can_be_voided(
