@@ -86,4 +86,28 @@ Caught:     Each failed on its first run, with the real cause visible in the out
 Why wrong:  I wrote the expectations from memory instead of opening the helper or the migration.
 Fix:        The tests now state their payment method, build a ledger without the key (`create_ledger(..., skip=...)`), and match the messages the triggers raise. No code under test changed.
 
+### M14: A multi-step command stopped at its first failure and I carried on (pass 5)
+What:       I ran one shell command that wrote two test files with heredocs and then edited a configuration test. The first heredoc contained a quote pattern the shell cannot parse, so the whole command failed before any step ran. I took the next result as if the edits had been made.
+Caught:     The configuration test failed on the next run, which showed the edit was missing.
+Why wrong:  This is the same hazard I had already noted for this shell (large files go through the Write tool), and I combined unrelated steps in one command, so one failure hid the others. It happened again while writing these records, which shows the habit, not the incident, was the fault.
+Fix:        The files were written with the Write tool and the edit was applied on its own. Unrelated steps now go in separate commands, and any script with prose in it is written to a file first.
+
+### M15: Three test expectations were wrong before the code was (pass 5)
+What:       A report test expected 2,400.00 where the data adds to 2,300.00; the email tests expected a recipient list that left out the administrator the fixture itself created; the duplicate and generation tests assumed a default payment method that the helper does not use.
+Caught:     Each test failed on its first run and the output showed the real cause. The code under test was right every time.
+Why wrong:  I wrote the expected figures and lists from memory instead of adding them up and reading the fixture.
+Fix:        Fixtures that make an owner of reference data now make it inactive, so it is nobody's recipient, and figures in tests are worked out from the documents they came from.
+
+### M16: The Resend transport leaked a socket on an error answer (pass 5)
+What:       `ResendMailer.send` let urllib's `HTTPError` propagate with its response socket still open. Python only closes it when the error object is collected.
+Caught:     The test suite treats warnings as errors; a `ResourceWarning` about an unclosed socket surfaced in a different, later test.
+Why wrong:  An error answer from a provider is the case that has to be handled cleanly, and I wrote only the success path with care.
+Fix:        The error is closed before it is re-raised, and the failure test checks the raw transport raises while the safe wrapper logs.
+
+### M17: A scripted edit changed the first match, which was the wrong method (pass 5)
+What:       To add the recipient lookup before the version-stamping line in `VoucherService._move`, my script replaced the first matching text in the file. The first match was in `post`, not `_move`.
+Caught:     By me, reading the line numbers in the next type-check output, before any test ran.
+Why wrong:  A text replacement does not know which method it is in, and the two methods share most of their lines.
+Fix:        The stray line was removed from `post` and the edit was made in `_move` with enough surrounding text to be unique.
+
 <!-- entries are added as they happen -->

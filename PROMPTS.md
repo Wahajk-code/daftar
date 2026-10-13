@@ -70,6 +70,12 @@ Each row represents a significant implementation prompt. Model and effort are re
 | B16 | 4    | Not stated     | Docker Desktop was restarted; carry on with the tasks. | Resume after the container engine failed mid-pass. | Data volume intact; the Pass 4 test suite resumed. |
 | B17 | 4    | Not stated     | Give a progress report on the work so far and list any ambiguities. | Mid-pass oversight. | Report given in chat; four judgement calls listed (void leaves the source posted, unverified chart, July fiscal start, dev database migration). |
 | B18 | 4    | Not stated     | Proceed. | Continue the pass after the progress report. | Ledger rules, generation, parallel and fresh-install tests written; the balance trigger was made non-deferred once and 30 tests failed. |
+| B19 | 4    | Not stated     | Proceed (approval of the three proposed Pass 4 commits). | Commits are made only with the owner's approval. | Three commits made (`78188ff`, `d14d818`, `0faf185`); untracked files left out. |
+| B20 | 5    | Not stated     | Proceed to Pass 5 (backend completion). | Start the next pass after reviewing Pass 4. | Pass 5 started with the four Pass 4 open points still unanswered; defaults kept. |
+| B21 | 5    | Not stated     | Give a progress report on the work so far and list any ambiguities. | Mid-pass oversight. | Report given in chat; Pass 5 email step done, remaining steps listed, five open points raised. |
+| B22 | 5    | Not stated     | Proceed, and say how many passes are left. | Keep the pass moving and track the remaining plan. | Ten passes in the plan; four done, Pass 5 nearly done, five left after it. Reports, duplicates, query-count and audit-coverage tests, CI, openapi export and the seed were built. |
+| B23 | 5    | Not stated     | Give a progress report on the work so far and list any ambiguities. | Mid-pass oversight. | Report given in chat; Pass 5 status and seven open points listed. |
+| B24 | 5    | Not stated     | Docker had stopped; proceed once it is back, then another progress report and ambiguities. | Resume after an interruption; mid-pass oversight. | Engine restarted, volume intact; tour endpoints and story-ID renames verified; report given in chat. |
 
 ---
 

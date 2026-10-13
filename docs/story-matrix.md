@@ -36,26 +36,26 @@ Find the tests for a story with: `Select-String -Path backend\tests\*.py -Patter
 | E5 | Post is idempotent; posted lines are immutable | [x] | [ ] | n/a |
 | E6 | Void with reason creates one linked reversal | [x] | [ ] | n/a |
 | F1 | One transition table; every valid and invalid pair tested | [x] | n/a | n/a |
-| F2 | Approval history timeline, one component for all types | [ ] | [ ] | [ ] |
-| F3 | Audit row for every create, update, status change | [ ] | n/a | n/a |
-| G1 | Expenses by type and cost centre | [ ] | [ ] | n/a |
-| G2 | Purchases by vendor, registered versus not | [ ] | [ ] | n/a |
-| G3 | Voucher register, voids linked to reversals | [ ] | [ ] | [ ] |
-| G4 | CSV export, injection-safe, UTF-8 with BOM | [ ] | [ ] | n/a |
+| F2 | Approval history timeline, one component for all types | [x] | [ ] | [ ] |
+| F3 | Audit row for every create, update, status change | [x] | n/a | n/a |
+| G1 | Expenses by type and cost centre | [x] | [ ] | n/a |
+| G2 | Purchases by vendor, registered versus not | [x] | [ ] | n/a |
+| G3 | Voucher register, voids linked to reversals | [x] | [ ] | [ ] |
+| G4 | CSV export, injection-safe, UTF-8 with BOM | [x] | [ ] | n/a |
 | H1 | Camera-first capture, compressed, prefilled | n/a | n/a | [ ] |
 | H2 | Capture survives a bad connection; no duplicates | n/a | n/a | [ ] |
 | H3 | View and approve or reject items from the phone | n/a | n/a | [ ] |
 | H4 | Vouchers viewable read-only | n/a | n/a | [ ] |
 | H5 | Tokens in secure storage, cleared on logout | n/a | n/a | [ ] |
 | I1 | Password reset by email (self-service) | [x] | [ ] | n/a |
-| I2 | Approver emailed on submission | [ ] | n/a | n/a |
-| I3 | Submitter emailed on approve or reject | [ ] | n/a | n/a |
+| I2 | Approver emailed on submission | [x] | n/a | n/a |
+| I3 | Submitter emailed on approve or reject | [x] | n/a | n/a |
 | I4 | Admin invites a user by email | [x] | [ ] | n/a |
 | I7 | Admin triggers a password reset | [x] | [ ] | n/a |
 | I8 | Admin resends or revokes a pending invite | [x] | [ ] | n/a |
 | M1 | Public screens are the login family only, 50/50 split, noindex everywhere | n/a | [ ] | n/a |
 | M2 | Footer shows version and git SHA | n/a | [ ] | n/a |
-| N1 | Skippable role-aware onboarding tour (web); three-card intro (mobile) | [ ] | [ ] | [ ] |
+| N1 | Skippable role-aware onboarding tour (web); three-card intro (mobile) | [x] | [ ] | [ ] |
 
 Notes on ticks made by the build (the owner still confirms each against the evidence):
 - A3: the API refusing every role everywhere is tested (`tests/api/test_access_matrix.py`), and Staff opening another

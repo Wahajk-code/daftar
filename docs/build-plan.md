@@ -110,16 +110,16 @@ Model: strong · Plan mode · Review: everything in this pass
 ## Pass 5: Backend completion
 Model: cheap
 
-- [ ] Email after commit, as background tasks, for submit, approve, reject, invite and reset; console, Mailpit or Resend by setting; a provider failure is logged and never fails the request (test it)
-- [ ] Per-user export limit on CSV downloads
-- [ ] Reports: expenses by type and cost centre, purchases by vendor split registered or not, voucher register; CSV per `domain-rules.md` section 9
-- [ ] Duplicate warnings per `domain-rules.md` section 8
-- [ ] A query-count test on list endpoints
-- [ ] An audit-coverage test: list every mutating route and prove each writes an audit row in its own transaction
-- [ ] CI workflow (`.github/workflows/ci.yml`): lint, types and the full backend suite against a Postgres service, then frontend lint, types, tests and build
-- [ ] `backend/openapi.json` exported and committed; the API list for the docs generated from it
-- [ ] Seed data per `seed-data.md`
-- [ ] **Backend check:** every backend story in `story-matrix.md` is ticked with evidence; lint, types and the full suite pass; the whole flow (create, submit, approve, generate, post, void) works through `localhost:8000/docs`
+- [x] Email after commit, as background tasks, for submit, approve, reject, invite and reset; console, Mailpit or Resend by setting; a provider failure is logged and never fails the request (test it)
+- [x] Per-user export limit on CSV downloads
+- [x] Reports: expenses by type and cost centre, purchases by vendor split registered or not, voucher register; CSV per `domain-rules.md` section 9
+- [x] Duplicate warnings per `domain-rules.md` section 8
+- [x] A query-count test on list endpoints
+- [x] An audit-coverage test: list every mutating route and prove each writes an audit row in its own transaction
+- [x] CI workflow (`.github/workflows/ci.yml`): lint, types and the full backend suite against a Postgres service, then frontend lint, types, tests and build
+- [x] `backend/openapi.json` exported and committed; the API list for the docs generated from it
+- [x] Seed data per `seed-data.md`
+- [x] **Backend check:** every backend story in `story-matrix.md` is ticked with evidence; lint, types and the full suite pass; the whole flow (create, submit, approve, generate, post, void) works through `localhost:8000/docs`
 
 ---
 
