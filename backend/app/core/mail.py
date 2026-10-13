@@ -1,18 +1,16 @@
 """Outgoing email. Services add messages to an Outbox; the router sends them in the background once the service has
 returned, which is after the commit. A provider failure is logged and never raised.
 
-Three transports, chosen by the MAIL_BACKEND setting: the console (development), SMTP (Mailpit locally) and Resend
-(deployed). Both real ones use only the standard library."""
+Two transports: the console (development) and SMTP (Gmail when deployed, Mailpit locally). Both use only the standard
+library. Which one is used follows the settings (see Settings.mail_transport)."""
 
-import json
 import logging
 import smtplib
-import urllib.error
-import urllib.request
+import ssl
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from email.message import EmailMessage as MimeMessage
-from email.utils import formatdate, make_msgid
+from email.utils import formatdate, make_msgid, parseaddr
 
 from app.config import Settings
 
@@ -50,13 +48,27 @@ class ConsoleMailer(Mailer):
 
 
 class SmtpMailer(Mailer):
-    """Plain SMTP without login or encryption: for Mailpit, which catches everything and delivers nothing."""
+    """SMTP with the standard library. With a user it logs in, after upgrading the connection with STARTTLS (port
+    587) or from the first byte when `secure` is set (port 465). Without a user it is plain, as Mailpit expects."""
 
-    def __init__(self, host: str, port: int, sender: str, timeout_seconds: int) -> None:
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        sender: str,
+        timeout_seconds: int,
+        *,
+        user: str | None = None,
+        password: str | None = None,
+        secure: bool = False,
+    ) -> None:
         self._host = host
         self._port = port
         self._sender = sender
         self._timeout = timeout_seconds
+        self._user = user
+        self._password = password
+        self._secure = secure
 
     def send(self, message: EmailMessage) -> None:
         mime = MimeMessage()
@@ -64,57 +76,31 @@ class SmtpMailer(Mailer):
         mime["To"] = message.to
         mime["Subject"] = message.subject
         mime["Date"] = formatdate(localtime=False)
-        mime["Message-ID"] = make_msgid(domain="daftar.local")
+        mime["Message-ID"] = make_msgid(domain=parseaddr(self._sender)[1].partition("@")[2] or "daftar.local")
         mime.set_content(message.body)
         if message.html:
             mime.add_alternative(message.html, subtype="html")
-        with smtplib.SMTP(self._host, self._port, timeout=self._timeout) as connection:
+        connection_class = smtplib.SMTP_SSL if self._secure else smtplib.SMTP
+        with connection_class(self._host, self._port, timeout=self._timeout) as connection:
+            if self._user is not None:
+                if not self._secure:
+                    connection.starttls(context=ssl.create_default_context())
+                connection.login(self._user, self._password or "")
             connection.send_message(mime)
 
 
-RESEND_ENDPOINT = "https://api.resend.com/emails"
-
-
-class ResendMailer(Mailer):
-    """Resend's HTTP API: POST /emails with a bearer key, JSON body with from, to, subject, text and html. Any
-    answer other than 2xx is an error (urllib raises for 4xx and 5xx)."""
-
-    def __init__(self, api_key: str, sender: str, timeout_seconds: int, endpoint: str = RESEND_ENDPOINT) -> None:
-        self._api_key = api_key
-        self._sender = sender
-        self._timeout = timeout_seconds
-        self._endpoint = endpoint
-
-    def send(self, message: EmailMessage) -> None:
-        fields = {"from": self._sender, "to": [message.to], "subject": message.subject, "text": message.body}
-        if message.html:
-            fields["html"] = message.html
-        payload = json.dumps(fields).encode()
-        request = urllib.request.Request(  # noqa: S310 - the endpoint is a constant https URL, or a local test server
-            self._endpoint,
-            data=payload,
-            method="POST",
-            headers={
-                "Authorization": f"Bearer {self._api_key}",
-                "Content-Type": "application/json",
-                "User-Agent": "daftar/1.0",
-            },
-        )
-        try:
-            with urllib.request.urlopen(request, timeout=self._timeout):  # noqa: S310
-                pass
-        except urllib.error.HTTPError as error:
-            error.close()  # an error answer keeps its socket open until it is collected
-            raise
-
-
 def build_mailer(settings: Settings) -> Mailer:
-    if settings.mail_backend == "smtp":
-        return SmtpMailer(settings.smtp_host, settings.smtp_port, settings.mail_from, settings.mail_timeout_seconds)
-    if settings.mail_backend == "resend":
-        key = settings.resend_api_key
-        assert key is not None  # Settings refuses to start without it
-        return ResendMailer(key.get_secret_value(), settings.mail_from, settings.mail_timeout_seconds)
+    if settings.mail_transport == "smtp":
+        password = settings.smtp_pass.get_secret_value() if settings.smtp_pass is not None else None
+        return SmtpMailer(
+            settings.smtp_host,
+            settings.smtp_port,
+            settings.mail_from,
+            settings.mail_timeout_seconds,
+            user=settings.smtp_user,
+            password=password,
+            secure=settings.smtp_secure,
+        )
     return ConsoleMailer()
 
 

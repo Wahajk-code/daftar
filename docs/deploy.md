@@ -2,7 +2,7 @@
 
 Three pieces, each on its own host: the database on Neon, the API on Render (from the backend Dockerfile), and the web app on
 Vercel. The browser only ever talks to the web app; the web app talks to the API from its server (the BFF), so the API needs no
-CORS list. Receipts live in Cloudinary and email goes through Resend.
+CORS list. Receipts live in Cloudinary and email goes out over SMTP through a Google account.
 
 Order matters: database, then API, then web app, then email links and the check.
 
@@ -16,7 +16,7 @@ Nothing secret is kept in the repository. You type each value into the host's da
      `python -c "import secrets; print(secrets.token_urlsafe(48))"`
    - `BFF_SHARED_SECRET`: another one, made the same way. It is typed into both the API and the web app and must match.
 3. Have your Cloudinary URL (`cloudinary://API_KEY:API_SECRET@CLOUD_NAME`, from the Cloudinary dashboard, Settings, API Keys)
-   and your Resend API key.
+   and a Google app password for the account that sends the email (section 6).
 
 ## 1. Database: Neon
 
@@ -50,9 +50,13 @@ Migrations are never run at boot. Run them yourself, before the first deploy and
    BFF_SHARED_SECRET=<the shared secret>
    STORAGE_BACKEND=cloudinary
    CLOUDINARY_URL=<your cloudinary url>
-   MAIL_BACKEND=resend
-   RESEND_API_KEY=<your resend key>
-   MAIL_FROM=Daftar <no-reply@your-verified-domain>
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_SECURE=false
+   SMTP_USER=<the google account>
+   SMTP_PASS=<its app password>
+   SMTP_FROM_EMAIL=info@visionpme.ca
+   SMTP_FROM_NAME=Daftar
    ```
 2. Build the API image and migrate:
    ```
@@ -90,9 +94,13 @@ from the Users screen.
    | `WEB_BASE_URL` | the Vercel address from step 5, with no trailing slash. Enter it after step 5, then redeploy |
    | `STORAGE_BACKEND` | `cloudinary` (already set) |
    | `CLOUDINARY_URL` | your Cloudinary URL |
-   | `MAIL_BACKEND` | `resend` (already set) |
-   | `RESEND_API_KEY` | your Resend key |
-   | `MAIL_FROM` | `Daftar <no-reply@your-verified-domain>` |
+   | `SMTP_HOST` | `smtp.gmail.com` (already set) |
+   | `SMTP_PORT` | `587` (already set) |
+   | `SMTP_SECURE` | `false` (already set) |
+   | `SMTP_USER` | the Google account that sends the mail |
+   | `SMTP_PASS` | that account's app password (16 characters, no spaces) |
+   | `SMTP_FROM_EMAIL` | the address mail comes from, `info@visionpme.ca` |
+   | `SMTP_FROM_NAME` | the name shown beside it, for example `Daftar` (no quotes) |
    | `DISPLAY_TIMEZONE` | `Asia/Karachi` (already set) |
 
    `MIGRATION_DATABASE_URL` is **not** set on Render: only you run migrations, from your computer.
@@ -120,11 +128,17 @@ Use the paid Starter plan for anything shown to other people.
 3. Deploy. Note the address, `https://your-project.vercel.app` (or add your own domain under Domains).
 4. Go back to Render and set `WEB_BASE_URL` to that address, then redeploy the API (invitation and reset links use it).
 
-## 6. Email: Resend
+## 6. Email: Google SMTP
 
-1. Add and verify your sending domain in Resend (the DNS records it lists), then create an API key.
-2. `MAIL_FROM` must be an address on that verified domain. Until the domain is verified Resend only delivers to your own account
-   address, so invitations to other people will not arrive.
+1. The Google account needs 2-step verification. Then create an app password (Google Account, Security, 2-Step Verification,
+   App passwords) and use those 16 characters as `SMTP_PASS`. The normal account password does not work.
+2. `SMTP_USER` is that account. `SMTP_FROM_EMAIL` must be that address or an alias added in Gmail under Settings, Accounts,
+   "Send mail as"; otherwise Google rewrites or refuses the sender.
+3. Setting `SMTP_USER` is what switches real sending on (`MAIL_BACKEND` can stay empty).
+4. Render's free web services block outbound SMTP ports (25, 465 and 587). Use a paid instance for the API, or the email will
+   fail with a connection timeout.
+5. Gmail limits a normal account to about 500 messages a day, which is plenty here.
+6. Check it from your computer with the same values in `.env`: `docker compose exec backend python -m app.mail_check you@example.com`.
 
 ## 7. Check that it works
 
@@ -155,5 +169,5 @@ Push to GitHub. Vercel and Render redeploy on their own. If the release added a 
 | Every page is slow or errors after a pause | The free Render plan is asleep; use Starter |
 | "role daftar_app does not exist" when migrating | Step 1.4 was skipped, or run on the wrong database |
 | Connection error mentioning options | The pooled Neon string was used; use the direct one |
-| Invitation emails do not arrive | The Resend domain is not verified yet, or `MAIL_FROM` is not on it |
+| Invitation emails do not arrive | `SMTP_USER` or `SMTP_PASS` is missing or wrong (a Google app password is needed), the sender is not the account or one of its aliases, or Render's free plan is blocking SMTP. The API log says `email failed` with the server's reason |
 | Receipts do not show after a restart | `STORAGE_BACKEND` is not `cloudinary` |

@@ -11,7 +11,7 @@ flowchart LR
     Mob[mobile/<br/>Expo, built last] -->|bearer token| API
     API --> DB[(PostgreSQL)]
     API --> Files[(Cloudinary<br/>receipt images)]
-    API --> Mail[Email<br/>console, Mailpit, Resend]
+    API --> Mail[Email<br/>console, Mailpit, Google SMTP]
 ```
 
 **Folders:** `backend/`, `frontend/`, `mobile/`, plus `docs/`. Three apps, three folders, nothing shared
@@ -327,7 +327,7 @@ Everything runs through `docker compose`. Claude Code writes these files in Pass
   session. `robots.txt` disallows everything and every route sends `noindex`.
 - **Invites and resets:** one `auth_tokens` table (purpose, hashed token, expiry, used-at). An invite is created by an Admin
   with a role and an email; accepting it creates the account. A reset is requested by the user or triggered by an Admin;
-  both send the same email. Email is sent after commit as a background task: Mailpit locally, Resend when deployed.
+  both send the same email. Email is sent after commit as a background task: Mailpit locally, Google SMTP when deployed.
 - **Onboarding tour:** `users.tour_completed_at` (null means show the tour). `GET /me` returns it; `POST /me/tour/complete`
   records completion or a skip, and `POST /me/tour/restart` offers the tour again. The tour is role-aware, 4 to 6 steps, skippable at every step, and can be relaunched from the
   profile menu. Mobile shows a three-card intro driven by the same flag.
@@ -338,7 +338,7 @@ Everything runs through `docker compose`. Claude Code writes these files in Pass
 |---|---|---|
 | Database | Neon | Use the pooled connection string. Suspends after about five minutes idle |
 | Receipts | Cloudinary | One account for dev and production, separate folders; credentials in the host's environment settings |
-| Email | Resend | Needs a verified domain, low daily cap |
+| Email | Google SMTP (app password) | About 500 messages a day; the sender must be the account or one of its aliases |
 | API | Render, from the backend Dockerfile | Sleeps when idle. Migrations are a release step, never at boot |
 | Web | Vercel | Hobby tier is non-commercial |
 | Mobile demo | Expo Go | No build needed |

@@ -76,7 +76,7 @@ Record the model and effort for every prompt in `PROMPTS.md` with a one-line rea
 |---|---|---|
 | Cloudinary | Receipts, from Pass 3 | `CLOUDINARY_URL` in the owner's `.env` (copy from `.env.example`) |
 | Neon, Render, Vercel | Deploy, Pass 8 | The hosts' environment-variable settings |
-| Resend and a sending domain | Production email, Pass 8 | The API host's environment settings |
+| A Google account app password | Production email, Pass 8 | The API host's environment settings |
 | `BFF_SHARED_SECRET` (a long random string the owner generates) | Trusting the browser's address in rate limits, Pass 2 | The web host and the API host environment settings |
 | Expo Go on a phone | Mobile, Pass 9 | The phone |
 

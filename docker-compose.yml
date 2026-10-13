@@ -44,10 +44,14 @@ services:
       CLOUDINARY_URL: ${CLOUDINARY_URL:-}
       BFF_SHARED_SECRET: ${BFF_SHARED_SECRET:-dev-bff-shared-secret-for-local-use-only}
       WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:3001}
-      MAIL_BACKEND: ${MAIL_BACKEND:-console}
-      MAIL_FROM: ${MAIL_FROM:-Daftar <no-reply@daftar.pk>}
+      MAIL_BACKEND: ${MAIL_BACKEND:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-no-reply@daftar.pk}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Daftar}
       SMTP_HOST: ${SMTP_HOST:-mailpit}
-      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
       DATABASE_URL: postgresql+psycopg://daftar_app:${APP_DB_PASSWORD:-daftar_app_dev_password}@postgres:5432/daftar
       MIGRATION_DATABASE_URL: postgresql+psycopg://daftar:${POSTGRES_PASSWORD:-daftar_dev_password}@postgres:5432/daftar
     ports:

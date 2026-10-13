@@ -1,3 +1,4 @@
+from email.utils import formataddr
 from functools import lru_cache
 from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -53,12 +54,17 @@ class Settings(BaseSettings):
     max_image_pixels: int = 40_000_000
     max_attachments_per_document: int = 10
 
-    # Email: "console" logs the message (development only), "smtp" talks to Mailpit, "resend" calls Resend's API.
-    mail_backend: Literal["console", "smtp", "resend"] = "console"
-    mail_from: str = "Daftar <no-reply@daftar.pk>"
+    # Email goes out over SMTP (Gmail when deployed, Mailpit locally), or to the log with "console" (development only).
+    # MAIL_BACKEND may be left out: it is smtp when SMTP_USER is set, and console otherwise.
+    mail_backend: Literal["console", "smtp"] | None = None
+    smtp_from_email: str = "no-reply@daftar.pk"
+    smtp_from_name: str = "Daftar"
     smtp_host: str = "mailpit"
     smtp_port: int = 1025
-    resend_api_key: SecretStr | None = None
+    smtp_user: str | None = None
+    smtp_pass: SecretStr | None = None
+    # false: connect plainly and, with a login, upgrade with STARTTLS (port 587). true: TLS from the first byte (465).
+    smtp_secure: bool = False
     mail_timeout_seconds: int = 10
 
     db_pool_size: int = 5
@@ -77,10 +83,32 @@ class Settings(BaseSettings):
             raise ValueError(f"{value!r} is not an IANA time zone") from exc
         return value
 
-    @field_validator("cloudinary_url", "resend_api_key", mode="before")
+    @field_validator("cloudinary_url", "smtp_user", "smtp_pass", "mail_backend", mode="before")
     @classmethod
     def _empty_means_unset(cls, value: object) -> object:
         return None if isinstance(value, str) and not value.strip() else value
+
+    @field_validator("mail_backend", mode="before")
+    @classmethod
+    def _retired_backend_means_automatic(cls, value: object) -> object:
+        """Email once also went through a mail API, chosen with MAIL_BACKEND=resend. That value is retired, and an old
+        setting must not stop the API starting, so it means "choose by SMTP_USER", like an empty one."""
+        return None if isinstance(value, str) and value.strip().lower() == "resend" else value
+
+    @field_validator("mail_backend", mode="before")
+    @classmethod
+    def _provider_names_mean_smtp(cls, value: object) -> object:
+        """MAIL_BACKEND=google (or gmail) is how the owner names it: both are SMTP."""
+        return "smtp" if isinstance(value, str) and value.strip().lower() in {"google", "gmail"} else value
+
+    @field_validator("smtp_from_name")
+    @classmethod
+    def _name_without_quotes(cls, value: str) -> str:
+        """A name typed with quotes in an env file (SMTP_FROM_NAME='"Équipe Vision PME"') keeps them; drop them."""
+        name = value.strip()
+        while len(name) >= 2 and name[0] == name[-1] and name[0] in "\"'":
+            name = name[1:-1].strip()
+        return name or "Daftar"
 
     @field_validator("cloudinary_url")
     @classmethod
@@ -100,8 +128,10 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _mail_is_configured(self) -> "Settings":
-        if self.mail_backend == "resend" and self.resend_api_key is None:
-            raise ValueError("RESEND_API_KEY is required when MAIL_BACKEND is resend")
+        if self.smtp_user is not None and self.smtp_pass is None:
+            raise ValueError("SMTP_PASS is required when SMTP_USER is set")
+        if "@" not in self.smtp_from_email:
+            raise ValueError("SMTP_FROM_EMAIL must be an email address")
         return self
 
     @model_validator(mode="after")
@@ -110,8 +140,8 @@ class Settings(BaseSettings):
             return self
         if self.storage_backend != "cloudinary":
             raise ValueError("receipts must be stored in Cloudinary in production")
-        if self.mail_backend == "console":
-            raise ValueError("email must go through SMTP or Resend in production, not the console")
+        if self.mail_transport == "console":
+            raise ValueError("email must go through SMTP in production, not the console (set SMTP_USER and SMTP_PASS)")
         if self.debug:
             raise ValueError("DEBUG must be off in production")
         key = self.secret_key.get_secret_value()
@@ -123,6 +153,17 @@ class Settings(BaseSettings):
         ):
             raise ValueError("SECRET_KEY is too weak for production")
         return self
+
+    @property
+    def mail_transport(self) -> Literal["console", "smtp"]:
+        if self.mail_backend is not None:
+            return self.mail_backend
+        return "smtp" if self.smtp_user is not None else "console"
+
+    @property
+    def mail_from(self) -> str:
+        """The From header: name and address, with a name that is not plain ASCII encoded the way mail programs read."""
+        return formataddr((self.smtp_from_name, self.smtp_from_email))
 
     @property
     def max_upload_bytes(self) -> int:

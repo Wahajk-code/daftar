@@ -35,7 +35,7 @@ Sign in with any demonstration account (password `daftar-demo-2026`):
 | approver@daftar.pk | Approver |
 | staff@daftar.pk | Staff |
 
-To try real receipts and email locally, fill `CLOUDINARY_URL` and `RESEND_API_KEY` in `.env` (the steps are written in
+To try real receipts and email locally, fill `CLOUDINARY_URL` and `SMTP_USER` and `SMTP_PASS` in `.env` (the steps are written in
 `.env.example`). On a phone on the same Wi-Fi, open `http://<this computer's address>:3001`: the camera button starts an expense
 from a photo of a receipt. Installing it as an app needs HTTPS (the deployed site).
 
@@ -52,14 +52,14 @@ Tests use a separate `daftar_test` database and a fake receipt store, so they ne
 ## Deploying
 
 One repository, one folder per service: `backend/` on Render, `frontend/` on Vercel, the database on Neon, receipts on
-Cloudinary and email on Resend. The steps and every environment variable are in `docs/deploy.md`.
+Cloudinary and email over SMTP (Google). The steps and every environment variable are in `docs/deploy.md`.
 
 ## Where to look
 
 | File | What it is |
 |---|---|
 | `docs/spec.md` | The brief line by line, and how each part is handled |
-| `docs/deploy.md` | Deploying: Neon, Render, Vercel, Cloudinary, Resend, step by step |
+| `docs/deploy.md` | Deploying: Neon, Render, Vercel, Cloudinary, Google SMTP, step by step |
 | `docs/architecture.md` | Design, diagrams, data model, security, local and deployed setup |
 | `docs/decisions.md` | Every decision with its reasoning and strongest objection |
 | `docs/domain-rules.md` | Money, allocation, numbering, vouchers, tax, dates |
