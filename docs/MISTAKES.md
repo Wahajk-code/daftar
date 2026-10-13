@@ -260,4 +260,10 @@ Caught:     The final full backend gate, which the owner had told me not to run 
 Why wrong:  I changed the rule in the table and its dedicated tests but not the exhaustive matrix test that encodes the same rule. Skipping the full gate for speed let a stale test hide.
 Fix:        The matrix expects the bookkeeping roles. Rule changes now name every test that encodes them, and the full gate runs before any commit.
 
+### M43: The API proxy copied the upstream Content-Length, which truncated every response on the live site (deploy)
+What:       The web app's proxy forwarded the API's content-length header. Render compresses responses, so the header held the compressed size while the proxy streamed the larger decompressed body. Every API response through the live site was cut off at about 240 bytes: charts and lists would have failed, while pages (rendered on the server) looked fine.
+Caught:     By me, running the smoke script against the live site and reading a JSON parse error, then checking the body with curl.
+Why wrong:  It only appears behind a compressing host, which the local setup never has, so passing every local check proved nothing about it. Deployed behaviour was left to the deploy pass.
+Fix:        The header is no longer forwarded; the runtime sets the length itself.
+
 <!-- entries are added as they happen -->

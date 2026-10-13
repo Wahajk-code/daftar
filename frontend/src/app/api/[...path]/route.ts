@@ -24,7 +24,7 @@ const FORWARDED_RESPONSE_HEADERS = [
   "retry-after",
   "x-correlation-id",
   "etag",
-  "content-length",
+  // Not content-length: a host may compress the body, so its length is not the length of what this server streams on.
 ];
 
 type Context = { params: Promise<{ path: string[] }> };
